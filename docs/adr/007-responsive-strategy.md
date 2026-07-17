@@ -76,7 +76,13 @@ tab bar vs. the current top bar). Not inventing one without evidence.
 - `PACKFE-013` (the originally-planned responsive pass) — confirm this
   ADR's decisions held up once more screens are built, and do the
   eyes-on-the-design verification this ADR couldn't do from CSS numbers
-  alone (nav pattern at mobile widths, especially).
+  alone. Two concrete items now, not just "nav pattern, especially":
+  nav at mobile widths (still unverified), and — found during
+  `PACKFE-004` — every `Modal — X` in Desktop has a `Sheet — X`
+  equivalent in Prototype (all four instances, not a one-off), meaning
+  every modal should become a bottom sheet on mobile, not stay a
+  centered dialog. `Modal` doesn't yet accept a `className` override to
+  support this.
 - If a future screen's design data reveals information architecture
   that genuinely differs between mobile and desktop (not just spacing/
   layout), not just chrome — revisit the single-component-tree decision

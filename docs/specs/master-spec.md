@@ -309,7 +309,17 @@ for off-scope findings that surface mid-feature — see this project's own
   see [ADR 007](../adr/007-responsive-strategy.md), settled during
   `PACKFE-003`, not at kickoff as originally planned here. This ticket's
   own `grill-me` verifies it held up once more screens exist, not
-  re-decides it from scratch.
+  re-decides it from scratch. **New evidenced finding from
+  `PACKFE-004`**: every `Modal — X` in the Desktop design has a
+  `Sheet — X` equivalent in Prototype (`categories`, `add items`,
+  `new item`, `new trip` — all four, not a one-off), meaning every
+  modal in this app should become a bottom sheet on mobile, not stay a
+  centered dialog. `Modal` (`src/components/ui/Modal.tsx`) doesn't
+  currently accept a `className` override to support this — that's this
+  ticket's job, not `PACKFE-004`'s, which deliberately ships the
+  categories modal using `Modal` as it exists today (centered,
+  functionally correct on every viewport, just not the ideal mobile
+  treatment).
 - **PACKFE-014** — Accessibility pass: keyboard navigation, focus
   management, ARIA on tab nav and modals.
 - **PACKFE-015** — E2E coverage consolidation: promote the per-AC
