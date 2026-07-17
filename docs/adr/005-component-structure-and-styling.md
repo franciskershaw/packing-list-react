@@ -35,6 +35,11 @@ Bricolage Grotesque type family confirmed present in both. Every feature
 styles against these tokens rather than picking colors/spacing by eye
 per screen.
 
+**Addendum (2026-07-17, PACKFE-001)**: the design also uses 'Karla' for
+body text throughout, with Bricolage Grotesque reserved for
+headings/large numbers — not caught at kickoff. Token set is
+`font-heading` (Bricolage Grotesque) + `font-body` (Karla).
+
 ## Alternatives rejected
 
 - **Atomic design** (atoms/molecules/organisms): stricter layering by
