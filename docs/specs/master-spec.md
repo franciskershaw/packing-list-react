@@ -202,6 +202,17 @@ reference them.
 
 ### Epic 3: Library
 
+- **PACKFE-016** — Shared test fixtures & mock helpers. **Priority — pick
+  up before `PACKFE-004`.** From the 2026-07-17 tech-debt pass (see
+  `docs/handoffs/tech-debt-2026-07-17-findings.md`): a shared
+  `UserProfile` mock fixture (currently duplicated and already drifted
+  across 3 test files), a shared `api/client` mock factory (duplicated
+  verbatim across 2 test files), and a shared `useAuth` mock helper
+  (duplicated verbatim across 2 test files). Time-coupled to landing
+  before more feature tickets' test suites copy-paste the same patterns
+  a third and fourth time.
+  - **Status: not started.**
+
 - **PACKFE-004** — Category browsing & management.
   - [ ] `/library` lists system categories and the user's own
         (`GET /categories`).

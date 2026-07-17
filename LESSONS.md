@@ -99,3 +99,16 @@ skill) and reviewed at the start of every `grill-me` and project kickoff.
   room to review/commit the doc on its own.
 - **Epic 2 demotion check**: Epic 2 was one ticket (`PACKFE-003`) touching
   no prior-epic global rules directly. Nothing to compress.
+
+## 2026-07-17 — Tech-debt pass — first run, test-suite duplication found early
+
+First pass for this project, whole codebase (nothing to diff against —
+no prior entry). Scoped to test-suite duplication specifically, per
+direct request drawing on a `packing-list-go` precedent (duplication
+discovered late was costly to retrofit). Found real, already-drifted
+duplication at just 3 tickets in: a mock `UserProfile` object duplicated
+with different values across 3 test files, and two verbatim-duplicated
+mock-setup blocks (`api/client`, `useAuth`) across 2 files each. Filed as
+`PACKFE-016`, flagged priority-before-`PACKFE-004` so it lands before
+more feature test suites copy-paste the same patterns further. Findings
+archive: `docs/handoffs/tech-debt-2026-07-17-findings.md`.
