@@ -123,21 +123,26 @@ reference them.
 
 - **PACKFE-001** — Project scaffolding: routing, query client, design
   tokens, base layout.
-  - [ ] React Router installed; route skeleton in place (see ADR 003) —
+  - [x] React Router installed; route skeleton in place (see ADR 003) —
         each route may render a placeholder, but the skeleton itself
         must exist and be navigable.
-  - [ ] `QueryClientProvider` wired in `main.tsx`.
-  - [ ] Tailwind config extended with design tokens (color palette +
+  - [x] `QueryClientProvider` wired in `main.tsx`.
+  - [x] Tailwind config extended with design tokens (color palette +
         Bricolage Grotesque font) extracted from the two design files.
-  - [ ] `src/components/ui/` scaffolded with minimal Button, Modal,
+  - [x] `src/components/ui/` scaffolded with minimal Button, Modal,
         Badge, Input primitives (styling only, no feature logic).
-  - [ ] Base app shell renders: nav matching Trips/Templates/Library,
+  - [x] Base app shell renders: nav matching Trips/Templates/Library,
         a profile entry point.
-  - [ ] Vite dev-server proxy configured (`/api` → `localhost:8080`).
-  - [ ] Playwright installed and configured; one smoke spec verifies the
+  - [x] Vite dev-server proxy configured (`/api` → `localhost:8080`).
+  - [x] Playwright installed and configured; one smoke spec verifies the
         app shell renders and nav links are present.
-  - [ ] Vitest + Testing Library installed and configured; one smoke
+  - [x] Vitest + Testing Library installed and configured; one smoke
         test verifies the project's test runner works end to end.
+  - **Status: Done.** See `docs/handoffs/PACKFE-001.md`. Also shipped,
+    not originally scoped: Prettier + import sorting + a Husky/
+    lint-staged pre-commit hook, and oxlint's `jsx-a11y` plugin — see
+    project `CLAUDE.md`. Surfaced a real test-coverage gap on `Modal`
+    (see `LESSONS.md`), not yet resolved.
 
 - **PACKFE-002** — Hand-written API client & types.
   - [ ] `src/api/types.ts` mirrors every `packing-list-go`

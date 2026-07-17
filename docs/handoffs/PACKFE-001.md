@@ -136,3 +136,14 @@ main.go`) rather than a bare connection-refused error buried in a
 - No `.http`-equivalent manual file for this ticket (no API calls yet).
   Manual verification is `npm run dev` + a visual check that the shell,
   nav, and placeholder routes render per the design tokens.
+
+## Close-out
+
+Completed 2026-07-17. Retro entry in LESSONS.md. Also shipped during
+close-out discussion, not originally scoped: Prettier + import sorting +
+a Husky/lint-staged pre-commit hook, and oxlint's `jsx-a11y` plugin (see
+project `CLAUDE.md`). Surfaced a real test-coverage gap on `Modal` — its
+design changed mid-ticket to something with real behavior, and the
+original "no test needed" call was never re-checked; `jsdom` also turns
+out not to implement `showModal()`, so only Playwright can cover it. Not
+yet fixed — tracked as a follow-up.

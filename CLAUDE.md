@@ -39,6 +39,37 @@ library,profile}/`) + shared primitives in `src/components/ui/` +
   Tailwind design tokens sourced from the project's design files
   ([ADR 005](docs/adr/005-component-structure-and-styling.md)).
 
+## Tooling
+
+- **Formatting**: Prettier (`.prettierrc.json`) with
+  `@ianvs/prettier-plugin-sort-imports` — oxlint has no `import/order`
+  equivalent (checked directly: its `import` plugin lacks a sorting
+  rule), so import ordering is Prettier's job here, not oxlint's.
+  `npm run format` / `format:check`.
+- **Pre-commit hook**: Husky (`.husky/pre-commit`) runs `lint-staged`,
+  which runs `prettier --write` + `oxlint --fix` on staged files before
+  every commit — verified working directly, not just configured. It does
+  **not** run the test suites (Vitest/Playwright) — those still need to
+  be run manually until this project has CI. Don't assume a green commit
+  means green tests.
+- **Editor**: `.vscode/settings.json` + `.vscode/extensions.json` are
+  committed (not gitignored, unlike most `.vscode/*` — see `.gitignore`)
+  so format-on-save with the Prettier extension works the same for
+  everyone without per-machine setup.
+- **Accessibility**: oxlint's `jsx-a11y` plugin is enabled in
+  `.oxlintrc.json` — catches missing `alt` text, non-semantic
+  click-handler elements, missing ARIA roles, etc. at lint time, for
+  every commit. A rule can still produce a real false positive (see
+  `Modal.tsx`'s backdrop-click handler) — suppress with a targeted
+  `oxlint-disable-next-line` and a comment explaining why, not a
+  blanket rule disable.
+- **Testing convention**: prefer `getByRole`/accessible-name queries
+  over test IDs in Vitest and Playwright specs alike. This emerged
+  organically in PACKFE-001, not as a deliberate up-front choice — now
+  explicit. It's a free accessibility check riding along on every test:
+  a query like `getByRole('link', { name: 'Trips' })` can only pass if
+  that element is genuinely exposed correctly to assistive tech.
+
 ## Overrides of the global default process
 
 - **Tests-first, redefined for frontend work.** The global rule requires

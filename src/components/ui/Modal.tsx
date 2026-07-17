@@ -17,6 +17,10 @@ export function Modal({ open, onClose, children }: ModalProps) {
   }, [open]);
 
   return (
+    // The onClick below is a mouse-only convenience: click on the backdrop
+    // to close. Not a missing keyboard path — showModal() already gives
+    // Escape-to-close natively, so there's no equivalent interaction to add.
+    // oxlint-disable-next-line click-events-have-key-events, no-noninteractive-element-interactions
     <dialog
       ref={dialogRef}
       onClose={onClose}
