@@ -61,3 +61,9 @@ If a feature folder grows large enough that its own internal
 components/hooks/tests split becomes unwieldy as a flat list — introduce
 a `components/` and `hooks/` subfolder _within that feature_ at that
 point, not across the board pre-emptively.
+
+## See also
+
+[ADR 007](007-responsive-strategy.md) — responsive/breakpoint strategy,
+settled during `PACKFE-003` (this ADR didn't decide it, despite sourcing
+tokens from both the Desktop and Prototype design variants).
