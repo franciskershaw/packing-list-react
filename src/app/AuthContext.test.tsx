@@ -3,17 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError, apiGet, apiPost } from "../api/client";
 import { queryClient } from "../lib/queryClient";
+import { createMockUserProfile } from "../test/fixtures";
 import { AuthProvider, useAuth } from "./AuthContext";
 
-vi.mock("../api/client", async () => {
-  const actual =
-    await vi.importActual<typeof import("../api/client")>("../api/client");
-  return {
-    ...actual,
-    apiPost: vi.fn(),
-    apiGet: vi.fn(),
-  };
-});
+vi.mock("../api/client");
 
 function TestConsumer() {
   const { user, status, logout } = useAuth();
@@ -26,12 +19,7 @@ function TestConsumer() {
   );
 }
 
-const testUser = {
-  id: "1",
-  email: "sam@example.com",
-  name: "Sam Rivera",
-  avatarUrl: "https://example.com/avatar.png",
-};
+const testUser = createMockUserProfile();
 
 describe("AuthContext", () => {
   beforeEach(() => {

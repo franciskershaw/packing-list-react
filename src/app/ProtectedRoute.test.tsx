@@ -2,12 +2,11 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
+import { createMockUserProfile } from "../test/fixtures";
+import { mockUseAuth } from "./__mocks__/AuthContext";
 import { ProtectedRoute } from "./ProtectedRoute";
 
-const mockUseAuth = vi.fn();
-vi.mock("./AuthContext", () => ({
-  useAuth: () => mockUseAuth(),
-}));
+vi.mock("./AuthContext");
 
 function renderProtected() {
   return render(
@@ -46,7 +45,7 @@ describe("ProtectedRoute", () => {
   it("renders the outlet when authenticated", () => {
     mockUseAuth.mockReturnValue({
       status: "authenticated",
-      user: { id: "1", email: "sam@example.com", name: "Sam", avatarUrl: "" },
+      user: createMockUserProfile(),
       logout: vi.fn(),
     });
     renderProtected();

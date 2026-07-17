@@ -4,26 +4,14 @@ import { describe, expect, it, vi } from "vitest";
 
 import { apiGet, apiPost } from "./api/client";
 import App from "./App";
+import { createMockUserProfile } from "./test/fixtures";
 
-vi.mock("./api/client", async () => {
-  const actual =
-    await vi.importActual<typeof import("./api/client")>("./api/client");
-  return {
-    ...actual,
-    apiPost: vi.fn(),
-    apiGet: vi.fn(),
-  };
-});
+vi.mock("./api/client");
 
 describe("App shell", () => {
   it("renders the primary nav with Trips, Templates, and Library once authenticated", async () => {
     vi.mocked(apiPost).mockResolvedValueOnce({ accessToken: "test-token" });
-    vi.mocked(apiGet).mockResolvedValueOnce({
-      id: "1",
-      email: "sam@example.com",
-      name: "Sam Rivera",
-      avatarUrl: "https://example.com/avatar.png",
-    });
+    vi.mocked(apiGet).mockResolvedValueOnce(createMockUserProfile());
 
     render(
       <MemoryRouter initialEntries={["/trips"]}>

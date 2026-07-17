@@ -94,3 +94,7 @@ ones listed in the ACs above. Manual verification: run the full suite
 technique `packing-list-go`'s `PACK-019`/`PACK-020` used for a
 comparable mechanical retrofit) to confirm nothing was silently dropped
 or renamed, not just that the pass count matches.
+
+## Close-out
+
+Completed 2026-07-17. Retro entry in LESSONS.md.

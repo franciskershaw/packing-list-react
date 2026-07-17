@@ -112,3 +112,15 @@ mock-setup blocks (`api/client`, `useAuth`) across 2 files each. Filed as
 `PACKFE-016`, flagged priority-before-`PACKFE-004` so it lands before
 more feature test suites copy-paste the same patterns further. Findings
 archive: `docs/handoffs/tech-debt-2026-07-17-findings.md`.
+
+## 2026-07-17 — PACKFE-016 — Clean mechanical refactor; zero behavior change confirmed by diff
+
+- No rework. All four test files refactored to the new shared
+  fixture/mocks; exact before/after test-name diff came back empty.
+- One real finding: Vitest's `__mocks__` auto-mock swaps modules at
+  runtime, but TypeScript resolves imports to the real file for
+  type-checking, which doesn't export mock-only symbols — fixed by
+  importing those directly from the `__mocks__` path, then verified
+  empirically (not assumed) that it's the same instance at runtime.
+  Already covered by the existing simulator-capability-gap global rule —
+  no new rule needed.

@@ -211,7 +211,8 @@ reference them.
   (duplicated verbatim across 2 test files). Time-coupled to landing
   before more feature tickets' test suites copy-paste the same patterns
   a third and fourth time.
-  - **Status: not started.**
+  - **Status: Done.** See `docs/handoffs/PACKFE-016.md`. Zero behavior
+    change, confirmed by an exact before/after test-name diff.
 
 - **PACKFE-004** — Category browsing & management.
   - [ ] `/library` lists system categories and the user's own

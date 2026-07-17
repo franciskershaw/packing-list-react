@@ -2,12 +2,10 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
+import { mockUseAuth } from "../../app/__mocks__/AuthContext";
 import { CallbackScreen } from "./CallbackScreen";
 
-const mockUseAuth = vi.fn();
-vi.mock("../../app/AuthContext", () => ({
-  useAuth: () => mockUseAuth(),
-}));
+vi.mock("../../app/AuthContext");
 
 function renderCallback() {
   return render(
