@@ -178,3 +178,10 @@ Google</a>` + "One tap. No passwords, ever." subtext, styled per
   5. Navigate to `/profile`, click "Sign out" — confirm you land on
      `/login` and reloading `/trips` directly now redirects you back to
      `/login`.
+
+## Close-out
+
+Completed 2026-07-17. Retro entry in LESSONS.md. Also closes Epic 2
+(Auth). Produced an unplanned ADR (007, responsive strategy) and three
+live process changes to the global pipeline during this ticket — see
+`LESSONS.md` for all of it.

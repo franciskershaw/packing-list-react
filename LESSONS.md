@@ -62,3 +62,40 @@ skill) and reviewed at the start of every `grill-me` and project kickoff.
   test-carve-out re-check, simulator-capability-gap) — all already
   principle-plus-citation, none read as incident narrative. Nothing
   compressed.
+
+## 2026-07-17 — PACKFE-003 — Auth shipped clean; closes Epic 2; three live process changes
+
+- No rework on the final implementation (21/21 Vitest, 2/2 Playwright,
+  real Google login manually verified) — but real design iteration got
+  there: the restore mechanism was correctly unified after being pushed
+  on directly, and the Playwright happy-path AC was dropped entirely
+  after an explicit cost/benefit conversation (a dev-only auth-bypass
+  endpoint needed to seed a session was judged disproportionate security
+  surface for a personal app — reversing my own earlier recommendation,
+  not the user catching an error).
+- **A real blind spot, caught by the user, not me**: responsive/mobile
+  strategy was never decided anywhere, despite an explicit "any huge
+  issues" review of this project earlier. It's the identical shape of
+  mistake as the tooling-baseline gap from `PACKFE-001` — a cross-cutting
+  concern deferred to one big end-of-backlog ticket instead of decided
+  early. Resolved with real design-data verification (decoded both
+  design files again, confirmed genuinely different container widths)
+  and ADR 007, applied immediately rather than just documented for
+  later.
+- Two regressions in `PACKFE-001`'s own tests, and one testing-
+  infrastructure bug (`@testing-library/react`'s auto-cleanup silently
+  never registering, fixed once at the shared `setupTests.ts` level) —
+  the auto-cleanup gap is another instance of the already-covered
+  simulator-capability-gap pattern, not a new one.
+- **Three process changes promoted live this ticket** (not waiting for
+  this close-out, per the two-speed rule): (1) generalized the
+  `PACKFE-001` tooling-baseline global rule to cover cross-cutting
+  frontend concerns broadly, since responsive strategy is the second
+  occurrence of the identical mistake; (2) new global rule — don't add
+  standing production surface purely to make a test automatable, weigh
+  it against what's already covered first; (3) the handoff doc now gets
+  its own stop-and-confirm checkpoint, separate from the tests-first one
+  — requested directly, since rolling straight from doc to tests left no
+  room to review/commit the doc on its own.
+- **Epic 2 demotion check**: Epic 2 was one ticket (`PACKFE-003`) touching
+  no prior-epic global rules directly. Nothing to compress.

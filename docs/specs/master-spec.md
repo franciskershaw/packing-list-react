@@ -171,21 +171,21 @@ reference them.
   `PACK-032` shipped 2026-07-17. See
   [ADR 001](../adr/001-auth-session-model.md)'s cross-repo dependency
   note.
-  - [ ] `/login` screen matches the design ("Continue with Google"
+  - [x] `/login` screen matches the design ("Continue with Google"
         button, "One tap. No passwords, ever." subtext).
-  - [ ] Clicking the button performs a full-page navigation to
+  - [x] Clicking the button performs a full-page navigation to
         `GET {API}/auth/google/login` (not a fetch).
-  - [ ] `/auth/callback` route: on mount, calls `POST /auth/refresh`,
+  - [x] `/auth/callback` route: on mount, calls `POST /auth/refresh`,
         then `GET /me` on success, populates `AuthContext`, navigates to
         `/trips`.
-  - [ ] On app load at any protected route, `AuthContext` attempts
+  - [x] On app load at any protected route, `AuthContext` attempts
         silent session restore (refresh → `/me`) before rendering;
         failure redirects to `/login`.
-  - [ ] Sign out calls `POST /auth/logout`, clears `AuthContext`,
+  - [x] Sign out calls `POST /auth/logout`, clears `AuthContext`,
         redirects to `/login`.
-  - [ ] Vitest tests cover `AuthContext`'s state transitions
+  - [x] Vitest tests cover `AuthContext`'s state transitions
         (unauthenticated → authenticated → signed out).
-  - [ ] Playwright spec covers the **unauthenticated** case (no cookie
+  - [x] Playwright spec covers the **unauthenticated** case (no cookie
         → real `401` from the backend → redirects to `/login`) against a
         real locally-running backend session. **Revised during this
         ticket's `grill-me`**: the authenticated happy path is
@@ -194,6 +194,11 @@ reference them.
         considered and rejected as disproportionate attack surface for
         this app's stage). Manual verification covers the happy path
         instead.
+  - **Status: Done.** See `docs/handoffs/PACKFE-003.md`. Also closes
+    Epic 2. Produced [ADR 007](../adr/007-responsive-strategy.md)
+    (unplanned — a responsive-strategy gap surfaced mid-ticket) and
+    three live process changes to the global pipeline — see
+    `LESSONS.md`.
 
 ### Epic 3: Library
 
