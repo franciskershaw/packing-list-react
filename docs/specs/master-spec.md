@@ -145,17 +145,25 @@ reference them.
     (see `LESSONS.md`), not yet resolved.
 
 - **PACKFE-002** — Hand-written API client & types.
-  - [ ] `src/api/types.ts` mirrors every `packing-list-go`
+  - [x] `src/api/types.ts` mirrors every `packing-list-go`
         `internal/models/*.go` struct field-for-field (exact `json` tag
         casing), each type citing the Go struct it mirrors.
-  - [ ] `src/api/client.ts`: fetch wrapper reading the base URL from the
-        Vite proxy, attaching the `Authorization` header from
-        `AuthContext`.
-  - [ ] 401 responses from the wrapper trigger a defined behavior (clear
-        `AuthContext`, redirect to `/login`) — exact mechanism decided in
-        this ticket's own `grill-me`, not assumed here.
-  - [ ] Vitest tests cover the wrapper's header-attachment and
+  - [x] `src/api/client.ts`: fetch wrapper reading the base URL from the
+        Vite proxy, attaching the `Authorization` header from the token
+        store (`src/api/authToken.ts` — not `AuthContext` directly; see
+        ADR 006).
+  - [x] 401 responses from the wrapper trigger a defined behavior
+        (clear the token) — redirect-to-`/login` deferred to
+        `PACKFE-003`, since it's the piece that reacts to the token
+        becoming `null`, not the piece that clears it. Decided in this
+        ticket's own `grill-me`, per ADR 006.
+  - [x] Vitest tests cover the wrapper's header-attachment and
         401-handling behavior.
+  - **Status: Done.** See `docs/handoffs/PACKFE-002.md`. Produced
+    [ADR 006](../adr/006-api-client-design.md) plus addenda to ADR 001
+    and ADR 004 — the session-state mechanism evolved during the
+    interview (plain variable → Zustand → reusing `QueryClient`), see
+    `LESSONS.md` for how.
 
 ### Epic 2: Auth
 

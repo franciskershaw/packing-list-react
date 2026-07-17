@@ -29,3 +29,36 @@ skill) and reviewed at the start of every `grill-me` and project kickoff.
 - Open gap, not resolved: the pre-commit hook only runs lint/format, not
   the test suites, and there's no CI — nothing currently enforces tests
   actually get run before a commit.
+
+## 2026-07-17 — PACKFE-002 — API client shipped clean; the user's own pushback beat my first design
+
+- No rework on the final implementation — all 10 tests passed first try
+  against the real `authToken.ts`/`client.ts`. But the design got there
+  through real back-and-forth, not straight to right: my first
+  token-access proposal (a plain module variable) only solved reading
+  the token outside React, not React reactively noticing a
+  401-triggered clear. Caught by the user directly asking whether
+  repeated "we're outside React" friction meant something was off, not
+  by me catching it myself — and their own follow-up ("can't React
+  Query solve this?") beat my own fix (Zustand): reused the
+  already-adopted `QueryClient`, added no new dependency, and didn't
+  reopen ADR 004's Zustand rejection. Produced ADR 006 plus addenda to
+  ADR 001/004.
+- **Pattern**: when a structured question needs re-asking because the
+  user needs more context first, drop to plain prose, then re-ask as
+  options — worked cleanly twice this ticket, worth defaulting to
+  rather than re-presenting the same dense options a second time.
+- Third instance (after PACK-030, PACK-032 in `packing-list-go`) of
+  verifying an API surface before relying on it: the response-parsing
+  helper's first draft assumed `.text()` was available on a fetch
+  `Response`; only `.json()` (wrapped in try/catch) is reliable, which
+  also matches real `fetch` throwing on an empty body. Already covered
+  by existing global rules (precedent-verification + the simulator-
+  capability-gap rule from `PACKFE-001`) — no new global rule needed,
+  just another confirming instance.
+- **Epic 1 demotion check** (first run since the rule requiring this
+  trace was added): skimmed the three rules added to
+  `~/.claude/CLAUDE.md` during this epic (frontend tooling baseline,
+  test-carve-out re-check, simulator-capability-gap) — all already
+  principle-plus-citation, none read as incident narrative. Nothing
+  compressed.

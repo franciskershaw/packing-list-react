@@ -111,3 +111,9 @@ Key decisions from the interview (2026-07-17):
   (no real call sites, no UI). Manual verification is `npm run build` +
   `tsc -b` confirming the types compile cleanly against
   `packing-list-go`'s current model definitions.
+
+## Close-out
+
+Completed 2026-07-17. Retro entry in LESSONS.md. Also closes Epic 1
+(Foundations) — first epic-boundary demotion check ran as part of this
+close-out; nothing needed compressing.
