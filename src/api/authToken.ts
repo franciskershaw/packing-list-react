@@ -1,7 +1,11 @@
+import { queryClient } from "../lib/queryClient";
+
+const TOKEN_KEY = ["authToken"];
+
 export function getAccessToken(): string | null {
-  return "not-implemented";
+  return queryClient.getQueryData<string | null>(TOKEN_KEY) ?? null;
 }
 
-export function setAccessToken(_token: string | null) {
-  // not implemented yet
+export function setAccessToken(token: string | null) {
+  queryClient.setQueryData(TOKEN_KEY, token);
 }
