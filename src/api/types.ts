@@ -112,3 +112,8 @@ export type UserProfile = {
 export type ApiErrorBody = {
   error: string;
 };
+
+// Mirrors internal/handler/auth_handler.go's RefreshToken response.
+export type RefreshResponse = {
+  accessToken: string;
+};
