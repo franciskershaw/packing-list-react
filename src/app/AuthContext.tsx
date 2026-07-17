@@ -1,6 +1,14 @@
-import { createContext, useContext, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 
-import type { UserProfile } from "../api/types";
+import { setAccessToken } from "../api/authToken";
+import { apiGet, apiPost } from "../api/client";
+import type { RefreshResponse, UserProfile } from "../api/types";
 
 type AuthStatus = "checking" | "authenticated" | "unauthenticated";
 
@@ -25,15 +33,48 @@ export function useAuth(): AuthState {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const stubValue: AuthState = {
-    user: null,
-    status: "checking",
-    logout: async () => {
-      throw new Error("not implemented");
-    },
-  };
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [status, setStatus] = useState<AuthStatus>("checking");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function restore() {
+      try {
+        const { accessToken } = await apiPost<RefreshResponse>("/auth/refresh");
+        setAccessToken(accessToken);
+        const profile = await apiGet<UserProfile>("/me");
+        if (!cancelled) {
+          setUser(profile);
+          setStatus("authenticated");
+        }
+      } catch {
+        if (!cancelled) {
+          setUser(null);
+          setStatus("unauthenticated");
+        }
+      }
+    }
+
+    void restore();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function logout() {
+    try {
+      await apiPost("/auth/logout");
+    } finally {
+      setAccessToken(null);
+      setUser(null);
+      setStatus("unauthenticated");
+    }
+  }
 
   return (
-    <AuthContext.Provider value={stubValue}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, status, logout }}>
+      {children}
+    </AuthContext.Provider>
   );
 }

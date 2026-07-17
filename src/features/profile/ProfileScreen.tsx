@@ -1,4 +1,5 @@
 import { useAuth } from "../../app/AuthContext";
+import { Button } from "../../components/ui/Button";
 
 // Deliberately minimal — PACKFE-011 replaces this with the real,
 // designed Profile screen (avatar, email, styling).
@@ -7,13 +8,9 @@ export function ProfileScreen() {
 
   return (
     <div>
-      <button
-        type="button"
-        onClick={() => void logout()}
-        className="rounded-full border border-border bg-bg-subtle px-5 py-2.5 font-body font-bold text-body hover:text-accent"
-      >
+      <Button variant="secondary" onClick={() => void logout()}>
         Sign out
-      </button>
+      </Button>
     </div>
   );
 }

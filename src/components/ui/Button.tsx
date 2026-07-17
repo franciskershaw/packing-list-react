@@ -21,7 +21,7 @@ export function Button({
   return (
     <button
       type="button"
-      className={`rounded-full px-5 py-2.5 font-body font-bold ${variantClasses[variant]} ${className}`}
+      className={`cursor-pointer rounded-full px-5 py-2.5 font-body font-bold ${variantClasses[variant]} ${className}`}
       {...props}
     >
       {children}

@@ -80,7 +80,7 @@ onClick>`. Goes through the same Vite `/api` proxy every other request
 ## Acceptance criteria
 
 - [ ] `src/api/types.ts` gains `RefreshResponse: { accessToken: string
-    }`, mirroring `POST /auth/refresh`'s actual response
+}`, mirroring `POST /auth/refresh`'s actual response
       (`internal/handler/auth_handler.go`'s `RefreshToken`).
 - [ ] `src/app/AuthContext.tsx` exports `AuthProvider` and `useAuth()`
       (throws a clear error if called outside `AuthProvider` — the raw
@@ -91,18 +91,18 @@ onClick>`. Goes through the same Vite `/api` proxy every other request
       `status: 'checking'`.
 - [ ] `logout()`: calls `POST /auth/logout`, then `setAccessToken(null)`
       (mirrors `client.ts`'s own 401 behavior), sets `status:
-    'unauthenticated'`, `user: null`.
+'unauthenticated'`, `user: null`.
 - [ ] `src/app/ProtectedRoute.tsx`: renders `FullPageLoading` while
       `status === 'checking'`, `<Navigate to="/login" replace />` while
       `'unauthenticated'`, `<Outlet />` while `'authenticated'`.
 - [ ] `src/app/FullPageLoading.tsx`: minimal shared loading state.
 - [ ] `src/app/AppRoutes.tsx`: the existing `<Route element={<AppLayout
-    />}>` wraps inside a new `<Route element={<ProtectedRoute />}>`.
+/>}>` wraps inside a new `<Route element={<ProtectedRoute />}>`.
       `/login` and `/auth/callback` stay outside it (must be reachable
       while unauthenticated).
 - [ ] `src/features/auth/LoginScreen.tsx` replaces the `/login`
       placeholder: `<a href="/api/auth/google/login">Continue with
-    Google</a>` + "One tap. No passwords, ever." subtext, styled per
+Google</a>` + "One tap. No passwords, ever." subtext, styled per
       design tokens.
 - [ ] `src/features/auth/CallbackScreen.tsx` replaces the
       `/auth/callback` placeholder: reads `status` from `useAuth()`,
