@@ -98,3 +98,16 @@ library,profile}/`) + shared primitives in `src/components/ui/` +
 - `docs/handoffs/PACKFE-NNN.md` — one per ticket
 - `docs/adr/NNN-title.md` — architecture decision records
 - `LESSONS.md` — retro log, reviewed each kickoff/grill-me
+
+## Off-scope findings during feature work
+
+The global rule is to flag, not silently fix, anything outside a
+ticket's stated scope. In this project, that flag has a home: **Epic 7
+("Production readiness & polish")** in `docs/specs/master-spec.md` is
+the durable landing spot for findings that surface mid-feature — bugs,
+gaps, or drift noticed while working on something else — rather than
+just mentioning them and letting them evaporate once the conversation
+moves on. Matches `packing-list-go`'s own convention for the same
+problem. Applies whether the finding comes from a formal pass (the
+tech-debt skill) or organic discovery mid-ticket (e.g. `PACKFE-017`,
+found while reviewing `PACKFE-016`).

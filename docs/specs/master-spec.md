@@ -298,15 +298,31 @@ reference them.
 ### Epic 7: Production readiness & polish
 
 _(Filed as placeholders at kickoff — each gets its own `grill-me` before
-implementation, per the standard pipeline.)_
+implementation, per the standard pipeline. Also the durable landing spot
+for off-scope findings that surface mid-feature — see this project's own
+`CLAUDE.md`.)_
 
 - **PACKFE-012** — Loading/error/empty states audit across all screens.
 - **PACKFE-013** — Responsive pass, checked against both the Desktop and
-  Prototype design variants (the two design files use different fixed
-  widths — confirm the intended breakpoint strategy as part of this
-  ticket's `grill-me`, since it wasn't decided at kickoff).
+  Prototype design variants. **Breakpoint strategy already decided** —
+  see [ADR 007](../adr/007-responsive-strategy.md), settled during
+  `PACKFE-003`, not at kickoff as originally planned here. This ticket's
+  own `grill-me` verifies it held up once more screens exist, not
+  re-decides it from scratch.
 - **PACKFE-014** — Accessibility pass: keyboard navigation, focus
   management, ARIA on tab nav and modals.
 - **PACKFE-015** — E2E coverage consolidation: promote the per-AC
   Playwright specs written across Epics 1–6 into a cohesive smoke suite;
   decide whether/how to wire it into CI as part of this ticket.
+- **PACKFE-017** — `PublicOnlyRoute` for `/login`. Found 2026-07-17
+  during `PACKFE-016` review (not `PACKFE-016`'s own scope) — an already
+  -authenticated user can still navigate to `/login` and see the sign-in
+  screen again; nothing redirects them away. Documented as a known
+  non-goal in `PACKFE-003`'s own handoff doc at the time, now promoted to
+  a tracked ticket. Fix pattern: a `PublicOnlyRoute` mirroring
+  `ProtectedRoute` (redirects to `/trips` if already authenticated,
+  renders the child route otherwise), wrapping just `/login`.
+  `/auth/callback` doesn't need this — `CallbackScreen` already checks
+  `status` itself and would correctly bounce an already-authenticated
+  visitor to `/trips`.
+  - **Status: not started.**
