@@ -49,12 +49,12 @@ Key decisions from the interview (2026-07-17):
   Karla is a confirmed addition, added as `font-body` alongside
   `font-heading`. ADR 005 gets a one-line addendum noting this.
 - **UI primitives are visual-variants-only**: Button (primary/secondary
-  + the design's pill border-radius), Modal (static box, design's
-  border-radius/shadow, no focus-trap/escape-key/portal logic), Badge
-  (pill shape, color prop), Input (bordered box matching tokens). No
-  interaction logic beyond what's needed to render — the first real
-  consumer (PACKFE-003 onward) adds behavior it actually needs, rather
-  than this ticket guessing at unstated requirements.
+  - the design's pill border-radius), Modal (static box, design's
+    border-radius/shadow, no focus-trap/escape-key/portal logic), Badge
+    (pill shape, color prop), Input (bordered box matching tokens). No
+    interaction logic beyond what's needed to render — the first real
+    consumer (PACKFE-003 onward) adds behavior it actually needs, rather
+    than this ticket guessing at unstated requirements.
 - **Vitest environment**: jsdom, over happy-dom — more spec-complete,
   matters more than raw speed at this suite's size.
 - **Playwright**: `webServer` auto-starts only the Vite dev server
@@ -63,7 +63,7 @@ Key decisions from the interview (2026-07-17):
   for future specs that need real API data — they call it in their own
   `test.beforeAll`, and it fails fast with a clear message
   (`packing-list-go API not responding at .../health. Start it: go run
-  main.go`) rather than a bare connection-refused error buried in a
+main.go`) rather than a bare connection-refused error buried in a
   browser trace. This ticket's own smoke spec is a Playwright
   tooling-sanity check (proves Playwright itself is wired up), not a
   feature test — it does **not** call `requireApi()`, since it never
@@ -78,18 +78,15 @@ Key decisions from the interview (2026-07-17):
       exists and is navigable.
 - [ ] `QueryClientProvider` wired in `main.tsx`.
 - [ ] `tailwind.config` (or CSS `@theme`, per Tailwind v4 convention)
-      extended with:
-      - Colors: `background` (`#FFFDF8`, `#F6EFE2`), `border`
-        (`#EADFCE`), text tiers `heading` (`#2A211C`), `body`
-        (`#5E5348`), `secondary` (`#8A7B6C`), `muted` (`#A2937F`),
-        `tertiary` (`#7A6E60`); `accent` (`#C65F3D`) with `accent-hover`
-        (`#A84B2D`) and `on-accent` (`#FAF5EC`); `accent-secondary`
-        (`#3E6B4F`) with `on-accent-secondary` (`#2E5140`); `notice-bg`
-        (`#F5E0DC`) with `notice-text` (`#B0504F`).
-      - Fonts: `font-heading` (Bricolage Grotesque), `font-body` (Karla).
-      - Border-radius scale reflecting the design's observed values
-        (pill: 999px for buttons/badges; card/input tier around
-        14-22px).
+      extended with: - Colors: `background` (`#FFFDF8`, `#F6EFE2`), `border`
+      (`#EADFCE`), text tiers `heading` (`#2A211C`), `body`
+      (`#5E5348`), `secondary` (`#8A7B6C`), `muted` (`#A2937F`),
+      `tertiary` (`#7A6E60`); `accent` (`#C65F3D`) with `accent-hover`
+      (`#A84B2D`) and `on-accent` (`#FAF5EC`); `accent-secondary`
+      (`#3E6B4F`) with `on-accent-secondary` (`#2E5140`); `notice-bg`
+      (`#F5E0DC`) with `notice-text` (`#B0504F`). - Fonts: `font-heading` (Bricolage Grotesque), `font-body` (Karla). - Border-radius scale reflecting the design's observed values
+      (pill: 999px for buttons/badges; card/input tier around
+      14-22px).
 - [ ] `src/components/ui/` scaffolded with `Button`, `Modal`, `Badge`,
       `Input` — visual variants only, styled against the tokens above,
       no interaction logic beyond what's needed to render.

@@ -18,11 +18,11 @@ Two clearly separated kinds of state, no third store:
   pack/unpack).
 - **Client-only UI state** (which modal is open, an in-progress
   new-list form before submit, the current auth session): React Context
-  + `useState`/`useReducer`. One `AuthContext` for the access
-  token/current user (see ADR 001); everything else component-local
-  `useState` unless two sibling components genuinely need to share it, in
-  which case it moves up to the nearest common ancestor — not a global
-  store.
+  - `useState`/`useReducer`. One `AuthContext` for the access
+    token/current user (see ADR 001); everything else component-local
+    `useState` unless two sibling components genuinely need to share it, in
+    which case it moves up to the nearest common ancestor — not a global
+    store.
 
 ## Alternatives rejected
 

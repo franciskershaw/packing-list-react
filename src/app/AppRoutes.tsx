@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+
 import { AppLayout } from "./AppLayout";
 import { RoutePlaceholder } from "./RoutePlaceholder";
 

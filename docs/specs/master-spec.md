@@ -262,8 +262,8 @@ reference them.
 
 ### Epic 7: Production readiness & polish
 
-*(Filed as placeholders at kickoff — each gets its own `grill-me` before
-implementation, per the standard pipeline.)*
+_(Filed as placeholders at kickoff — each gets its own `grill-me` before
+implementation, per the standard pipeline.)_
 
 - **PACKFE-012** — Loading/error/empty states audit across all screens.
 - **PACKFE-013** — Responsive pass, checked against both the Desktop and

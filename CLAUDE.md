@@ -35,7 +35,7 @@ See `docs/adr/` for the full reasoning behind each of these:
   `useState`/`useReducer` for client UI state
   ([ADR 004](docs/adr/004-state-management.md)).
 - **Structure**: feature folders (`src/features/{auth,trips,templates,
-  library,profile}/`) + shared primitives in `src/components/ui/` +
+library,profile}/`) + shared primitives in `src/components/ui/` +
   Tailwind design tokens sourced from the project's design files
   ([ADR 005](docs/adr/005-component-structure-and-styling.md)).
 
@@ -43,9 +43,9 @@ See `docs/adr/` for the full reasoning behind each of these:
 
 - **Tests-first, redefined for frontend work.** The global rule requires
   failing tests before implementation code. For this project that applies
-  to *behavior* — hooks, `AuthContext` state transitions, data-fetching
+  to _behavior_ — hooks, `AuthContext` state transitions, data-fetching
   logic, form validation — using Vitest + Testing Library, exactly as
-  written. For *presentation-only* work (markup/styling with no
+  written. For _presentation-only_ work (markup/styling with no
   assertable behavior), write implementation-first instead: a red test
   for "looks right" is theater. That work is carried by the per-AC manual
   verification checkpoint below, not exempted from verification

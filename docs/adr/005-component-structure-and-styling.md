@@ -59,5 +59,5 @@ headings/large numbers — not caught at kickoff. Token set is
 
 If a feature folder grows large enough that its own internal
 components/hooks/tests split becomes unwieldy as a flat list — introduce
-a `components/` and `hooks/` subfolder *within that feature* at that
+a `components/` and `hooks/` subfolder _within that feature_ at that
 point, not across the board pre-emptively.
