@@ -32,15 +32,30 @@ The frontend never receives an access token in a URL. Sign-in works as:
 
 ## Cross-repo dependency
 
-Step 2 requires a change in `packing-list-go`:
-`internal/handler/auth_handler.go`'s `GoogleCallback` currently renders
-the access token as JSON. It needs to redirect to the frontend's
-`/auth/callback` route instead, with no token in the URL. This is filed
-as **`PACK-032`** in `packing-list-go/docs/specs/master-spec.md`
-(2026-07-17, filed from this kickoff), separate from `PACK-027`
-(refresh-token rotation — related but distinct, see that ticket's own
-entry). `PACKFE-003` (this project's sign-in ticket) is blocked on
-`PACK-032` landing first.
+Step 2 required a change in `packing-list-go`:
+`internal/handler/auth_handler.go`'s `GoogleCallback` used to render the
+access token as JSON; it now redirects to the frontend's `/auth/callback`
+route instead, with no token in the URL. Shipped as **`PACK-032`**
+(2026-07-17, Done) — see `packing-list-go/docs/specs/master-spec.md` and
+`docs/handoffs/PACK-032.md` there. Separate from `PACK-027`
+(refresh-token rotation — related but distinct, still not started).
+`PACKFE-003` (this project's sign-in ticket) is unblocked as of
+`PACK-032` shipping.
+
+## Addendum (2026-07-17, PACKFE-002)
+
+Step 3's "in-memory via `AuthContext`" undersold the actual mechanism —
+`AuthContext` doesn't itself own token storage. The token lives in
+TanStack Query's `QueryClient` cache, read/written via
+`src/api/authToken.ts`'s `getAccessToken()`/`setAccessToken()`, because
+`src/api/client.ts` (a plain module, not a component) needs to read and
+clear it without React involved at all. `AuthContext` (when built) reads
+the same underlying value reactively via `useQuery`. Full reasoning and
+rejected alternatives (a plain module variable; Zustand; a custom browser
+event for 401-triggered redirects) are in
+[ADR 006](006-api-client-design.md). This is a mechanism-level
+refinement, not a reversal — the token is still in-memory only, still
+never in a URL/`localStorage`/`sessionStorage`.
 
 ## Alternatives rejected
 
