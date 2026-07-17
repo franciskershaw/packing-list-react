@@ -154,10 +154,11 @@ reference them.
 
 ### Epic 2: Auth
 
-- **PACKFE-003** — Google sign-in & session bootstrap. **Blocked on a
-  `packing-list-go` ticket landing first** — see
+- **PACKFE-003** — Google sign-in & session bootstrap. **Blocked on
+  `PACK-032` in `packing-list-go`** (OAuth callback redirect change —
+  filed 2026-07-17, not started) — see
   [ADR 001](../adr/001-auth-session-model.md)'s cross-repo dependency
-  note; file that backend ticket before this one's `grill-me`.
+  note.
   - [ ] `/login` screen matches the design ("Continue with Google"
         button, "One tap. No passwords, ever." subtext).
   - [ ] Clicking the button performs a full-page navigation to

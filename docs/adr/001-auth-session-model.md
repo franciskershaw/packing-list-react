@@ -35,13 +35,12 @@ The frontend never receives an access token in a URL. Sign-in works as:
 Step 2 requires a change in `packing-list-go`:
 `internal/handler/auth_handler.go`'s `GoogleCallback` currently renders
 the access token as JSON. It needs to redirect to the frontend's
-`/auth/callback` route instead, with no token in the URL. **This is not
-implemented by this kickoff** — it must be filed as its own ticket in
-`packing-list-go`'s own backlog (natural home: extend PACK-027, which is
-already deferred there pending "the frontend integration ticket that
-touches auth anyway" — see `packing-list-go/docs/specs/master-spec.md`).
-PACKFE-003 (this project's sign-in ticket) is blocked on that backend
-ticket landing first.
+`/auth/callback` route instead, with no token in the URL. This is filed
+as **`PACK-032`** in `packing-list-go/docs/specs/master-spec.md`
+(2026-07-17, filed from this kickoff), separate from `PACK-027`
+(refresh-token rotation — related but distinct, see that ticket's own
+entry). `PACKFE-003` (this project's sign-in ticket) is blocked on
+`PACK-032` landing first.
 
 ## Alternatives rejected
 
