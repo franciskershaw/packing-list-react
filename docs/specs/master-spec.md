@@ -167,9 +167,8 @@ reference them.
 
 ### Epic 2: Auth
 
-- **PACKFE-003** — Google sign-in & session bootstrap. **Blocked on
-  `PACK-032` in `packing-list-go`** (OAuth callback redirect change —
-  filed 2026-07-17, not started) — see
+- **PACKFE-003** — Google sign-in & session bootstrap. Unblocked —
+  `PACK-032` shipped 2026-07-17. See
   [ADR 001](../adr/001-auth-session-model.md)'s cross-repo dependency
   note.
   - [ ] `/login` screen matches the design ("Continue with Google"
@@ -186,8 +185,15 @@ reference them.
         redirects to `/login`.
   - [ ] Vitest tests cover `AuthContext`'s state transitions
         (unauthenticated → authenticated → signed out).
-  - [ ] Playwright spec covers the callback → `/trips` happy path
-        against a real locally-running backend session.
+  - [ ] Playwright spec covers the **unauthenticated** case (no cookie
+        → real `401` from the backend → redirects to `/login`) against a
+        real locally-running backend session. **Revised during this
+        ticket's `grill-me`**: the authenticated happy path is
+        deliberately _not_ automated — see the handoff doc's context
+        section for why (a dev-only auth-bypass backend endpoint was
+        considered and rejected as disproportionate attack surface for
+        this app's stage). Manual verification covers the happy path
+        instead.
 
 ### Epic 3: Library
 
