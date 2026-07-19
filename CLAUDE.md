@@ -95,21 +95,20 @@ directory above this repo, at `../desktop.html` / `../prototype.html`.
 executing bundles, and this branch never persists a screenshot library
 (see below), so there's nothing that needs them in version control.
 
-**Just-in-time rendering only.** There is no upfront or persisted
-screenshot library. When asked to help build or review a specific
-screen against the design, render that screen fresh in a real browser
-(e.g. Playwright, `file://` the source, let its JS execute, click
-through nav/tabs/modals to reach the relevant state) and actually look
-at the resulting screenshot before saying anything about layout,
-spacing, or fidelity.
+**No automated rendering pipeline.** There is no upfront or persisted
+screenshot library, and no browser-automation tooling (e.g. Playwright)
+in this workflow — that was tried and abandoned as unreliable. When a
+question needs a look at a specific screen's actual rendered state, get
+a fresh screenshot from the developer rather than automating it.
 
 **Hard rule, not a suggestion**: never assess or comment on design match
 from the source file's markup/CSS, and never from memory of a prior
-render in a different conversation — always render fresh, every time.
-This is the exact failure mode from the first attempt: an entire
-roadmap and set of ADRs got built assuming AI had seen the designs when
-it had only read a loading shell. If asked about a screen and rendering
-isn't practical in the moment, say so explicitly rather than guessing.
+render in a different conversation — always work from a current
+screenshot. This is the exact failure mode from the first attempt: an
+entire roadmap and set of ADRs got built assuming AI had seen the
+designs when it had only read a loading shell. If asked about a screen
+and a fresh screenshot isn't available, say so explicitly rather than
+guessing.
 
 ## AI's role on this branch
 
