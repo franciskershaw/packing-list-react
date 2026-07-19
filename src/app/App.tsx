@@ -1,12 +1,12 @@
-// import { AppRoutes } from "./app/AppRoutes";
+import { AppRoutes } from "./AppRoutes";
+
 // import { AuthProvider } from "./app/AuthContext";
 
 function App() {
   return (
     // <AuthProvider>
-    //   <AppRoutes />
+    <AppRoutes />
     // </AuthProvider>
-    <div>Packing list</div>
   );
 }
 
