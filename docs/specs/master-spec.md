@@ -72,6 +72,16 @@ one stops fitting; no formal record-keeping process around it.
   (`src/features/{auth,trips,templates,library,profile}/`) + shared
   primitives in `src/components/ui/` + Tailwind design tokens sourced
   from the design files.
+- **Responsive/breakpoint strategy** (decided 2026-07-19 during grill-me
+  on the landing screen, not at original kickoff — kickoff left this
+  unset): default to one responsive component per screen, reflowed with
+  Tailwind breakpoint utilities, when mobile and desktop show the same
+  elements just rearranged. Split into separate variants sharing logic
+  via a hook (not shared markup) only when a breakpoint changes _what's
+  there_ — a different nav pattern, a different interaction model,
+  elements added/removed rather than repositioned. Test: same DOM
+  elements, different arrangement → one component; different elements or
+  interaction pattern → two components, shared logic.
 - **Auth/session**: httpOnly refresh cookie + refresh-on-load, access
   token in memory only, never in a URL or `localStorage`. Has a
   cross-repo dependency on `packing-list-go` — check that project before

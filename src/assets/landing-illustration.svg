@@ -1,0 +1,31 @@
+<svg viewBox="0 0 390 252" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="322" cy="52" r="21" fill="#C89B3C"></circle>
+  <path d="M60 40 L60 50 M55 45 L65 45" stroke="#C89B3C" stroke-width="2" stroke-linecap="round"></path>
+  <path d="M124 78 L124 86 M120 82 L128 82" stroke="#D8CBB6" stroke-width="2" stroke-linecap="round"></path>
+  <path d="M268 96 L268 104 M264 100 L272 100" stroke="#D8CBB6" stroke-width="2" stroke-linecap="round"></path>
+  <rect x="180" y="52" width="58" height="16" rx="8" fill="#FFFDF8"></rect>
+  <rect x="36" y="92" width="44" height="14" rx="7" fill="#FFFDF8"></rect>
+  <path d="M0 192 Q95 122 200 166 T390 152 L390 252 L0 252 Z" fill="#E0D3BC"></path>
+  <path d="M42 128 L58 164 L26 164 Z" fill="#2E5140"></path>
+  <rect x="39" y="164" width="6" height="8" rx="2" fill="#8A5A3C"></rect>
+  <path d="M348 132 L366 172 L330 172 Z" fill="#2E5140"></path>
+  <path d="M348 116 L362 148 L334 148 Z" fill="#3E6B4F"></path>
+  <rect x="345" y="172" width="6" height="9" rx="2" fill="#8A5A3C"></rect>
+  <path d="M0 214 Q130 154 260 198 T390 188 L390 252 L0 252 Z" fill="#D8CBB6"></path>
+  <path d="M0 238 Q120 198 240 222 T390 216 L390 252 L0 252 Z" fill="#4F7A5E"></path>
+  <path d="M160 122 L160 142" stroke="#8A5A3C" stroke-width="3" stroke-linecap="round"></path>
+  <path d="M160 122 L182 129 L160 136 Z" fill="#C89B3C"></path>
+  <path d="M160 140 L216 228 L104 228 Z" fill="#C65F3D"></path>
+  <path d="M160 162 L183 228 L137 228 Z" fill="#A84B2D"></path>
+  <rect x="90" y="184" width="26" height="46" rx="13" fill="#3F7E8C"></rect>
+  <rect x="80" y="194" width="12" height="22" rx="5" fill="#C89B3C"></rect>
+  <ellipse cx="98" cy="198" rx="3" ry="4" fill="#FFFDF8"></ellipse>
+  <ellipse cx="108" cy="198" rx="3" ry="4" fill="#FFFDF8"></ellipse>
+  <path d="M255 198 C245 210 247 221 255 226 C263 221 265 210 255 198 Z" fill="#C65F3D"></path>
+  <path d="M255 210 C251 216 252 221 255 224 C258 221 259 216 255 210 Z" fill="#C89B3C"></path>
+  <rect x="238" y="226" width="34" height="6" rx="3" fill="#8A5A3C"></rect>
+  <rect x="284" y="194" width="26" height="38" rx="13" fill="#8A5A83"></rect>
+  <ellipse cx="292" cy="206" rx="3" ry="4" fill="#FFFDF8"></ellipse>
+  <ellipse cx="302" cy="206" rx="3" ry="4" fill="#FFFDF8"></ellipse>
+  <path d="M284 216 Q276 212 272 204" stroke="#8A5A83" stroke-width="5" fill="none" stroke-linecap="round"></path>
+</svg>
