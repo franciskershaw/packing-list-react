@@ -12,8 +12,9 @@ screen shipped against the actual designs — worth reading `main`'s
 pre-reset `LESSONS.md` for the full story if this ever needs
 re-litigating. Short version: that process was well-suited to
 `packing-list-go` (a REST API with real behavioral surface to test) and
-badly suited to hand-building UI against a visual design, where the
-developer — not AI — is doing most of the implementation.
+badly suited to hand-building UI against a visual design. AI's role has
+since been split by work type rather than blanket "AI reviews, developer
+authors" — see "AI's role on this branch" below.
 
 ## Naming
 
@@ -49,9 +50,9 @@ None of this was the source of friction last time — kept as-is.
 ## Overrides of the global default process
 
 This branch trades the global pipeline's rigor for speed, because the
-developer is hand-building UI directly against a visual design and
-driving implementation himself, with AI in a pairing/review role rather
-than owning delivery. Specifically:
+developer is hand-building UI directly against a visual design. AI's
+authorship split (UI vs. logic) is defined in "AI's role on this branch"
+below, not here. Specifically:
 
 - **No handoff docs.** `docs/specs/master-spec.md`'s roadmap ticket
   (description + rough checklist) is the whole planning artifact. No
@@ -62,10 +63,14 @@ than owning delivery. Specifically:
 - **No ADRs.** Real architectural decisions are recorded inline in
   `docs/specs/master-spec.md`'s Architecture section, not as separate
   ADR docs. No `docs/adr/` folder.
-- **No `grill-me`-before-every-ticket requirement**, no `close-out`
-  after every ticket, no periodic `tech-debt` pass. No `LESSONS.md` on
-  this branch. Mark roadmap checklist items done directly in the master
-  spec as you finish them.
+- **A conversation before starting work, not a mandatory `grill-me`
+  skill invocation.** Talk through what's being built and reach a shared
+  understanding before implementation begins — skip the formal
+  skill/handoff-doc ceremony unless a piece of work is genuinely large
+  or ambiguous enough to need it. No `close-out` after every ticket, no
+  periodic `tech-debt` pass. No `LESSONS.md` on this branch. Mark
+  roadmap checklist items done directly in the master spec as you
+  finish them.
 - **No E2E test suite**, ruled out rather than deferred: the OAuth-only
   auth model makes seeding an authenticated Playwright session
   impractical without adding a dev-only auth-bypass endpoint, which was
@@ -75,17 +80,23 @@ than owning delivery. Specifically:
 
 ## Testing
 
-Suggestion-only. When something behavior-heavy comes up during a
-feature — a hook, a state transition, form/API logic — flag it as worth
-a Vitest + Testing Library test, and let the developer decide whether
-and when to write it. No coverage target, no gate blocking a commit on
-missing tests.
+Suggestion-only, never a gate. Flag a unit-test opportunity (Vitest,
+plus `@testing-library/react` for component/hook behavior — no
+Playwright/E2E) whenever logic has real conditional branching, a state
+transition, a race/ordering condition, or an edge case a future refactor
+could silently break. Don't flag trivial pass-through calls, pure
+presentational markup, or declarative wiring (e.g. a route table) — a
+suggested test that doesn't guard a real risk is wasted effort. Flag it
+wherever it comes up: during the pre-work conversation for new work, or
+opportunistically mid-implementation/review if something testable
+surfaces that wasn't anticipated. When flagged and accepted, write the
+test before the implementation it covers.
 
 `@testing-library/react` and Playwright are **not currently installed**
 (removed in the reset; Vitest itself remains). Re-add
-`@testing-library/react` and verify a trivial smoke test passes the
-first time a real test actually gets written — don't pre-scaffold it now
-for tests that don't exist yet.
+`@testing-library/react` the first time a flagged test actually needs
+it, and verify a trivial smoke test passes then — don't pre-scaffold it
+now for tests that don't exist yet.
 
 ## Design artifacts
 
@@ -112,14 +123,45 @@ guessing.
 
 ## AI's role on this branch
 
-Assist and review, not author, by default — for UI/markup and for
-logic-heavy code alike (API client, hooks, TanStack Query wiring, form
-validation). The developer drives implementation. AI's default
-contributions are: test suggestions (see Testing), design-comparison
-feedback (see Design artifacts), code review, answering questions, and
-general pairing. AI only writes production code when explicitly asked
-to in the moment — that's an exception per-request, not a standing
-default for any category of file.
+Split by whether the file renders a screen or visual component with
+real layout/styling decisions, or is pure logic:
+
+- **UI/markup** (screens, visually laid-out components, anything
+  compared against a design artifact): developer authors it. AI's role
+  stays assist/review — design-comparison feedback (see Design
+  artifacts), code review, pairing.
+- **Logic** (hooks, API clients, context/state, route guards, utils —
+  anything without meaningful JSX layout, even if it returns trivial
+  passthrough JSX): AI can author it by default, once a shared
+  understanding of what's being built is reached in conversation (see
+  "A conversation before starting work" above).
+
+Either way, implementation only starts once the developer gives an
+explicit go-ahead for the ticket as a whole — one go-ahead per ticket,
+not a re-confirmation per file or per extraction.
+
+## Structure conventions
+
+A constant, type/interface, or small helper does not get its own file
+until it has a real second consumer outside the module that currently
+owns it. Until then, it's colocated in whichever file already owns that
+concept — prefer the data-producing module for types (e.g. a shape
+returned by `api.ts` lives in `api.ts`), and the shared-state module for
+cross-cutting config constants (e.g. a routing default lives in the
+context file that also exports its query key). The same test applies to
+wrapper components and hooks: a route guard, gate, or similar wrapper
+only gets its own file once it has real existing reuse across call
+sites, or is a distinct routed screen — a single-call-site wrapper is
+inlined at the call site instead (a ternary + `<Navigate>`, not a
+dedicated component).
+
+Feature folders (`src/features/<name>/`) stay flat — no
+`components/`/`hooks/` subfolders — until a folder passes 8 files.
+Revisit the split only then.
+
+Apply this by default while writing new code, not just when asked to
+simplify — self-check new files/components against it before calling a
+feature done.
 
 ## Docs
 
