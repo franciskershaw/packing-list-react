@@ -130,7 +130,28 @@ start one, rather than writing it all up front.
   - [ ] `src/components/ui/` scaffolded with Button, Modal, Badge, Input
         primitives (styling only)
   - [ ] Base app shell renders: nav matching Trips/Templates/Library, a
-        profile entry point
+        profile entry point - [ ] Two components sharing data via a hook, per the responsive
+        strategy above (different elements/interaction, not just
+        rearrangement): `MobileTabBar.tsx` (bottom, floating) +
+        `DesktopSidebar.tsx` (left rail), both in
+        `src/components/nav/`, driven by a shared `navItems.ts`
+        (Trips/Templates/Library/Profile, each with a
+        `showAs: "tab" | "accountRow"` flag) - [ ] `AppShell.tsx` (`src/components/nav/`) wraps authenticated
+        routes via nested `<Route>` + `<Outlet>`; `AppRoutes.tsx`
+        restructured so `/trips`, `/templates`, `/library`,
+        `/profile` nest under it. Sign-in stays outside the shell. - [ ] Switch point: Tailwind `lg` (1024px) - [ ] Mobile bar: `fixed` (not `absolute`), bottom offset adds
+        `env(safe-area-inset-bottom)`; main content gets a shared
+        bottom-padding constant from the shell, not hardcoded per
+        screen - [ ] Desktop: `h-screen flex` in the shell, sidebar `shrink-0`,
+        sidebar and content each independently `overflow-y-auto` - [ ] Desktop account row navigates to `/profile` (same
+        destination as mobile's Profile tab), no dropdown menu;
+        shows real `user.avatarUrl`, not a fabricated-initials
+        placeholder - [ ] `/templates`, `/library`, `/profile` get minimal "coming
+        soon" placeholder screens matching `TripsScreen.tsx`'s
+        existing pattern - [ ] Add `--color-accent-subtle: #f6e3d9` to `index.css`'s
+        `@theme` - [ ] `useActiveNavKey` hook (pathname → active key) gets a
+        Vitest unit test for its branching; presentational nav
+        components stay untested
 
 ### Epic 2: Auth
 
