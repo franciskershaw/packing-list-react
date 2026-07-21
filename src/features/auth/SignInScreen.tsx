@@ -38,7 +38,9 @@ export function SignInScreen() {
         <div className="flex flex-col items-center gap-3 lg:w-fit">
           <Button
             icon={<GoogleIcon />}
-            onClick={() => {}}
+            onClick={() => {
+              window.location.href = `${import.meta.env.VITE_API_URL}/auth/google/login`;
+            }}
             className="w-full max-w-sm sm:w-auto"
           >
             Continue with Google
