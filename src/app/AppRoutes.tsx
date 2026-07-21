@@ -1,11 +1,15 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
+import { AppShell } from "../components/nav/AppShell";
 import {
   DEFAULT_AUTHENTICATED_ROUTE,
   useAuth,
 } from "../features/auth/AuthContext";
 import { RequireAuth } from "../features/auth/RequireAuth";
 import { SignInScreen } from "../features/auth/SignInScreen";
+import { LibraryScreen } from "../features/library/LibraryScreen";
+import { ProfileScreen } from "../features/profile/ProfileScreen";
+import { TemplatesScreen } from "../features/templates/TemplatesScreen";
 import { TripsScreen } from "../features/trips/TripsScreen";
 
 export function AppRoutes() {
@@ -37,13 +41,17 @@ export function AppRoutes() {
         }
       />
       <Route
-        path="/trips"
         element={
           <RequireAuth>
-            <TripsScreen />
+            <AppShell />
           </RequireAuth>
         }
-      />
+      >
+        <Route path="/trips" element={<TripsScreen />} />
+        <Route path="/templates" element={<TemplatesScreen />} />
+        <Route path="/library" element={<LibraryScreen />} />
+        <Route path="/profile" element={<ProfileScreen />} />
+      </Route>
     </Routes>
   );
 }
