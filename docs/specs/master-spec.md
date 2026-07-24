@@ -152,6 +152,14 @@ start one, rather than writing it all up front.
         `@theme` - [ ] `useActiveNavKey` hook (pathname → active key) gets a
         Vitest unit test for its branching; presentational nav
         components stay untested
+  - [ ] `DesktopSidebar.tsx` renders real content (currently a
+        placeholder box) — matches `../../profile-page-handoff.html`'s
+        desktop state (screenshotted 2026-07-24): logo header,
+        Trips/Templates/Library rows via shared `navItems.ts`,
+        bottom-pinned account row (avatar + name + email, shared
+        `Avatar` component, navigates to `/profile`, highlighted when
+        active). Built alongside PACKFE-007, tracked here since it's
+        shell scope, not profile-screen scope.
 
 ### Epic 2: Auth
 
@@ -193,8 +201,29 @@ start one, rather than writing it all up front.
 ### Epic 7: Profile
 
 - **PACKFE-007** — Profile & sign-out
-  - [ ] View avatar/name/email
-  - [ ] Sign out clears the session
+  - [ ] `ProfileScreen.tsx` renders the profile card (avatar, name,
+        email, "Signed in with Google" badge) — matches
+        `../../profile-page-handoff.html`'s mobile + desktop states
+        (screenshotted 2026-07-24). No stats row (Trips/Items/Archived
+        counts) — no backend support exists yet; not planned as a
+        follow-up unless revisited later.
+  - [ ] Shared `Avatar` component (`src/components/ui/Avatar.tsx`):
+        renders `user.avatarUrl` as the primary image, falls back to an
+        initials circle (via a pure `getInitials(name)` helper) on a
+        missing/broken image. Used by both `ProfileScreen` and
+        `DesktopSidebar`'s account row.
+  - [ ] `getInitials(name)` unit-tested with Vitest, same pattern as
+        `useActiveNavKey.test.ts`; the `<img onError>` fallback swap
+        itself is presentational — manual verification only.
+  - [ ] `Button.tsx` gets a `variant?: "default" | "danger"` prop;
+        Sign out uses `variant="danger"` (`--color-notice-bg` /
+        `--color-notice-text` tokens)
+  - [ ] Sign-out button wired to the existing `useLogout` hook
+        (`src/features/auth/useLogout.ts`) — no new redirect logic
+        needed, `RequireAuth` already redirects to `/` once
+        `isAuthenticated` flips false
+  - [ ] Temporary sign-out button + comment removed from
+        `TripsScreen.tsx`
 
 ### Later / polish
 
