@@ -269,7 +269,7 @@ start one, rather than writing it all up front.
 
   - [ ] **Piece 1 — API/data layer + toast foundation.** Pure logic, no
         design artifact needed, unblocks everything below.
-    - [ ] Fix `lib/api/client.ts`'s `apiFetch` — it currently does
+    - [x] Fix `lib/api/client.ts`'s `apiFetch` — it currently does
           `await res.text()` for error messages, returning the raw JSON body
           (`{"error":"..."}`) instead of a clean string. Parse the JSON and
           extract `.error`, falling back to a generic message if parsing fails.

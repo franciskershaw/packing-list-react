@@ -52,7 +52,16 @@ export async function apiFetch<T>(
   }
 
   if (!res.ok) {
-    throw new ApiError(res.status, await res.text());
+    let message = "request failed";
+    try {
+      const body = await res.json();
+      if (typeof body?.error === "string") {
+        message = body.error;
+      }
+    } catch {
+      // non-JSON body — keep the generic fallback
+    }
+    throw new ApiError(res.status, message);
   }
 
   return res.json() as Promise<T>;
