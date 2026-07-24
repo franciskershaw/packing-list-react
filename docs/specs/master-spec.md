@@ -240,8 +240,8 @@ start one, rather than writing it all up front.
 
 ### Epic 8: Shared UI primitives
 
-- **PACKFE-008** — Modal shell component
-  - [ ] `Modal.tsx` (`src/components/ui/`) built on `@radix-ui/react-dialog`
+- **PACKFE-008** — Modal shell component — **Done** (2026-07-24)
+  - [x] `Modal.tsx` (`src/components/ui/`) built on `@radix-ui/react-dialog`
         (`Dialog.Root`/`Portal`/`Overlay`/`Content`), matching
         `../../modal-component-handoff.html`'s shell spec (screenshotted
         2026-07-24): one component covers both shells via `lg:`
@@ -251,32 +251,37 @@ start one, rather than writing it all up front.
         inset, `max-h-[78%]`/`h-[80%]` for `size="fixed"`), desktop
         centered dialog (`rounded-[22px]`, scales up + fades, 40px
         page-edge margin, fixed `desktopWidth` per use case)
-  - [ ] Props: `title`, `subtitle?`, `onClose`, `size?: "auto" | "fixed"`
+  - [x] Props: `title`, `subtitle?`, `onClose`, `size?: "auto" | "fixed"`
         (default `"auto"`), `desktopWidth`, `footer?`, `children`, plus
         `showCloseButton?: boolean` (default `true`) — a deliberate
         addition beyond the handoff's spec (which had no close button at
         all); renders as a `lucide` `X` icon button, top-right,
         `aria-label="Close"`, wired to `onClose`
-  - [ ] Backdrop click closes; inner card click does not propagate
+  - [x] Backdrop click closes; inner card click does not propagate
         (Radix default)
-  - [ ] Escape-to-close (Radix default)
-  - [ ] Focus trapped while open, restored to the triggering element on
-        close (Radix default)
-  - [ ] `sheetUp`/`modalIn` `@keyframes` added to `index.css` (first use
-        of `@keyframes` in this codebase), applied via arbitrary
-        Tailwind `animate-[...]` per shell
-  - [ ] `@testing-library/react` added as a dev dependency — first real
+  - [x] Escape-to-close (Radix default)
+  - [x] Focus trapped while open (Radix default); restored to the
+        triggering element on close — **hand-rolled**, not a Radix
+        default as originally assumed (see `LESSONS.md`, 2026-07-24, for
+        why)
+  - [x] `sheetUp`/`modalIn`/`overlayFadeIn` `@keyframes` added to
+        `index.css` (first use of `@keyframes` in this codebase),
+        applied via arbitrary Tailwind `animate-[...]` per shell.
+        `overlayFadeIn` added post-review — the backdrop had no entrance
+        animation in the first pass; exit-fade deferred, not in scope
+  - [x] `@testing-library/react` added as a dev dependency — first real
         trigger for it per `CLAUDE.md`'s testing section. Vitest + RTL
         cover: backdrop-click closes, inner-click doesn't, Escape
         closes, focus restored on close
-  - [ ] Temporary throwaway trigger on `LibraryScreen.tsx` ("Open modal"
+  - [x] Temporary throwaway trigger on `LibraryScreen.tsx` ("Open modal"
         button + minimal placeholder content) to prove the shell works
         end-to-end; removed once the first real use case is built
-  - [ ] Non-goal: the four real use cases (New trip, Add items picker,
+  - [x] Non-goal: the four real use cases (New trip, Add items picker,
         New library item, Manage categories) — shell only, content comes
         later per-feature
-  - [ ] `master-spec.md`'s Architecture section gets a short note
+  - [x] `master-spec.md`'s Architecture section gets a short note
         recording the one-component-two-shells decision
+  - [x] `npm test` script added (`vitest run`)
 
 ### Later / polish
 

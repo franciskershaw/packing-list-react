@@ -53,3 +53,41 @@ new ticket's grill-me and at project kickoff.
 - Ran the Epic 7 demotion check as part of this close-out (PACKFE-007 is
   Epic 7's only ticket) — nothing needed compressing, `CLAUDE.md` wasn't
   touched during this epic before today.
+
+## 2026-07-24 — PACKFE-008 — Radix Dialog's defaults assume `<Dialog.Trigger>`; ours doesn't use one
+
+Lightweight entry (checklist + this note only, no retro interview) — no
+process questions this time, just implementation traps worth writing down
+before the four real use cases build on top of `Modal.tsx`.
+
+- Radix's own `FocusScope` (used internally by `Dialog.Content`) already
+  captures and restores the previously-focused element correctly, with no
+  `Dialog.Trigger` required. But `Dialog`'s own wrapper unconditionally
+  calls `event.preventDefault()` in its default `onCloseAutoFocus` handler
+  and then tries `context.triggerRef.current?.focus()` — which is always
+  `null` for us, since we mount/unmount `Modal` externally instead of
+  rendering `<Dialog.Trigger>`. Net effect: Radix's good default gets
+  silently blocked by Radix's own bad-for-us default, with nothing
+  visibly broken (focus just goes nowhere) — no error, no warning, easy
+  to ship without noticing. Fixed with a small unmount-effect that
+  captures/restores focus ourselves.
+- **Pattern**: when adopting a headless UI primitive that assumes a
+  specific usage shape (here: an always-rendered `Trigger` + internal
+  open state), verify its stated defaults actually engage under _your_
+  usage pattern before trusting them — don't assume "well-tested primitive"
+  transfers to "well-tested for how we're using it." Caught here because
+  the test suite asserted focus restoration directly, not by inspection.
+- Backdrop-dismiss isn't a raw `pointerdown` — Radix defers it to the
+  `click` event that follows (`deferPointerDownOutside`), and registers
+  its outside-pointerdown listener via `setTimeout(0)`. Tests simulating
+  outside-clicks need to fire both events and let a tick pass first.
+- `fireEvent.click()` doesn't simulate the browser's native click-to-focus
+  behavior — a test asserting focus behavior around a click needs an
+  explicit `.focus()` call first, `fireEvent.click()` alone isn't enough.
+- We hardcode `open` as literally `true` on `Dialog.Root` (mount/unmount is
+  fully external). This works fine for open/dismiss behavior but means
+  Radix's Presence never witnesses a real open→closed transition — so
+  anything gated on that (the good focus-restoration default above, and
+  any future exit animation) won't fire. Revisit only if exit animations
+  are wanted later; would mean switching `Modal` to an `open` prop with
+  Radix's Presence managing unmount timing instead of the parent.
