@@ -10,6 +10,25 @@ function mockFetchOnce(status: number, jsonImpl: () => Promise<unknown>) {
   } as Response);
 }
 
+describe("apiFetch 204 handling", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("returns undefined for a 204 No Content response without parsing a body", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      status: 204,
+      json: () =>
+        Promise.reject(new SyntaxError("Unexpected end of JSON input")),
+    } as Response);
+
+    await expect(
+      apiFetch("/categories/1", { method: "DELETE" }),
+    ).resolves.toBeUndefined();
+  });
+});
+
 describe("apiFetch error parsing", () => {
   afterEach(() => {
     vi.restoreAllMocks();
