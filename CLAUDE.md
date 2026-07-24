@@ -77,6 +77,13 @@ below, not here. Specifically:
   already rejected once as disproportionate risk for a personal app (see
   pre-reset `LESSONS.md`, `main` branch). Revisit only if the auth model
   itself changes.
+- **Ticket order is non-binding.** The epic numbering in
+  `master-spec.md`'s roadmap is a checklist, not a sequence — work moves
+  screen by screen based on what actually makes sense next, pulling in
+  whatever other ticket's components are needed to make that screen work
+  (e.g. PACKFE-007 pulled in PACKFE-001's `DesktopSidebar` build-out).
+  Still one ticket open at a time; "what's next" just isn't determined by
+  epic order.
 
 ## Testing
 
@@ -126,10 +133,22 @@ guessing.
 Split by whether the file renders a screen or visual component with
 real layout/styling decisions, or is pure logic:
 
-- **UI/markup** (screens, visually laid-out components, anything
-  compared against a design artifact): developer authors it. AI's role
-  stays assist/review — design-comparison feedback (see Design
-  artifacts), code review, pairing.
+- **UI/markup with a design artifact for it** (a screen or component
+  with a corresponding Claude Design handoff export _and_ a current
+  screenshot of the specific target state, reviewed before any code is
+  written — see Design artifacts below): AI can author it directly.
+  Developer reviews visually against the same screenshot afterward and
+  iterates. This replaced an earlier "developer authors all UI" rule —
+  PACKFE-007 showed the screenshot-grounding requirement, not
+  authorship, was the actual fix for this project's original
+  visual-fidelity problems (see `LESSONS.md`, 2026-07-24). If a screen
+  has real interactivity (forms, drag/drop, modals, multi-step flows),
+  call that out explicitly during `grill-me` — a design handoff may not
+  capture that behavior fully, and the task may need breaking into
+  smaller chunks before AI authors any of it.
+- **UI/markup with no design artifact yet**: developer authors it. AI's
+  role stays assist/review — design-comparison feedback, code review,
+  pairing.
 - **Logic** (hooks, API clients, context/state, route guards, utils —
   anything without meaningful JSX layout, even if it returns trivial
   passthrough JSX): AI can author it by default, once a shared

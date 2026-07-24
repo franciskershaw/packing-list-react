@@ -152,13 +152,15 @@ start one, rather than writing it all up front.
         `@theme` - [ ] `useActiveNavKey` hook (pathname → active key) gets a
         Vitest unit test for its branching; presentational nav
         components stay untested
-  - [ ] `DesktopSidebar.tsx` renders real content (currently a
+  - [x] `DesktopSidebar.tsx` renders real content (currently a
         placeholder box) — matches `../../profile-page-handoff.html`'s
-        desktop state (screenshotted 2026-07-24): logo header,
-        Trips/Templates/Library rows via shared `navItems.ts`,
-        bottom-pinned account row (avatar + name + email, shared
-        `Avatar` component, navigates to `/profile`, highlighted when
-        active). Built alongside PACKFE-007, tracked here since it's
+        desktop state (screenshotted 2026-07-24): "Pack-It" wordmark (no
+        tick icon — deliberate deviation from the design, see
+        `LESSONS.md`), Trips/Templates/Library rows via shared
+        `navItems.ts`, bottom-pinned account row (avatar + name + email,
+        shared `Avatar` component, navigates to `/profile`, highlighted
+        via `bg-accent-subtle` when active — same treatment as active
+        nav rows). Built alongside PACKFE-007, tracked here since it's
         shell scope, not profile-screen scope.
 
 ### Epic 2: Auth
@@ -200,29 +202,29 @@ start one, rather than writing it all up front.
 
 ### Epic 7: Profile
 
-- **PACKFE-007** — Profile & sign-out
-  - [ ] `ProfileScreen.tsx` renders the profile card (avatar, name,
+- **PACKFE-007** — Profile & sign-out — **Done** (2026-07-24)
+  - [x] `ProfileScreen.tsx` renders the profile card (avatar, name,
         email, "Signed in with Google" badge) — matches
         `../../profile-page-handoff.html`'s mobile + desktop states
         (screenshotted 2026-07-24). No stats row (Trips/Items/Archived
         counts) — no backend support exists yet; not planned as a
         follow-up unless revisited later.
-  - [ ] Shared `Avatar` component (`src/components/ui/Avatar.tsx`):
+  - [x] Shared `Avatar` component (`src/components/ui/Avatar.tsx`):
         renders `user.avatarUrl` as the primary image, falls back to an
         initials circle (via a pure `getInitials(name)` helper) on a
         missing/broken image. Used by both `ProfileScreen` and
         `DesktopSidebar`'s account row.
-  - [ ] `getInitials(name)` unit-tested with Vitest, same pattern as
+  - [x] `getInitials(name)` unit-tested with Vitest, same pattern as
         `useActiveNavKey.test.ts`; the `<img onError>` fallback swap
         itself is presentational — manual verification only.
-  - [ ] `Button.tsx` gets a `variant?: "default" | "danger"` prop;
+  - [x] `Button.tsx` gets a `variant?: "default" | "danger"` prop;
         Sign out uses `variant="danger"` (`--color-notice-bg` /
         `--color-notice-text` tokens)
-  - [ ] Sign-out button wired to the existing `useLogout` hook
+  - [x] Sign-out button wired to the existing `useLogout` hook
         (`src/features/auth/useLogout.ts`) — no new redirect logic
         needed, `RequireAuth` already redirects to `/` once
         `isAuthenticated` flips false
-  - [ ] Temporary sign-out button + comment removed from
+  - [x] Temporary sign-out button + comment removed from
         `TripsScreen.tsx`
 
 ### Later / polish
@@ -231,4 +233,14 @@ Not tickets yet — a parking lot for things noticed mid-build that aren't
 worth stopping for. Promote to a numbered ticket above when you actually
 want to do it.
 
-- (empty — add as you go)
+- Project-wide close-out once several more screens are built: review the
+  development process itself (grill-me/close-out cadence,
+  screenshot-grounded AI-authorship rule, ticket-order flexibility) and
+  streamline it based on what's actually worked across multiple tickets,
+  not just PACKFE-007's single retro. Include a discussion of how to
+  practically bring back a test-driven approach — this branch dropped
+  tests-first entirely during the process reset, and it's worth
+  revisiting whether some lighter-weight version fits now that a few
+  screens' worth of real experience exists, rather than assuming the
+  original all-or-nothing tradeoff still holds. Not tied to a specific
+  epic — revisit when it feels due.
