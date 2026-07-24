@@ -91,6 +91,24 @@ one stops fitting; no formal record-keeping process around it.
   focus restoration, Escape/backdrop-close, portal-to-body, ARIA)
   rather than hand-rolled, since that contract is exactly the kind of
   thing worth getting from a tested primitive instead of a first pass.
+- **Toast/notification primitive** (decided 2026-07-24 during PACKFE-003's
+  grill-me): built on `@radix-ui/react-toast` for the same reason as
+  `Modal.tsx` above — auto-dismiss timing, ARIA live-region announcement,
+  swipe-to-dismiss, and stacking multiple toasts are a behavioral contract
+  worth getting from a tested primitive. A single `ToastProvider` mounts
+  once near the app root; any screen triggers one via a `useToast()` hook.
+  Unlike `Modal`, no design artifact exists for the toast's visual styling
+  (no screenshot, no handoff spec beyond a passing behavior mention) — AI
+  authored a first pass anyway (sourced from the existing token palette:
+  `notice-bg`/`notice-text` for errors), a deliberate one-off exception to
+  the "no design artifact → developer authors" rule, same reasoning as
+  `DesktopSidebar.tsx` in PACKFE-007. Developer reviews/iterates on the
+  styling once built. **Scope decision**: every rejected/blocked action
+  surfaces via toast — including duplicate-name conflicts on create/rename
+  forms — rather than splitting toast (no-form-context actions) from
+  inline field errors (form actions). Simpler for a single-user personal
+  app; revisit only if a future screen's forms get complex enough that
+  losing the error-to-field association actually causes confusion.
 - **Auth/session**: httpOnly refresh cookie + refresh-on-load, access
   token in memory only, never in a URL or `localStorage`. Has a
   cross-repo dependency on `packing-list-go` — check that project before
@@ -184,11 +202,97 @@ start one, rather than writing it all up front.
 
 ### Epic 3: Item library
 
-- **PACKFE-003** — Categories & items CRUD
-  - [ ] Browse system + personal categories, with system ones
-        non-editable
-  - [ ] Create/rename/delete personal categories
-  - [ ] Create/rename/delete personal items within a category
+- **PACKFE-003** — Categories & items CRUD ("Library screen")
+  - Grilled 2026-07-24 against `../../library-screen-handoff.html` (screenshotted
+    the same day) plus 7 supporting screenshots of the live prototype/handoff.
+    The most complex screen built so far — real interactivity (two modal
+    flows, filtering, category management) — so per `CLAUDE.md`'s AI-authorship
+    rule this is broken into sequenced pieces rather than one pass, roughly
+    following the handoff's own §4 "suggested build order" but with the
+    data/toast layer pulled forward as its own foundation piece first.
+  - **Screenshot coverage gaps, resolved during grill-me**: no render existed
+    of the new `LibraryItemRow` chevron affordance, the Edit-item modal, or
+    the category-rename interaction. Two more screenshots (chevron
+    before/after, category-rename-in-place) closed the first and third gaps.
+    **The Edit-item modal has no screenshot anywhere and none is obtainable**
+    — built instead as an explicit, named inference: the handoff's own text
+    says to "extend the existing New-item sheet with an edit mode," so it
+    reuses the exact New-item shell (screenshotted), retitled, with the name
+    field pre-filled and the matching category chip pre-selected. Agreed:
+    **no delete button inside the modal** — delete stays exclusively on the
+    row's existing `×` control, which the chevron treatment keeps as-is.
+  - **Non-goal, explicitly deferred rather than dropped**: seeding
+    `packing-list-go`'s system categories/items. `db/seeds/categories.sql`
+    exists but its `ON CONFLICT DO NOTHING` is currently a no-op (no unique
+    constraint on `categories.name`, so re-running it duplicates rows), and
+    no items seed exists at all. This is Go-side work and that project
+    hasn't opted out of the global spec→handoff→tests-first pipeline the way
+    this repo has, so it becomes its own small `packing-list-go` ticket —
+    addressed when it actually blocks building/testing against real data,
+    not folded into this ticket's scope.
+
+  - [ ] **Piece 1 — API/data layer + toast foundation.** Pure logic, no
+        design artifact needed, unblocks everything below.
+    - [ ] Fix `lib/api/client.ts`'s `apiFetch` — it currently does
+          `await res.text()` for error messages, returning the raw JSON body
+          (`{"error":"..."}`) instead of a clean string. Parse the JSON and
+          extract `.error`, falling back to a generic message if parsing fails.
+    - [ ] `src/api/types.ts`: `Category`/`Item` types mirroring
+          `packing-list-go`'s structs.
+    - [ ] Fetch functions + TanStack Query hooks for categories/items
+          (list/create/update/delete each), with cache invalidation on mutations.
+    - [ ] Toast system on `@radix-ui/react-toast` (new dependency) — same
+          reasoning as `Modal.tsx`/PACKFE-008: auto-dismiss, ARIA live-region,
+          swipe-to-dismiss, and stacking are a behavioral contract worth
+          getting from a tested primitive. Single `ToastProvider` near the app
+          root, `useToast()` hook for any screen to call.
+    - [ ] Toast visual styling: **no design artifact exists for this** (no
+          screenshot, no handoff spec beyond a passing behavior mention) — a
+          deliberate one-off exception to "no design artifact → developer
+          authors" (same reasoning as `DesktopSidebar.tsx`/PACKFE-007): AI
+          drafts a first pass from the existing token palette
+          (`notice-bg`/`notice-text`, `border`, `radius-card`), developer
+          reviews/adjusts after.
+    - [ ] **Scope decision**: every rejected/blocked action surfaces via
+          toast — delete-in-use, category-has-items, _and_ duplicate-name
+          conflicts on create/rename forms. No inline field-level error state
+          anywhere in this ticket; simpler for a single-user app, revisit only
+          if a future form gets complex enough that this actually confuses.
+  - [ ] **Piece 2 — Shared atoms** (screenshot-grounded: mobile anatomy +
+        desktop list screenshots). `SearchField`, `Chip` (filter variant),
+        `SystemBadge`, delete icon-button, `DashedAddRow` — straight into
+        `src/components/ui/` since each has ≥2 real consumers already
+        (this screen + the Manage-categories sheet, some also the future
+        item picker).
+  - [ ] **Piece 3 — `LibraryItemRow`** (screenshot-grounded: chevron
+        before/after screenshot + handoff §2's code sample). `mine` vs `sys`
+        item states; chevron always visible (no hover dependency); row tap
+        opens Edit-item modal; `×` delete keeps its own `stopPropagation`;
+        row padding `py-3.5` so the tap target clears 44px.
+  - [ ] **Piece 4 — New/Edit-item modal content** (screenshot-grounded for
+        New; Edit is the named inference above). Built as `Modal` content,
+        wired to `POST /items` (create) / `PATCH /items/:id` (edit). Conflict
+        (409 duplicate name) surfaces via toast per the scope decision above.
+  - [ ] **Piece 5 — Manage-categories modal content** (screenshot-grounded:
+        desktop list + rename-in-place screenshots). System categories show
+        the `BUILT-IN` badge, non-tappable; user-owned rows tap into an
+        inline rename input + `accent-secondary` (green) "Save" button
+        (first real use of that token), row's `×` hidden while renaming.
+        Persistent "New category name…" + Add row at the bottom — note this
+        is a distinct, always-visible input+button, **not** the same
+        dashed-border `DashedAddRow` atom used for "+ New item" elsewhere.
+        Delete-has-items conflict surfaces via toast.
+  - [ ] **Piece 6 — Screen assembly** (screenshot-grounded: mobile anatomy +
+        desktop list screenshots). Header/subtitle, search filtering
+        (substring match, ANDed with the active chip, not ORed), category
+        filter chips (`All` + one per category; horizontal-scroll mobile,
+        `flex-wrap` desktop), category group cards (1-col mobile / 2-col CSS
+        grid desktop, groups omitted entirely if zero matches after
+        filtering — not shown empty), empty-search-results state (centered
+        copy + "+ New item" still visible underneath), no true zero-state
+        needed (system data always seeds the screen). Wires the `Categories`
+        pill to the Manage-categories modal and the dashed row to the
+        New-item modal.
 
 ### Epic 4: Templates
 
