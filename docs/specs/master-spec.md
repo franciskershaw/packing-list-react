@@ -109,13 +109,49 @@ one stops fitting; no formal record-keeping process around it.
   inline field errors (form actions). Simpler for a single-user personal
   app; revisit only if a future screen's forms get complex enough that
   losing the error-to-field association actually causes confusion.
+  **Concrete shape** (decided 2026-07-24 during PACKFE-003 Piece 1's
+  grill-me): one file, `src/components/ui/Toast.tsx`, exporting both
+  `ToastProvider` and `useToast` — matches `Modal.tsx`'s one-file-per-
+  primitive precedent despite being provider/hook-shaped rather than a
+  single controlled component. Mounted in `App.tsx` alongside
+  `AuthProvider` (no ordering dependency between the two). `useToast()`
+  exposes a minimal `toast(message: string)` — no `variant` prop yet,
+  since this ticket only requires error/rejected-action toasts and no
+  second variant is confirmed anywhere in the roadmap; adding one later
+  is a deliberate, visible API change, not pre-built now. The queue
+  (array of active toasts, `crypto.randomUUID()` ids, no cap on
+  concurrent toasts) is hand-rolled state sitting on top of Radix's
+  per-toast primitives — same category as `Modal.tsx`'s hand-rolled
+  focus-restore in PACKFE-008, so it gets a Vitest test (written first,
+  before the provider) rather than being left to Radix's own test
+  coverage.
 - **Auth/session**: httpOnly refresh cookie + refresh-on-load, access
   token in memory only, never in a URL or `localStorage`. Has a
   cross-repo dependency on `packing-list-go` — check that project before
   starting the sign-in ticket.
-- **API contract**: hand-written types in `src/api/types.ts` mirroring
-  `packing-list-go`'s Go structs field-for-field, until that project
-  ships an OpenAPI spec.
+- **API contract**: hand-written types, colocated per-entity with their
+  fetch functions in `src/api/<entity>.ts` (e.g. `src/api/categories.ts`,
+  `src/api/items.ts`), mirroring `packing-list-go`'s Go structs
+  field-for-field, until that project ships an OpenAPI spec. Revised
+  2026-07-24 during PACKFE-003 Piece 1's grill-me from an earlier plan of
+  a single shared `src/api/types.ts` — colocating type + fetch function
+  per entity matches the one real existing precedent (`User` in
+  `features/auth/api.ts`) and `CLAUDE.md`'s Structure convention (a type
+  stays with its data-producing module until it has a real second
+  consumer). `Category`/`Item` get the shared `src/api/` location rather
+  than staying feature-scoped in `library/` specifically because a real
+  second consumer is already confirmed, not speculative:
+  `packing-list-go`'s `template_item_handler.go` (`BulkAddItems`) already
+  calls `itemRepo.GetItems` with a `categoryId` filter for PACKFE-004's
+  item-picker. `User` itself isn't retroactively migrated — it has no
+  second consumer. TanStack Query hooks (list + all mutations) live in
+  the same per-entity file as their fetch functions, not split out
+  separately — keeps query-key ownership next to the invalidation calls
+  that reference it. `useItems(params?: { categoryId?: string; search?:
+string })` accepts optional server-side filters now (key `["items",
+params]`) since the filtered variant's consumer is already confirmed
+  above, even though Library's own call stays unparameterized (piece 6
+  filters client-side).
 - **Local dev connectivity**: Vite dev-server proxy (`/api` →
   `http://localhost:8080`), not CORS. Requires `packing-list-go` running
   locally on `:8080` alongside `npm run dev`.
