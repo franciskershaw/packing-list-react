@@ -82,6 +82,15 @@ one stops fitting; no formal record-keeping process around it.
   elements added/removed rather than repositioned. Test: same DOM
   elements, different arrangement → one component; different elements or
   interaction pattern → two components, shared logic.
+- **Overlay/dialog primitive** (decided 2026-07-24 during PACKFE-008's
+  grill-me): `Modal.tsx` applies the responsive-strategy test above to
+  its mobile bottom-sheet vs. desktop centered-dialog shells — same
+  content and DOM structure either way, so it's one component switching
+  shell classes at the `lg:` breakpoint, not two. Built on
+  `@radix-ui/react-dialog` for the behavioral contract (focus trap,
+  focus restoration, Escape/backdrop-close, portal-to-body, ARIA)
+  rather than hand-rolled, since that contract is exactly the kind of
+  thing worth getting from a tested primitive instead of a first pass.
 - **Auth/session**: httpOnly refresh cookie + refresh-on-load, access
   token in memory only, never in a URL or `localStorage`. Has a
   cross-repo dependency on `packing-list-go` — check that project before
@@ -127,8 +136,10 @@ start one, rather than writing it all up front.
   - [ ] `QueryClientProvider` wired in `main.tsx`
   - [ ] Tailwind config extended with design tokens (color palette, font)
         pulled from `desktop.html`/`prototype.html`
-  - [ ] `src/components/ui/` scaffolded with Button, Modal, Badge, Input
-        primitives (styling only)
+  - [ ] `src/components/ui/` scaffolded with Button, Badge, Input
+        primitives (styling only). Modal split out to PACKFE-008 — bigger
+        in scope (new dependency, accessibility contract) than "styling
+        only" covers.
   - [ ] Base app shell renders: nav matching Trips/Templates/Library, a
         profile entry point - [ ] Two components sharing data via a hook, per the responsive
         strategy above (different elements/interaction, not just
@@ -226,6 +237,46 @@ start one, rather than writing it all up front.
         `isAuthenticated` flips false
   - [x] Temporary sign-out button + comment removed from
         `TripsScreen.tsx`
+
+### Epic 8: Shared UI primitives
+
+- **PACKFE-008** — Modal shell component
+  - [ ] `Modal.tsx` (`src/components/ui/`) built on `@radix-ui/react-dialog`
+        (`Dialog.Root`/`Portal`/`Overlay`/`Content`), matching
+        `../../modal-component-handoff.html`'s shell spec (screenshotted
+        2026-07-24): one component covers both shells via `lg:`
+        breakpoint classes (same DOM, different arrangement, per the
+        responsive-strategy test in Architecture below) — mobile bottom
+        sheet (`rounded-t-[26px]`, slides up + fades, `pb-11` + safe-area
+        inset, `max-h-[78%]`/`h-[80%]` for `size="fixed"`), desktop
+        centered dialog (`rounded-[22px]`, scales up + fades, 40px
+        page-edge margin, fixed `desktopWidth` per use case)
+  - [ ] Props: `title`, `subtitle?`, `onClose`, `size?: "auto" | "fixed"`
+        (default `"auto"`), `desktopWidth`, `footer?`, `children`, plus
+        `showCloseButton?: boolean` (default `true`) — a deliberate
+        addition beyond the handoff's spec (which had no close button at
+        all); renders as a `lucide` `X` icon button, top-right,
+        `aria-label="Close"`, wired to `onClose`
+  - [ ] Backdrop click closes; inner card click does not propagate
+        (Radix default)
+  - [ ] Escape-to-close (Radix default)
+  - [ ] Focus trapped while open, restored to the triggering element on
+        close (Radix default)
+  - [ ] `sheetUp`/`modalIn` `@keyframes` added to `index.css` (first use
+        of `@keyframes` in this codebase), applied via arbitrary
+        Tailwind `animate-[...]` per shell
+  - [ ] `@testing-library/react` added as a dev dependency — first real
+        trigger for it per `CLAUDE.md`'s testing section. Vitest + RTL
+        cover: backdrop-click closes, inner-click doesn't, Escape
+        closes, focus restored on close
+  - [ ] Temporary throwaway trigger on `LibraryScreen.tsx` ("Open modal"
+        button + minimal placeholder content) to prove the shell works
+        end-to-end; removed once the first real use case is built
+  - [ ] Non-goal: the four real use cases (New trip, Add items picker,
+        New library item, Manage categories) — shell only, content comes
+        later per-feature
+  - [ ] `master-spec.md`'s Architecture section gets a short note
+        recording the one-component-two-shells decision
 
 ### Later / polish
 
