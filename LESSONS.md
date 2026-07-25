@@ -140,3 +140,33 @@ before the four real use cases build on top of `Modal.tsx`.
   surface either bug above — both needed the developer actually using the
   running feature. Reinforces this project's existing manual-verification
   convention rather than adding anything new to it.
+
+## 2026-07-26 — PACKFE-003 Piece 5 — Manage-categories modal shipped; same hands-on-use pattern as Piece 4, twice over
+
+- No rework on the interview/implementation itself — component split,
+  item-count derivation, and button styling all landed as decided. The one
+  real correction was mid-build and caught by the test suite, not by hand:
+  Escape-to-cancel via `stopPropagation` on the rename input doesn't work,
+  because Radix's Escape-to-close listener runs in the capture phase on
+  `document`, always ahead of a descendant's bubble-phase handler. Fixed
+  via Radix's own `onEscapeKeyDown` extension point on `Dialog.Content`
+  (now forwarded through `Modal`).
+- Hands-on use again caught what tests and a screenshot check didn't:
+  oversized `ConfirmDialog` buttons and a delete-icon layout shift, both
+  pre-existing since Piece 4's `ConfirmDialog`/`DeleteIconButton`.
+  Diagnosed the shift precisely rather than guessed — live
+  `getBoundingClientRect` measurement (browser tool against the
+  already-running dev server, used only after asking permission) showed
+  `ConfirmDialog`'s `stopPropagation` wrapper div sitting as a real, empty
+  flex item in the row (Radix portals the actual dialog elsewhere), eating
+  a `gap` unit. Fixed with `className="contents"`.
+- **Pattern**: this is the second ticket running where real UI bugs only
+  surfaced via the developer actually using the feature, not tests or a
+  pre-build screenshot check — treat hands-on use as load-bearing
+  verification, not a formality, and expect a bug-fix round after every
+  screenshot-grounded piece.
+- Comment verbosity was corrected twice in the _same_ session — after
+  being told once and saving a memory on it, the same pattern reappeared
+  in the very next edits before self-correction. A memory checked
+  passively isn't enough; needs active self-checking before writing any
+  `/** */` block.

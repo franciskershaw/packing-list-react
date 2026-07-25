@@ -662,10 +662,12 @@ variables)` has it. No real call sites exist yet, so this is a
         `LibraryItemRow.test.tsx` assertions split into two (dialog-opens
         vs. confirm-fires-onDelete) since the old single-click
         immediate-`onDelete` contract no longer holds.
-  - [x] **Piece 5 — Manage-categories modal content** — implementation +
-        tests done 2026-07-26; **manual browser verification against the
-        screenshots still outstanding** (dev-server checking is the
-        developer's job per this project's `CLAUDE.md` — not run here).
+  - [x] **Piece 5 — Manage-categories modal content** — **Done** (2026-07-26,
+        closed out same day). Implementation, tests, and manual browser
+        verification against both screenshots all held up. Two real bugs
+        (oversized `ConfirmDialog` buttons, delete-icon layout shift) only
+        surfaced via hands-on use — see Post-verification feedback below
+        and the `LESSONS.md` entry for this piece.
         Screenshot-grounded: desktop list + rename-in-place screenshots,
         both reviewed fresh 2026-07-26 — `Screenshot 2026-07-24 at
 12.49.59.png` and `Screenshot 2026-07-24 at 13.00.14.png`
