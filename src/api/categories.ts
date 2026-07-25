@@ -1,8 +1,9 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { useToast } from "../components/ui/Toast";
 import { apiFetch } from "../lib/api/client";
 import { useApiMutation } from "../lib/Tanstack/useApiMutation";
+import { useApiQuery } from "../lib/Tanstack/useApiQuery";
 
 export interface Category {
   id: string;
@@ -37,7 +38,7 @@ export function deleteCategory(id: string): Promise<void> {
 }
 
 export function useCategories() {
-  return useQuery({
+  return useApiQuery({
     queryKey: CATEGORIES_QUERY_KEY,
     queryFn: fetchCategories,
   });

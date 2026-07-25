@@ -1,8 +1,9 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { useToast } from "../components/ui/Toast";
 import { apiFetch } from "../lib/api/client";
 import { useApiMutation } from "../lib/Tanstack/useApiMutation";
+import { useApiQuery } from "../lib/Tanstack/useApiQuery";
 
 export interface Item {
   id: string;
@@ -57,7 +58,7 @@ export function deleteItem(id: string): Promise<void> {
 }
 
 export function useItems(params?: ItemsQueryParams) {
-  return useQuery({
+  return useApiQuery({
     queryKey: [...ITEMS_QUERY_KEY, params],
     queryFn: () => fetchItems(params),
   });
