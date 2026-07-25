@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { useToast } from "../components/ui/Toast";
 import { apiFetch } from "../lib/api/client";
 import { useApiMutation } from "../lib/Tanstack/useApiMutation";
 
@@ -64,16 +65,19 @@ export function useItems(params?: ItemsQueryParams) {
 
 export function useCreateItem() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   return useApiMutation({
     mutationFn: createItem,
-    onSuccess: () => {
+    onSuccess: (data) => {
       void queryClient.invalidateQueries({ queryKey: ITEMS_QUERY_KEY });
+      toast(`${data.name} joined the library`, "success");
     },
   });
 }
 
 export function useUpdateItem() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   return useApiMutation({
     mutationFn: ({
       id,
@@ -83,18 +87,21 @@ export function useUpdateItem() {
       name?: string;
       categoryId?: string;
     }) => updateItem(id, input),
-    onSuccess: () => {
+    onSuccess: (data) => {
       void queryClient.invalidateQueries({ queryKey: ITEMS_QUERY_KEY });
+      toast(`${data.name} updated`, "success");
     },
   });
 }
 
 export function useDeleteItem() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   return useApiMutation({
-    mutationFn: deleteItem,
-    onSuccess: () => {
+    mutationFn: ({ id }: { id: string; name: string }) => deleteItem(id),
+    onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: ITEMS_QUERY_KEY });
+      toast(`${variables.name} removed`, "success");
     },
   });
 }

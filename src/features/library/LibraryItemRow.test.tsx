@@ -19,7 +19,7 @@ const sysItem: Item = {
 };
 
 describe("LibraryItemRow", () => {
-  it("mine row: clicking the delete button calls onDelete but not onEdit", () => {
+  it("mine row: clicking the delete button opens a confirm dialog, not onEdit", () => {
     const onEdit = vi.fn();
     const onDelete = vi.fn();
     render(
@@ -27,6 +27,21 @@ describe("LibraryItemRow", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Delete Socks" }));
+
+    screen.getByText("Delete Socks?");
+    expect(onDelete).not.toHaveBeenCalled();
+    expect(onEdit).not.toHaveBeenCalled();
+  });
+
+  it("mine row: confirming the delete dialog calls onDelete but not onEdit", () => {
+    const onEdit = vi.fn();
+    const onDelete = vi.fn();
+    render(
+      <LibraryItemRow item={mineItem} onEdit={onEdit} onDelete={onDelete} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete Socks" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
 
     expect(onDelete).toHaveBeenCalledTimes(1);
     expect(onEdit).not.toHaveBeenCalled();

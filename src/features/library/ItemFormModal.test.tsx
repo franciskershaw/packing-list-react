@@ -116,10 +116,14 @@ describe("ItemFormModal", () => {
 
     renderModal({ item });
 
-    await screen.findByText("Edit item");
+    screen.getByText("Edit item");
     expect(screen.getByPlaceholderText("e.g. Bum bag")).toHaveValue(
       "Rain poncho",
     );
+    // Wait on a category chip, not the title above — the title renders
+    // synchronously from `item` regardless of whether the categories
+    // query (which the chips depend on) has resolved yet.
+    await screen.findByRole("button", { name: "Toiletries" });
     expect(screen.getByRole("button", { name: "Toiletries" })).toHaveAttribute(
       "aria-pressed",
       "true",

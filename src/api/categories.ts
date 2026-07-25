@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { useToast } from "../components/ui/Toast";
 import { apiFetch } from "../lib/api/client";
 import { useApiMutation } from "../lib/Tanstack/useApiMutation";
 
@@ -54,21 +55,25 @@ export function useCreateCategory() {
 
 export function useUpdateCategory() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   return useApiMutation({
     mutationFn: ({ id, name }: { id: string; name: string }) =>
       updateCategory(id, name),
-    onSuccess: () => {
+    onSuccess: (data) => {
       void queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEY });
+      toast(`Renamed to ${data.name}`, "success");
     },
   });
 }
 
 export function useDeleteCategory() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   return useApiMutation({
-    mutationFn: deleteCategory,
-    onSuccess: () => {
+    mutationFn: ({ id }: { id: string; name: string }) => deleteCategory(id),
+    onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEY });
+      toast(`${variables.name} removed`, "success");
     },
   });
 }
