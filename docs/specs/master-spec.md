@@ -267,33 +267,50 @@ start one, rather than writing it all up front.
     addressed when it actually blocks building/testing against real data,
     not folded into this ticket's scope.
 
-  - [ ] **Piece 1 — API/data layer + toast foundation.** Pure logic, no
+  - [x] **Piece 1 — API/data layer + toast foundation.** Pure logic, no
         design artifact needed, unblocks everything below.
     - [x] Fix `lib/api/client.ts`'s `apiFetch` — it currently does
           `await res.text()` for error messages, returning the raw JSON body
           (`{"error":"..."}`) instead of a clean string. Parse the JSON and
           extract `.error`, falling back to a generic message if parsing fails.
-    - [ ] `src/api/types.ts`: `Category`/`Item` types mirroring
-          `packing-list-go`'s structs.
-    - [ ] Fetch functions + TanStack Query hooks for categories/items
-          (list/create/update/delete each), with cache invalidation on mutations.
-    - [ ] Toast system on `@radix-ui/react-toast` (new dependency) — same
+          Also fixed a related gap found while building the delete hooks
+          below: `apiFetch` unconditionally called `res.json()` on success,
+          which throws on the `204 No Content` empty body the Go delete
+          handlers return — now short-circuits to `undefined` for `204`.
+    - [x] `Category`/`Item` types mirroring `packing-list-go`'s structs,
+          colocated per-entity with their fetch functions in
+          `src/api/categories.ts` / `src/api/items.ts` (revised from the
+          original `src/api/types.ts` plan — see Architecture section above).
+    - [x] Fetch functions + TanStack Query hooks for categories/items
+          (list/create/update/delete each), with cache invalidation on
+          mutations. `useItems(params?: { categoryId?, search? })` supports
+          server-side filtering for PACKFE-004's future item-picker; Library's
+          own call stays unparameterized (client-side filtering, piece 6).
+    - [x] Toast system on `@radix-ui/react-toast` (new dependency) — same
           reasoning as `Modal.tsx`/PACKFE-008: auto-dismiss, ARIA live-region,
           swipe-to-dismiss, and stacking are a behavioral contract worth
           getting from a tested primitive. Single `ToastProvider` near the app
-          root, `useToast()` hook for any screen to call.
-    - [ ] Toast visual styling: **no design artifact exists for this** (no
+          root (`App.tsx`), `useToast()` hook for any screen to call. See
+          Architecture section above for the concrete shape decided during
+          this piece's grill-me.
+    - [x] Toast visual styling: **no design artifact exists for this** (no
           screenshot, no handoff spec beyond a passing behavior mention) — a
           deliberate one-off exception to "no design artifact → developer
           authors" (same reasoning as `DesktopSidebar.tsx`/PACKFE-007): AI
           drafts a first pass from the existing token palette
           (`notice-bg`/`notice-text`, `border`, `radius-card`), developer
           reviews/adjusts after.
-    - [ ] **Scope decision**: every rejected/blocked action surfaces via
+    - [x] **Scope decision**: every rejected/blocked action surfaces via
           toast — delete-in-use, category-has-items, _and_ duplicate-name
           conflicts on create/rename forms. No inline field-level error state
           anywhere in this ticket; simpler for a single-user app, revisit only
           if a future form gets complex enough that this actually confuses.
+          Implemented via a shared `useApiMutation` wrapper
+          (`src/lib/Tanstack/useApiMutation.ts`) that every category/item
+          mutation hook uses instead of `useMutation` directly, firing a
+          toast from `ApiError.message` in `onError` — guarantees the
+          behavior without repeating the wiring at each of the 8 hooks (or
+          each future call site).
   - [ ] **Piece 2 — Shared atoms** (screenshot-grounded: mobile anatomy +
         desktop list screenshots). `SearchField`, `Chip` (filter variant),
         `SystemBadge`, delete icon-button, `DashedAddRow` — straight into
