@@ -424,10 +424,52 @@ variant="dashed"`) — same precedent as PACKFE-008's throwaway
           the developer (2026-07-25) — held up. Demo harness still to be
           removed once Piece 3/6 wire the atoms into the real screen.
   - [ ] **Piece 3 — `LibraryItemRow`** (screenshot-grounded: chevron
-        before/after screenshot + handoff §2's code sample). `mine` vs `sys`
-        item states; chevron always visible (no hover dependency); row tap
-        opens Edit-item modal; `×` delete keeps its own `stopPropagation`;
-        row padding `py-3.5` so the tap target clears 44px.
+        before/after screenshot + handoff §2's code sample). Grilled
+        2026-07-26. `mine` vs `sys` item states; chevron always visible (no
+        hover dependency); row tap opens Edit-item modal; `×` delete keeps
+        its own `stopPropagation`; row padding `py-3.5` so the tap target
+        clears 44px.
+    - Uses the real `Item.isSystem` field (`src/api/items.ts`), not the
+      handoff code sample's illustrative `item.sys` shorthand.
+    - **A11y gap in the handoff's own sample, resolved during grill-me**:
+      its code wraps the whole `mine` row in a bare `<div onClick={onEdit}>`
+      with no keyboard handler — a real gap against this project's
+      `jsx-a11y` lint baseline, and a first for this codebase (every
+      existing clickable element so far is a real `<button>` via
+      `InteractiveButton`). Can't make the row itself a real `<button>`
+      since the `×` delete control nests inside it (buttons can't nest).
+      Resolved as `div role="button" tabIndex={0} onClick={onEdit}` plus an
+      `onKeyDown` handler firing `onEdit` on Enter/Space — keeps the
+      handoff's exact markup/classes, just closes the keyboard gap.
+    - **File location**: `src/features/library/LibraryItemRow.tsx`
+      (feature-local), not `src/components/ui/`. Unlike Piece 2's atoms
+      (each with ≥2 real consumers), this is named in the handoff as
+      specific to this one screen with no other consumer in sight.
+      Confirmed against `CLAUDE.md`'s Structure conventions: feature
+      folders stay flat until 8 files; `library/` will have ~4
+      (`LibraryScreen`, this, plus Piece 4/5's modal content) by the time
+      this ticket lands, well under threshold — no `components/` subfolder
+      needed yet.
+    - **Test decision, revised from Piece 2's precedent**: unlike Piece 2's
+      atoms (pure prop-driven markup, no branching), this component has a
+      real conditional (`isSystem` renders an entirely different subtree)
+      and a real interaction contract (`×` click must `stopPropagation` so
+      it never also fires `onEdit`; the new `onKeyDown` handler must fire
+      `onEdit` on Enter/Space and do nothing on `isSystem` rows) — clears
+      the bar for a suggested test per `CLAUDE.md`'s testing section.
+      `LibraryItemRow.test.tsx`: render + `fireEvent` + `vi.fn()`, same
+      shape as `Modal.test.tsx` (already-installed
+      `@testing-library/react`, no re-add needed). Asserts: `×` click calls
+      `onDelete` not `onEdit`; Enter/Space on a `mine` row calls `onEdit`;
+      an `isSystem` row renders no chevron/`×`, isn't keyboard-focusable,
+      and ignores clicks.
+    - **Manual verification**: swap the two ad-hoc placeholder rows in
+      `LibraryScreen.tsx`'s Piece 2 demo harness for real
+      `<LibraryItemRow>` (one `mine`, one `sys`), `onEdit` wired to a
+      temporary toast (`"Edit Socks (demo)"`) — same placeholder-via-toast
+      pattern the harness already uses for delete, since Piece 4's real
+      Edit-item modal doesn't exist yet. Demo harness still to be removed
+      once Piece 6 assembles the real screen.
   - [ ] **Piece 4 — New/Edit-item modal content** (screenshot-grounded for
         New; Edit is the named inference above). Built as `Modal` content,
         wired to `POST /items` (create) / `PATCH /items/:id` (edit). Conflict
