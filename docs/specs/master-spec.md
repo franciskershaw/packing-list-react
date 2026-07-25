@@ -306,7 +306,8 @@ start one, rather than writing it all up front.
 
 ### Epic 3: Item library
 
-- **PACKFE-003** — Categories & items CRUD ("Library screen")
+- **PACKFE-003** — Categories & items CRUD ("Library screen") — **Done**
+  (2026-07-25)
   - Grilled 2026-07-24 against `../../library-screen-handoff.html` (screenshotted
     the same day) plus 7 supporting screenshots of the live prototype/handoff.
     The most complex screen built so far — real interactivity (two modal
@@ -762,7 +763,7 @@ variables)` has it. No real call sites exist yet, so this is a
         from flex layout entirely while keeping it as a real node for the
         event-bubbling fix. Affects every `DeleteIconButton` consumer
         (`LibraryItemRow` too), not just this piece's `CategoryRow`.
-  - [ ] **Piece 6 — Screen assembly**. Grilled 2026-07-25 against the mobile
+  - [x] **Piece 6 — Screen assembly** — **Done** (2026-07-25). Grilled 2026-07-25 against the mobile
         anatomy (`Screenshot 2026-07-24 at 12.49.27.png`) and desktop list
         (`Screenshot 2026-07-24 at 12.49.43.png`) screenshots, plus
         `library-screen-handoff.html` §3.1–3.6. Header/subtitle, search
@@ -776,7 +777,7 @@ variables)` has it. No real call sites exist yet, so this is a
         underneath), no true zero-state needed (system data always seeds
         the screen). Wires the `Categories` pill to the Manage-categories
         modal and the dashed row to the New-item modal.
-    - [ ] **Header copy discrepancy, resolved**: the two reference
+    - [x] **Header copy discrepancy, resolved**: the two reference
           screenshots disagree on subtitle text ("All items, yours and
           built-in." on mobile vs. "Everything you own, in one tidy place."
           on desktop) despite the handoff's own §3.1 prose stating markup
@@ -784,22 +785,22 @@ variables)` has it. No real call sites exist yet, so this is a
           it's the string the handoff's own text annotation cites as
           canonical; the desktop screenshot is treated as a stale
           mid-iteration snapshot (16 seconds apart, same session).
-    - [ ] **Filter-chip label, decided**: the "show everything" chip reads
+    - [x] **Filter-chip label, decided**: the "show everything" chip reads
           `Everything`, not `All` — overrides this checklist's own
           previously-written wording (`All`), matching the desktop
           screenshot instead of the mobile one. (Inconsistent with the
           header-copy call above, which went mobile; developer's explicit
           choice both times, not a rule.)
-    - [ ] **New-item prefill, decided**: tapping the dashed "+ New item"
+    - [x] **New-item prefill, decided**: tapping the dashed "+ New item"
           row while a specific category chip is active (not `Everything`)
           passes that category as `ItemFormModal`'s existing
           `defaultCategoryId`. No prefill when `Everything` is active.
-    - [ ] **Group header count, decided**: the count next to a category
+    - [x] **Group header count, decided**: the count next to a category
           name (e.g. "Clothing 7") reflects the number of currently
           matching/visible rows in that card, not the category's total
           item count — recalculates under search/filter rather than
           staying fixed.
-    - [ ] **Loading state, decided — first of its kind in this project**:
+    - [x] **Loading state, decided — first of its kind in this project**:
           no loading treatment is specced anywhere in this file for any
           screen. Piece 6 renders header + search field immediately
           (data-independent) but withholds the filter-chip row and group
@@ -809,20 +810,31 @@ variables)` has it. No real call sites exist yet, so this is a
           parking-lot item added below**: a real loading treatment (e.g.
           skeleton) is wanted eventually, just not designed yet or solved
           by this ticket.
-    - [ ] **Fetch-error state, decided**: if the categories/items query
+    - [x] **Fetch-error state, decided**: if the categories/items query
           itself errors (e.g. backend down), fire a generic toast (existing
           `useToast()`, default `"error"` variant) rather than showing
           nothing or a distinct inline error state.
-    - [ ] **Filter state scope, decided**: search text + active chip live
+      - [x] **Implementation refined post-build**: the first pass put a
+            `useEffect` watching `categories.error`/`items.error` directly
+            in `LibraryScreen` — wrong layer, and not reusable. Landed on a
+            new `useApiQuery` wrapper (`src/lib/Tanstack/useApiQuery.ts`),
+            sibling to the existing `useApiMutation`, used by both
+            `useCategories`/`useItems`: wraps the actual `queryFn` in
+            try/catch, toasts, rethrows — no `useEffect` involved, since
+            `useQuery`'s per-query `onError` was removed entirely in
+            TanStack Query v5 (confirmed via the installed `.d.ts`, not
+            memory). Any future query hook gets the same behavior for
+            free by using `useApiQuery` instead of `useQuery`.
+    - [x] **Filter state scope, decided**: search text + active chip live
           in local `LibraryScreen` component state, not the URL — resets
           each time the screen is (re)mounted. No existing precedent
           in this codebase for URL-synced filters; not introducing one
           here.
-    - [ ] **Test flagged and accepted**: filtering/grouping (search +
+    - [x] **Test flagged and accepted**: filtering/grouping (search +
           active-chip AND logic, case-insensitive match, zero-match
           group omission, per-group matching count) is extracted into a
           pure helper — `groupLibraryItems(items, categories, { search,
-    categoryId }) → { category, items }[]` — colocated in
+categoryId }) → { category, items }[]` — colocated in
           `src/features/library/`, unit-tested with Vitest
           (`groupLibraryItems.test.ts`) written before the screen wires
           it in, per this project's testing convention (real conditional
@@ -830,7 +842,7 @@ variables)` has it. No real call sites exist yet, so this is a
           (header/chips/cards/wiring) is presentation-only, verified
           manually against the two reference screenshots — no test file
           for the screen component itself.
-    - [ ] Temporary demo harness in `LibraryScreen.tsx` (test-toast button,
+    - [x] Temporary demo harness in `LibraryScreen.tsx` (test-toast button,
           temporary "Manage categories" button, categories/items debug
           count text, hardcoded demo `LibraryItemRow`, demo `Chip`/
           `TextField` row) removed entirely, replaced by the real
@@ -952,3 +964,6 @@ want to do it.
   during its brief fetch window rather than a plain "Loading…" text.
   Worth designing something real (skeleton rows, etc.) once it comes up
   again enough to be worth a shared pattern rather than a one-off.
+- Manage-categories modal (`CategoriesModal.tsx`) scrolling UX needs
+  improvement (noticed at PACKFE-003 close-out, 2026-07-25) — not
+  diagnosed further yet, just flagged.

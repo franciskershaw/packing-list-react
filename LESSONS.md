@@ -170,3 +170,34 @@ before the four real use cases build on top of `Modal.tsx`.
   in the very next edits before self-correction. A memory checked
   passively isn't enough; needs active self-checking before writing any
   `/** */` block.
+
+## 2026-07-25 — PACKFE-003 Piece 6 — Library screen assembled; ticket (and Epic 3) closed
+
+- No rework on the assembled screen itself. Real friction was post-
+  implementation: an error-toast-on-fetch-failure first pass put a
+  `useEffect` directly in `LibraryScreen`, correctly rejected as the wrong
+  layer. The fix took two more rounds — a `useApiQuery` wrapper still
+  using `useEffect` internally wasn't it either — before landing on
+  wrapping the actual `queryFn` in try/catch (mirroring `useApiMutation`'s
+  shape exactly), no `useEffect` anywhere.
+- **Pattern**: when asked "why isn't there just an X" about a library API,
+  check the actual installed type definitions before answering from
+  memory — confirmed here that `onError` was removed from `useQuery`
+  entirely in TanStack Query v5 by reading `node_modules`' own `.d.ts`,
+  not recalled/assumed.
+- Grill-me resolved two mobile/desktop screenshot conflicts (subtitle
+  copy, filter-chip label) with different sources winning each —
+  deliberate case-by-case calls, not a standing "mobile wins" rule.
+- Found a live conflict between `CLAUDE.md`'s stated override ("no
+  close-out, no LESSONS.md on this branch") and actual practice (this
+  file has been maintained every piece) — flagged and resolved by asking
+  rather than silently picking a side. `CLAUDE.md`'s text itself is now
+  stale and should be corrected, not just worked around again next time.
+- **Follow-up noted, not solved here**: Manage-categories modal's
+  scrolling UX needs improvement — flagged during close-out, not
+  diagnosed further. See `master-spec.md`'s parking lot.
+- Ran demotion check for Epic 3 close-out (only ticket in the epic) —
+  nothing needed compressing; the rules touched during this epic
+  (`Button` compact variants, `TextField` `onSubmit`, chip selected-state
+  resolution) are already stated as concrete precedents, not incident
+  narratives.
