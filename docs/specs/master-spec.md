@@ -311,12 +311,69 @@ start one, rather than writing it all up front.
           toast from `ApiError.message` in `onError` — guarantees the
           behavior without repeating the wiring at each of the 8 hooks (or
           each future call site).
-  - [ ] **Piece 2 — Shared atoms** (screenshot-grounded: mobile anatomy +
-        desktop list screenshots). `SearchField`, `Chip` (filter variant),
-        `SystemBadge`, delete icon-button, `DashedAddRow` — straight into
-        `src/components/ui/` since each has ≥2 real consumers already
-        (this screen + the Manage-categories sheet, some also the future
-        item picker).
+  - [ ] **Piece 2 — Shared atoms**. Grilled 2026-07-25 against all 7 of
+        PACKFE-003's screenshots (mobile anatomy, desktop list, desktop +
+        mobile New-item modal, desktop Manage-categories, chevron
+        before/after, category-rename-in-place) plus `library-screen-handoff.html`
+        §3.2–3.5. `SearchField`, `Chip` (filter variant), `SystemBadge`,
+        `DeleteIconButton`, `DashedAddRow` — straight into
+        `src/components/ui/` (stays flat despite passing 8 files; the
+        `src/features/<name>/` 8-file threshold in `CLAUDE.md`'s Structure
+        conventions was confirmed feature-folder-specific, not extended to
+        `components/ui/`) since each has ≥2 real consumers already (this
+        screen + the Manage-categories sheet, some also the future item
+        picker).
+    - [ ] **Chip selected-state conflict, resolved**: the handoff's §3.3
+          prose ("solid `heading`-fill/`on-accent`-text") and the mobile
+          anatomy screenshot both describe/show a solid dark fill, but
+          three other real screenshots — desktop list's active "Clothing"
+          chip, and the category-picker chips in both the desktop and
+          mobile New-item modals — all show a white bg + `accent`
+          (#c65f3d) border/text outline instead. Going with the outline
+          treatment: it's consistent across 3 sightings, both breakpoints,
+          and two different flows, against 1 sighting for solid-fill. The
+          anatomy diagram and handoff prose are treated as the stale
+          source here, consistent with `CLAUDE.md`'s screenshot-over-markup
+          rule.
+    - [ ] `Chip`: `{ label: string; selected: boolean; onClick: () => void }`,
+          stateless/presentational — selection state lives in the parent
+          (filter row or category picker). No count-badge variant; no
+          internal responsive behavior (mobile horizontal-scroll vs.
+          desktop `flex-wrap` is the containing row's concern, not the
+          atom's).
+    - [ ] `SearchField`: controlled `{ value, onChange, placeholder }`
+          wrapping a plain `<input>` — not built on a generic shared
+          `Input` primitive (PACKFE-001's unbuilt "Input primitive" line is
+          superseded by naming specific atoms as they're actually needed).
+    - [ ] `SystemBadge`: no props beyond standard HTML attrs — literal
+          "BUILT-IN" text hardcoded, no variant seen across any of the 4
+          screenshots it appears in.
+    - [ ] `DeleteIconButton`: required `label: string` prop (the item/category
+          name), builds `aria-label={\`Delete ${label}\`}`internally —
+    guarantees an accessible name at every call site by construction
+    rather than trusting each of the ~2 callers to pass one
+    (icon-only button, oxlint's`jsx-a11y`would otherwise flag it).
+    26px circle,`notice-bg`/`notice-text`, "×" glyph. Purely
+    presentational — the "blocked, here's the count" rejection-toast
+    behavior the handoff mentions already lives in Piece 1's
+    `useApiMutation` wrapper, not in this atom.
+    - [ ] `DashedAddRow`: `{ label: string; onClick: () => void }`, full-width
+          dashed-border button. Confirms the Piece 5 note above: the
+          Manage-categories sheet's "New category name…" input+button row
+          is a distinct, separately-built element, **not** a consumer of
+          this atom, despite the handoff's §3.5 text implying otherwise.
+    - [ ] No automated tests — all 5 atoms are prop-driven presentational
+          markup with no real branching/state, matching `CLAUDE.md`'s
+          testing carve-out (suggestion-only, and this doesn't clear the
+          bar for a suggested test).
+    - [ ] Manual verification: temporary demo harness on
+          `LibraryScreen.tsx` rendering all 5 atoms with their key states
+          (chip selected/unselected, a `mine`- and `sys`-style row each
+          with `DeleteIconButton`/`SystemBadge`, `SearchField`,
+          `DashedAddRow`) — same precedent as PACKFE-008's throwaway "Open
+          modal" trigger. Screenshot it, compare against the source
+          screenshots above, then remove once Piece 3/6 wire the atoms
+          into the real screen.
   - [ ] **Piece 3 — `LibraryItemRow`** (screenshot-grounded: chevron
         before/after screenshot + handoff §2's code sample). `mine` vs `sys`
         item states; chevron always visible (no hover dependency); row tap
