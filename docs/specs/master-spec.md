@@ -118,7 +118,18 @@ one stops fitting; no formal record-keeping process around it.
   exposes a minimal `toast(message: string)` — no `variant` prop yet,
   since this ticket only requires error/rejected-action toasts and no
   second variant is confirmed anywhere in the roadmap; adding one later
-  is a deliberate, visible API change, not pre-built now. The queue
+  is a deliberate, visible API change, not pre-built now.
+  **Variant added, PACKFE-003 Piece 4's grill-me (2026-07-26)**: the
+  deferred change above happened -- `toast(message: string, variant?:
+"error" | "success")`, default `"error"` (all pre-existing call sites
+  unchanged). `"success"` renders with `--color-accent-secondary`/
+  `--color-on-accent-secondary` (the same green already slated for
+  Piece 5's category-rename "Save" button) instead of `notice-bg`/
+  `notice-text`. Trigger: create/edit-item success toasts (Piece 4)
+  plus delete-item/delete-category/rename-category success toasts,
+  the last three wired into their hooks' `onSuccess` even though no
+  real UI calls them yet (see Piece 4 entry below for why).
+  The queue
   (array of active toasts, `crypto.randomUUID()` ids, no cap on
   concurrent toasts) is hand-rolled state sitting on top of Radix's
   per-toast primitives — same category as `Modal.tsx`'s hand-rolled
@@ -472,9 +483,91 @@ variant="dashed"`) — same precedent as PACKFE-008's throwaway
       once Piece 6 assembles the real screen. Checked against the chevron
       before/after screenshot by the developer (2026-07-26) — held up.
   - [ ] **Piece 4 — New/Edit-item modal content** (screenshot-grounded for
-        New; Edit is the named inference above). Built as `Modal` content,
-        wired to `POST /items` (create) / `PATCH /items/:id` (edit). Conflict
-        (409 duplicate name) surfaces via toast per the scope decision above.
+        New: desktop + mobile "Add to your library" modal screenshots,
+        2026-07-24; Edit is the named inference above). Grilled 2026-07-26.
+        Built as `Modal` content, wired to `POST /items` (create) /
+        `PATCH /items/:id` (edit). Conflict (409 duplicate name) surfaces
+        via toast per the scope decision above.
+    - [ ] **File/shape**: `src/features/library/ItemFormModal.tsx`
+          (feature-local, same reasoning as Piece 3's `LibraryItemRow` — no
+          consumer outside this screen). One component, not two — mode is
+          inferred from an optional `item` prop (present → edit, absent →
+          new) rather than a separate `mode` flag:
+          `ItemFormModal({ item?: Item; defaultCategoryId?: string; onClose: () => void })`.
+          Title: `item ? "Edit item" : "Add to your library"`. Submit
+          label: `item ? "Save" : "Add to library"`, both `variant="primary"`.
+    - [ ] **New `Button` variant, `primary`**: solid accent-fill CTA
+          (`bg-accent`/`text-on-accent`, hover `bg-accent-hover`) — no
+          existing variant (`default`/`danger`/`dashed`) covers a solid CTA.
+          Added as a self-contained `VARIANT_CLASSES` entry, matching the
+          existing pattern (`Button.tsx`, PACKFE-003 Piece 2's consolidation
+          note). First use here; Piece 5's "Add"/rename-"Save" buttons will
+          likely reuse it or a sibling variant.
+    - [ ] **Category chip always has a selection** — matches both
+          screenshots (never an unselected state shown): `categoryId` state
+          initializes to `item?.categoryId ?? defaultCategoryId ?? categories[0]?.id`,
+          never blank. Removes the "no category chosen" case entirely.
+          `defaultCategoryId` is accepted as a prop now so Piece 6 can later
+          pass the Library screen's active filter chip — Piece 4 itself
+          doesn't wire that, it just accepts the optional prop.
+    - [ ] **Submit disabled** when `name.trim() === ""` — client-known-empty
+          state, no reason to round-trip. Doesn't conflict with the
+          no-inline-field-errors scope decision (that's about server-side
+          rejections like duplicate-name, a different axis than disabling a
+          button for blank input).
+    - [ ] **Success toasts** (new — see Architecture section's Toast
+          variant note above): on successful create, `` `${item.name} joined
+    the library` ``; on successful edit, `` `${item.name} updated` ``,
+          both `variant: "success"`, fired from `useCreateItem`/
+          `useUpdateItem`'s own `onSuccess` in `src/api/items.ts` (entity
+          name comes from the POST/PATCH response body, no signature change
+          needed). Modal closes via a **call-site** `onSuccess` passed to
+          `.mutate(input, { onSuccess: () => onClose() })` — runs alongside
+          the hook-level `onSuccess` (toast + cache invalidation), no
+          conflict between the two.
+    - [ ] **Scope expansion, decided during this grill-me**: delete-item,
+          delete-category, and rename-category also get success toasts —
+          `` `${name} removed` `` (delete, either entity), `` `Renamed to
+    ${name}` `` (rename) — even though none of the three has real UI
+          wired to it yet (`LibraryItemRow`'s `onDelete` in the real screen
+          is still Piece 3's demo-toast stub; category rename UI is
+          Piece 5, unbuilt). Wired into the hooks now, **unverifiable until
+          Piece 5/6 actually call them** — flag this explicitly at those
+          pieces' manual-verification step, don't assume it silently works.
+          Required a **mutate-variable shape change**: `useDeleteItem`/
+          `useDeleteCategory` took a plain `id: string`; DELETE returns `204`
+          (no body), so there's no name to read in `onSuccess(data)`.
+          Changed to `{ id: string; name: string }` so `onSuccess(_data,
+    variables)` has it. No real call sites exist yet, so this is a
+          free change now, but Piece 5/6 must call `.mutate({ id, name })`,
+          not `.mutate(id)`. `useUpdateCategory` needed no shape change —
+          its PATCH response already returns the renamed `Category`.
+    - [ ] **Desktop width**: `lg:w-[420px]`, estimated from the screenshot's
+          proportions (no exact prior measurement exists — the shell demo's
+          `460px` was an arbitrary placeholder, not measured from this
+          screen). Developer eyeball-corrects against the real render,
+          same as every other screenshot-grounded piece.
+    - [ ] No delete button inside the modal (already settled above) —
+          delete stays exclusively on the row's `×`.
+    - [ ] **Test decision**: `ItemFormModal.test.tsx` — first test
+          combining `QueryClientProvider` + mocked `fetch` + RTL render
+          (closest precedents, `client.test.ts`'s fetch-mocking and
+          `Toast.test.tsx`'s render/fireEvent, don't overlap). Clears the
+          bar per `CLAUDE.md`'s testing section: real branching (edit vs.
+          new prefill, disabled-submit, correct mutation + payload chosen).
+          Covers: edit mode prefills name + selects the item's category
+          chip and calls `useUpdateItem` with `{ id, name, categoryId }`;
+          new mode calls `useCreateItem` with `{ name, categoryId }`; submit
+          disabled while name is blank/whitespace; `onClose` fires on
+          mutation success.
+    - [ ] **Manual verification**: replace `LibraryScreen.tsx`'s demo
+          harness's "+ New item" toast-only button and the temporary
+          "Open modal" trigger with the real `ItemFormModal` (new mode);
+          wire a temporary edit trigger too (existing demo rows' `onEdit`).
+          Compare against the desktop + mobile "Add to your library"
+          screenshots. Edit mode has no screenshot to compare against
+          (named inference, already agreed) — verify structurally only
+          (retitled shell, prefilled fields, no delete button).
   - [ ] **Piece 5 — Manage-categories modal content** (screenshot-grounded:
         desktop list + rename-in-place screenshots). System categories show
         the `BUILT-IN` badge, non-tappable; user-owned rows tap into an
