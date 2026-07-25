@@ -91,6 +91,31 @@ one stops fitting; no formal record-keeping process around it.
   focus restoration, Escape/backdrop-close, portal-to-body, ARIA)
   rather than hand-rolled, since that contract is exactly the kind of
   thing worth getting from a tested primitive instead of a first pass.
+- **Confirm-dialog primitive** (added 2026-07-26, mid-Piece-4 feedback):
+  `ConfirmDialog.tsx` (`src/components/ui/`) — content wrapper around
+  `Modal`, `{ title, message, confirmLabel, onConfirm, onCancel }`. No
+  design artifact for it anywhere in this project (same one-off-exception
+  category as `Toast`'s styling/`DesktopSidebar.tsx` below). First
+  consumer: `DeleteIconButton`'s `×`, which now opens this before calling
+  its `onClick` prop rather than firing it immediately — a real behavior
+  change from Piece 2, where it shipped as purely presentational. Also
+  the reason it now carries a Vitest test
+  (`DeleteIconButton.test.tsx`) — open/cancel/confirm branching clears
+  the testing bar Piece 2's version didn't. Piece 5's category delete
+  will be this primitive's second consumer.
+  **Portal event-bubbling gotcha, found while building this**: `Modal`'s
+  content is portaled to `document.body`, but React bubbles synthetic
+  events through the _component_ tree, not the DOM tree — so a
+  `ConfirmDialog` rendered from inside a clickable row (`DeleteIconButton`
+  → `LibraryItemRow`) had every click inside it (Cancel, Confirm, the
+  backdrop) also reach the row's own `onClick`. Fixed once, generically,
+  inside `ConfirmDialog` itself (a wrapping `stopPropagation` div) rather
+  than requiring every future consumer to guard against it. Ships two
+  accepted `jsx-a11y` warnings (`click-events-have-key-events`/
+  `no-static-element-interactions`) on that wrapper — same category as
+  `LibraryItemRow`'s already-accepted warning: inherent to a non-visual
+  event boundary, not a real accessibility gap (the actual interactive
+  content inside is Radix's own accessible `Dialog`).
 - **Toast/notification primitive** (decided 2026-07-24 during PACKFE-003's
   grill-me): built on `@radix-ui/react-toast` for the same reason as
   `Modal.tsx` above — auto-dismiss timing, ARIA live-region announcement,
@@ -482,13 +507,14 @@ variant="dashed"`) — same precedent as PACKFE-008's throwaway
       Edit-item modal doesn't exist yet. Demo harness still to be removed
       once Piece 6 assembles the real screen. Checked against the chevron
       before/after screenshot by the developer (2026-07-26) — held up.
-  - [ ] **Piece 4 — New/Edit-item modal content** (screenshot-grounded for
-        New: desktop + mobile "Add to your library" modal screenshots,
-        2026-07-24; Edit is the named inference above). Grilled 2026-07-26.
-        Built as `Modal` content, wired to `POST /items` (create) /
-        `PATCH /items/:id` (edit). Conflict (409 duplicate name) surfaces
-        via toast per the scope decision above.
-    - [ ] **File/shape**: `src/features/library/ItemFormModal.tsx`
+  - [x] **Piece 4 — New/Edit-item modal content** — **Done** (2026-07-26).
+        (screenshot-grounded for New: desktop + mobile "Add to your
+        library" modal screenshots, 2026-07-24; Edit is the named
+        inference above). Grilled 2026-07-26. Built as `Modal` content,
+        wired to `POST /items` (create) / `PATCH /items/:id` (edit).
+        Conflict (409 duplicate name) surfaces via toast per the scope
+        decision above.
+    - [x] **File/shape**: `src/features/library/ItemFormModal.tsx`
           (feature-local, same reasoning as Piece 3's `LibraryItemRow` — no
           consumer outside this screen). One component, not two — mode is
           inferred from an optional `item` prop (present → edit, absent →
@@ -496,28 +522,28 @@ variant="dashed"`) — same precedent as PACKFE-008's throwaway
           `ItemFormModal({ item?: Item; defaultCategoryId?: string; onClose: () => void })`.
           Title: `item ? "Edit item" : "Add to your library"`. Submit
           label: `item ? "Save" : "Add to library"`, both `variant="primary"`.
-    - [ ] **New `Button` variant, `primary`**: solid accent-fill CTA
+    - [x] **New `Button` variant, `primary`**: solid accent-fill CTA
           (`bg-accent`/`text-on-accent`, hover `bg-accent-hover`) — no
           existing variant (`default`/`danger`/`dashed`) covers a solid CTA.
           Added as a self-contained `VARIANT_CLASSES` entry, matching the
           existing pattern (`Button.tsx`, PACKFE-003 Piece 2's consolidation
           note). First use here; Piece 5's "Add"/rename-"Save" buttons will
           likely reuse it or a sibling variant.
-    - [ ] **Category chip always has a selection** — matches both
+    - [x] **Category chip always has a selection** — matches both
           screenshots (never an unselected state shown): `categoryId` state
           initializes to `item?.categoryId ?? defaultCategoryId ?? categories[0]?.id`,
           never blank. Removes the "no category chosen" case entirely.
           `defaultCategoryId` is accepted as a prop now so Piece 6 can later
           pass the Library screen's active filter chip — Piece 4 itself
           doesn't wire that, it just accepts the optional prop.
-    - [ ] **Submit disabled** when `name.trim() === ""` — client-known-empty
+    - [x] **Submit disabled** when `name.trim() === ""` — client-known-empty
           state, no reason to round-trip. Doesn't conflict with the
           no-inline-field-errors scope decision (that's about server-side
           rejections like duplicate-name, a different axis than disabling a
           button for blank input).
-    - [ ] **Success toasts** (new — see Architecture section's Toast
+    - [x] **Success toasts** (new — see Architecture section's Toast
           variant note above): on successful create, `` `${item.name} joined
-    the library` ``; on successful edit, `` `${item.name} updated` ``,
+the library` ``; on successful edit, `` `${item.name} updated` ``,
           both `variant: "success"`, fired from `useCreateItem`/
           `useUpdateItem`'s own `onSuccess` in `src/api/items.ts` (entity
           name comes from the POST/PATCH response body, no signature change
@@ -525,10 +551,10 @@ variant="dashed"`) — same precedent as PACKFE-008's throwaway
           `.mutate(input, { onSuccess: () => onClose() })` — runs alongside
           the hook-level `onSuccess` (toast + cache invalidation), no
           conflict between the two.
-    - [ ] **Scope expansion, decided during this grill-me**: delete-item,
+    - [x] **Scope expansion, decided during this grill-me**: delete-item,
           delete-category, and rename-category also get success toasts —
           `` `${name} removed` `` (delete, either entity), `` `Renamed to
-    ${name}` `` (rename) — even though none of the three has real UI
+${name}` `` (rename) — even though none of the three has real UI
           wired to it yet (`LibraryItemRow`'s `onDelete` in the real screen
           is still Piece 3's demo-toast stub; category rename UI is
           Piece 5, unbuilt). Wired into the hooks now, **unverifiable until
@@ -538,7 +564,7 @@ variant="dashed"`) — same precedent as PACKFE-008's throwaway
           `useDeleteCategory` took a plain `id: string`; DELETE returns `204`
           (no body), so there's no name to read in `onSuccess(data)`.
           Changed to `{ id: string; name: string }` so `onSuccess(_data,
-    variables)` has it. No real call sites exist yet, so this is a
+variables)` has it. No real call sites exist yet, so this is a
           free change now, but Piece 5/6 must call `.mutate({ id, name })`,
           not `.mutate(id)`. `useUpdateCategory` needed no shape change —
           its PATCH response already returns the renamed `Category`.
@@ -547,9 +573,9 @@ variant="dashed"`) — same precedent as PACKFE-008's throwaway
           `460px` was an arbitrary placeholder, not measured from this
           screen). Developer eyeball-corrects against the real render,
           same as every other screenshot-grounded piece.
-    - [ ] No delete button inside the modal (already settled above) —
+    - [x] No delete button inside the modal (already settled above) —
           delete stays exclusively on the row's `×`.
-    - [ ] **Test decision**: `ItemFormModal.test.tsx` — first test
+    - [x] **Test decision**: `ItemFormModal.test.tsx` — first test
           combining `QueryClientProvider` + mocked `fetch` + RTL render
           (closest precedents, `client.test.ts`'s fetch-mocking and
           `Toast.test.tsx`'s render/fireEvent, don't overlap). Clears the
@@ -559,15 +585,51 @@ variant="dashed"`) — same precedent as PACKFE-008's throwaway
           chip and calls `useUpdateItem` with `{ id, name, categoryId }`;
           new mode calls `useCreateItem` with `{ name, categoryId }`; submit
           disabled while name is blank/whitespace; `onClose` fires on
-          mutation success.
-    - [ ] **Manual verification**: replace `LibraryScreen.tsx`'s demo
-          harness's "+ New item" toast-only button and the temporary
-          "Open modal" trigger with the real `ItemFormModal` (new mode);
-          wire a temporary edit trigger too (existing demo rows' `onEdit`).
-          Compare against the desktop + mobile "Add to your library"
-          screenshots. Edit mode has no screenshot to compare against
-          (named inference, already agreed) — verify structurally only
-          (retitled shell, prefilled fields, no delete button).
+          mutation success. All 4 pass; full suite (35 tests across 7
+          files) and `tsc --noEmit` stay green.
+          **New dev dependency surfaced while writing it**:
+          `@testing-library/jest-dom` — the assertions this test needed
+          (`toHaveAttribute`, `toBeDisabled`, `toHaveValue`) aren't covered
+          by plain Vitest `expect`, and no existing test file in this repo
+          had pulled it in yet. Wired via `@testing-library/jest-dom/vitest`
+          in `src/setupTests.ts` (v7 ships that subpath with its own
+          Vitest-typed `expect` augmentation). Considered rewriting the 5
+          assertions as plain DOM-property checks instead, matching
+          `Modal.test.tsx`/`LibraryItemRow.test.tsx`'s existing style with
+          no new dependency — developer chose to add the dependency
+          instead.
+    - [x] **Manual verification** — developer confirmed the full
+          create-item flow end-to-end 2026-07-26 (unblocked by PACK-033's
+          category seed fix, `packing-list-go`), against the real desktop + mobile "Add to your library" screenshots; `lg:w-[420px]`
+          estimate held, no correction needed. `LibraryScreen.tsx`'s demo
+          harness's "+ New item" button opens the real `ItemFormModal` in
+          new mode (replacing PACKFE-008's temporary "Open modal" shell
+          trigger — this is its first real use case); one demo row's
+          `onEdit` opens it in edit mode. Edit mode verified structurally
+          only, per the named-inference agreement (no screenshot exists
+          for it).
+    - [x] **Post-verification feedback, addressed same day**:
+      - Success-toast contrast bug: `Toast.tsx`'s success variant paired
+        `bg-accent-secondary` with `text-on-accent-secondary` — two
+        near-identical dark greens, effectively unreadable. Fixed to
+        `text-on-accent` (the cream token), matching `Avatar.tsx`'s
+        existing pairing for the same background color.
+        `--color-on-accent-secondary` is now unused anywhere in the
+        codebase — left in place, not removed, developer's call.
+      - Demo harness's static "Socks" row replaced with real items:
+        `LibraryScreen.tsx` now maps `useItems()`'s live (non-system)
+        data underneath the static "T-shirts" system-row placeholder,
+        `onEdit` wired to the real item. `onDelete` stays a toast stub —
+        real delete-wiring is still Piece 6's job, not pulled forward.
+      - **Delete confirmation added** — flagged as feeling too easy to
+        lose an item with no confirmation step. New `ConfirmDialog`
+        primitive (see Architecture section above) gates
+        `DeleteIconButton`'s `onClick` behind a confirm/cancel step.
+        Copy: title `` `Delete ${label}?` ``, body "This can't be
+        undone.", confirm button labeled "Delete". Existing
+        `LibraryItemRow.test.tsx` assertions split into two (dialog-opens
+        vs. confirm-fires-onDelete) since the old single-click
+        immediate-`onDelete` contract no longer holds.
   - [ ] **Piece 5 — Manage-categories modal content** (screenshot-grounded:
         desktop list + rename-in-place screenshots). System categories show
         the `BUILT-IN` badge, non-tappable; user-owned rows tap into an

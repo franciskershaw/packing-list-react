@@ -115,3 +115,28 @@ before the four real use cases build on top of `Modal.tsx`.
   override before assuming its default applies — this project's override
   was re-litigated as a "conflict" at the start of nearly every session;
   now checked and deferred to silently.
+
+## 2026-07-26 — PACKFE-003 Piece 4 — Item creation shipped; hands-on use surfaced two real bugs tests couldn't
+
+- No rework on the modal itself — design held from grill-me through
+  implementation. The real friction was three gaps outside the ticket's
+  own code: `@testing-library/jest-dom` wasn't installed yet (added, first
+  trigger for it), the dev DB had zero categories because
+  `packing-list-go`'s seed script was a silent no-op (fixed cross-repo as
+  **PACK-033**, same day), and no local `psql` meant pivoting verification
+  to Neon's web SQL Editor mid-ticket.
+- Once real item creation was actually usable, hands-on use (not the test
+  suite) caught a genuine toast-contrast bug (`text-on-accent-secondary`
+  paired against a near-identical green — should've been `text-on-accent`,
+  `Avatar.tsx`'s existing pairing for that background) and a missing
+  delete-confirmation step.
+- **Pattern**: React bubbles portal-rendered events through the
+  _component_ tree, not the DOM tree — a `Modal`/`ConfirmDialog` rendered
+  from inside a clickable row will have every click inside it also reach
+  the row's own `onClick` unless stopped at the dialog's own boundary.
+  Worth remembering for any future modal nested inside a clickable
+  parent, not just this one.
+- **Pattern**: a green test suite plus a prior screenshot check didn't
+  surface either bug above — both needed the developer actually using the
+  running feature. Reinforces this project's existing manual-verification
+  convention rather than adding anything new to it.
