@@ -116,6 +116,24 @@ one stops fitting; no formal record-keeping process around it.
   `LibraryItemRow`'s already-accepted warning: inherent to a non-visual
   event boundary, not a real accessibility gap (the actual interactive
   content inside is Radix's own accessible `Dialog`).
+- **`Button.tsx` compact variants** (decided 2026-07-26 during PACKFE-003
+  Piece 5's grill-me): existing `primary`/`danger`/`dashed` variants are
+  either `w-full` or otherwise sized for their own use case, none fit an
+  inline button sized to content. Two new variants added instead of
+  fighting that via `className` overrides (Tailwind utility precedence
+  isn't reliably JSX-order-dependent, so overriding e.g. `w-full` from
+  the outside is fragile): `success` (`--color-accent-secondary` bg,
+  `text-on-accent` — **not** `text-on-accent-secondary`, the
+  near-illegible pairing already fixed once in `Toast`, see above) for
+  the category-rename "Save" button; `accent` (solid `--color-accent`
+  bg, `text-on-accent`) for the persistent "Add" category button. Both
+  compact/pill-sized, not full-width. `Cancel` (rename's cancel action,
+  added as a deliberate deviation from the rename-in-place screenshot —
+  see Piece 5 below) reuses the existing `default` variant as-is.
+- **`TextField.tsx` gains `onSubmit?: () => void`** (decided 2026-07-26,
+  Piece 5's grill-me), wired to Enter. First use: the category-rename
+  input and the persistent "New category name…" input. `ItemFormModal`'s
+  existing `TextField` usage is unaffected (prop is optional).
 - **Toast/notification primitive** (decided 2026-07-24 during PACKFE-003's
   grill-me): built on `@radix-ui/react-toast` for the same reason as
   `Modal.tsx` above — auto-dismiss timing, ARIA live-region announcement,
@@ -631,14 +649,62 @@ variables)` has it. No real call sites exist yet, so this is a
         vs. confirm-fires-onDelete) since the old single-click
         immediate-`onDelete` contract no longer holds.
   - [ ] **Piece 5 — Manage-categories modal content** (screenshot-grounded:
-        desktop list + rename-in-place screenshots). System categories show
-        the `BUILT-IN` badge, non-tappable; user-owned rows tap into an
-        inline rename input + `accent-secondary` (green) "Save" button
-        (first real use of that token), row's `×` hidden while renaming.
-        Persistent "New category name…" + Add row at the bottom — note this
-        is a distinct, always-visible input+button, **not** the same
-        dashed-border `DashedAddRow` atom used for "+ New item" elsewhere.
-        Delete-has-items conflict surfaces via toast.
+        desktop list + rename-in-place screenshots, both reviewed fresh
+        2026-07-26 — `Screenshot 2026-07-24 at 12.49.59.png` and
+        `Screenshot 2026-07-24 at 13.00.14.png` respectively, from the
+        original Piece-0 grill-me's 7 supporting screenshots). System
+        categories show the `BUILT-IN` badge, non-tappable; user-owned
+        rows tap anywhere to enter rename mode (no chevron — unlike
+        `LibraryItemRow`, this is inline rename in the same modal, not
+        navigation), row's `×` hidden while renaming.
+    - [ ] `CategoriesModal.tsx` + `CategoryRow.tsx` in
+          `src/features/library/` (still flat — 7 files total, under the
+          8-file split threshold). `CategoriesModal` owns
+          `renamingId: string | null` (only one row editable at a time,
+          confirmed during grill-me) and passes it + a setter down to each
+          `CategoryRow`; opening one row's rename mode implicitly closes
+          any other via that single piece of state.
+    - [ ] Item counts (`"7 items"` etc. in the screenshot): no backend
+          count field exists (`Category` has no `itemCount`,
+          `packing-list-go` doesn't return one). Derived client-side —
+          `CategoriesModal` calls the existing unparameterized
+          `useItems()` (already warm in TanStack Query's cache from
+          `LibraryScreen`, so no extra request in practice) and counts by
+          `categoryId`.
+    - [ ] Rename mode: inline `TextField` (autofocused) + compact
+          `success`-variant "Save" button (see Architecture section
+          above) + a **Cancel button next to Save** — a deliberate
+          deviation from the screenshot (which shows no cancel
+          affordance), added during grill-me since "there is enough room
+          for both." Escape also cancels rename mode — handled on the
+          input itself (`stopPropagation`) so it doesn't bubble to
+          Radix's `Dialog` and close the whole modal instead. Save
+          disabled only on blank/whitespace name (mirrors
+          `ItemFormModal`'s `submitDisabled` precedent exactly — an
+          unchanged name is allowed through, harmless no-op if
+          resubmitted). Enter in the input submits Save (new
+          `TextField.onSubmit`, see Architecture section above).
+    - [ ] Persistent "New category name…" `TextField` + compact
+          `accent`-variant "Add" button, always visible at the bottom of
+          the modal (in `Modal`'s `footer` prop, so it never scrolls away
+          — same pattern as `ItemFormModal`'s submit button) — a
+          distinct, always-visible input+button, **not** the same
+          dashed-border `Button variant="dashed"` used for "+ New item"
+          elsewhere. Enter submits Add, same as rename's Save.
+    - [ ] Category delete reuses `DeleteIconButton` (already gates
+          `onClick` behind `ConfirmDialog` — Piece 5 is its confirmed
+          second consumer per the Architecture section above) as-is, no
+          changes needed to either primitive.
+    - [ ] Duplicate-name (create and rename) and delete-has-items
+          conflicts need no client-side handling — `useApiMutation`
+          already auto-toasts any `ApiError` message, and
+          `packing-list-go`'s handler already returns clean messages for
+          both (`category_handler.go`) — confirmed by reading current
+          source during grill-me, not assumed.
+    - [ ] Temporary "Manage categories (temporary)" trigger button on
+          `LibraryScreen`, same throwaway-harness pattern as
+          `ItemFormModal`'s existing temporary triggers — removed once
+          Piece 6 wires the real `Categories` pill.
   - [ ] **Piece 6 — Screen assembly** (screenshot-grounded: mobile anatomy +
         desktop list screenshots). Header/subtitle, search filtering
         (substring match, ANDed with the active chip, not ORed), category
