@@ -16,7 +16,7 @@ export function InteractiveButton({
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: ReactNode;
-  variant?: "default" | "danger" | "dashed";
+  variant?: "default" | "danger" | "dashed" | "primary";
 }
 
 const VARIANT_CLASSES: Record<NonNullable<ButtonProps["variant"]>, string> = {
@@ -26,6 +26,8 @@ const VARIANT_CLASSES: Record<NonNullable<ButtonProps["variant"]>, string> = {
     "rounded-card border-0 bg-notice-bg px-6 py-4 font-body text-base font-semibold text-notice-text shadow-sm",
   dashed:
     "w-full rounded-2xl border border-dashed border-[#c9bba6] py-3 text-sm font-bold text-tertiary",
+  primary:
+    "w-full rounded-2xl border-0 bg-accent px-6 py-4 font-body text-base font-bold text-on-accent shadow-sm hover:bg-accent-hover disabled:opacity-50",
 };
 
 export function Button({
