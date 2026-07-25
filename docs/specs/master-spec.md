@@ -762,17 +762,79 @@ variables)` has it. No real call sites exist yet, so this is a
         from flex layout entirely while keeping it as a real node for the
         event-bubbling fix. Affects every `DeleteIconButton` consumer
         (`LibraryItemRow` too), not just this piece's `CategoryRow`.
-  - [ ] **Piece 6 — Screen assembly** (screenshot-grounded: mobile anatomy +
-        desktop list screenshots). Header/subtitle, search filtering
-        (substring match, ANDed with the active chip, not ORed), category
-        filter chips (`All` + one per category; horizontal-scroll mobile,
-        `flex-wrap` desktop), category group cards (1-col mobile / 2-col CSS
-        grid desktop, groups omitted entirely if zero matches after
-        filtering — not shown empty), empty-search-results state (centered
-        copy + "+ New item" still visible underneath), no true zero-state
-        needed (system data always seeds the screen). Wires the `Categories`
-        pill to the Manage-categories modal and the dashed row to the
-        New-item modal.
+  - [ ] **Piece 6 — Screen assembly**. Grilled 2026-07-25 against the mobile
+        anatomy (`Screenshot 2026-07-24 at 12.49.27.png`) and desktop list
+        (`Screenshot 2026-07-24 at 12.49.43.png`) screenshots, plus
+        `library-screen-handoff.html` §3.1–3.6. Header/subtitle, search
+        filtering (substring match, case-insensitive, ANDed with the active
+        chip — not ORed), category filter chips (`Everything` + one per
+        category; horizontal-scroll mobile, `flex-wrap` desktop), category
+        group cards (1-col mobile / 2-col CSS grid desktop, groups omitted
+        entirely if zero matches after filtering — not shown empty),
+        empty-search-results state (centered copy "Nothing matches — try a
+        different search, or create it below" + "+ New item" still visible
+        underneath), no true zero-state needed (system data always seeds
+        the screen). Wires the `Categories` pill to the Manage-categories
+        modal and the dashed row to the New-item modal.
+    - [ ] **Header copy discrepancy, resolved**: the two reference
+          screenshots disagree on subtitle text ("All items, yours and
+          built-in." on mobile vs. "Everything you own, in one tidy place."
+          on desktop) despite the handoff's own §3.1 prose stating markup
+          is identical at both breakpoints. Going with the mobile copy —
+          it's the string the handoff's own text annotation cites as
+          canonical; the desktop screenshot is treated as a stale
+          mid-iteration snapshot (16 seconds apart, same session).
+    - [ ] **Filter-chip label, decided**: the "show everything" chip reads
+          `Everything`, not `All` — overrides this checklist's own
+          previously-written wording (`All`), matching the desktop
+          screenshot instead of the mobile one. (Inconsistent with the
+          header-copy call above, which went mobile; developer's explicit
+          choice both times, not a rule.)
+    - [ ] **New-item prefill, decided**: tapping the dashed "+ New item"
+          row while a specific category chip is active (not `Everything`)
+          passes that category as `ItemFormModal`'s existing
+          `defaultCategoryId`. No prefill when `Everything` is active.
+    - [ ] **Group header count, decided**: the count next to a category
+          name (e.g. "Clothing 7") reflects the number of currently
+          matching/visible rows in that card, not the category's total
+          item count — recalculates under search/filter rather than
+          staying fixed.
+    - [ ] **Loading state, decided — first of its kind in this project**:
+          no loading treatment is specced anywhere in this file for any
+          screen. Piece 6 renders header + search field immediately
+          (data-independent) but withholds the filter-chip row and group
+          cards until both `useCategories`/`useItems` resolve — rendering
+          nothing rather than a "Loading…" placeholder, to avoid
+          inventing a visual pattern with zero design backing. **Follow-up
+          parking-lot item added below**: a real loading treatment (e.g.
+          skeleton) is wanted eventually, just not designed yet or solved
+          by this ticket.
+    - [ ] **Fetch-error state, decided**: if the categories/items query
+          itself errors (e.g. backend down), fire a generic toast (existing
+          `useToast()`, default `"error"` variant) rather than showing
+          nothing or a distinct inline error state.
+    - [ ] **Filter state scope, decided**: search text + active chip live
+          in local `LibraryScreen` component state, not the URL — resets
+          each time the screen is (re)mounted. No existing precedent
+          in this codebase for URL-synced filters; not introducing one
+          here.
+    - [ ] **Test flagged and accepted**: filtering/grouping (search +
+          active-chip AND logic, case-insensitive match, zero-match
+          group omission, per-group matching count) is extracted into a
+          pure helper — `groupLibraryItems(items, categories, { search,
+    categoryId }) → { category, items }[]` — colocated in
+          `src/features/library/`, unit-tested with Vitest
+          (`groupLibraryItems.test.ts`) written before the screen wires
+          it in, per this project's testing convention (real conditional
+          branching worth guarding). Rest of the screen
+          (header/chips/cards/wiring) is presentation-only, verified
+          manually against the two reference screenshots — no test file
+          for the screen component itself.
+    - [ ] Temporary demo harness in `LibraryScreen.tsx` (test-toast button,
+          temporary "Manage categories" button, categories/items debug
+          count text, hardcoded demo `LibraryItemRow`, demo `Chip`/
+          `TextField` row) removed entirely, replaced by the real
+          assembly.
 
 ### Epic 4: Templates
 
@@ -884,3 +946,9 @@ want to do it.
   screens' worth of real experience exists, rather than assuming the
   original all-or-nothing tradeoff still holds. Not tied to a specific
   epic — revisit when it feels due.
+- A real loading-state visual treatment (noticed during PACKFE-003 Piece
+  6, 2026-07-25 — first screen to hit this gap). No screen in this
+  project has a designed loading pattern yet; Piece 6 renders nothing
+  during its brief fetch window rather than a plain "Loading…" text.
+  Worth designing something real (skeleton rows, etc.) once it comes up
+  again enough to be worth a shared pattern rather than a one-off.
