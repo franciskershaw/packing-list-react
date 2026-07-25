@@ -3,11 +3,17 @@ import { useState } from "react";
 import { useCategories } from "../../api/categories";
 import { useItems } from "../../api/items";
 import { Button } from "../../components/ui/Button";
+import { Chip } from "../../components/ui/Chip";
+import { DeleteIconButton } from "../../components/ui/DeleteIconButton";
 import { Modal } from "../../components/ui/Modal";
+import { SystemBadge } from "../../components/ui/SystemBadge";
+import { TextField } from "../../components/ui/TextField";
 import { useToast } from "../../components/ui/Toast";
 
 export function LibraryScreen() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [demoChip, setDemoChip] = useState("All");
+  const [demoSearch, setDemoSearch] = useState("");
   const { toast } = useToast();
   const categories = useCategories();
   const items = useItems();
@@ -35,6 +41,39 @@ export function LibraryScreen() {
             ? "loading…"
             : (items.error?.message ?? items.data?.length)}
         </p>
+      </div>
+
+      {/* Temporary demo harness — remove once Piece 3/6 wire these atoms into the real screen */}
+      <div className="flex w-full max-w-md flex-col gap-3 border-t border-border pt-4">
+        <TextField
+          value={demoSearch}
+          onChange={setDemoSearch}
+          placeholder="Search your stuff…"
+        />
+        <div className="flex flex-wrap gap-1.5">
+          {["All", "Clothing", "Toiletries"].map((label) => (
+            <Chip
+              key={label}
+              label={label}
+              selected={demoChip === label}
+              onClick={() => setDemoChip(label)}
+            />
+          ))}
+        </div>
+        <div className="flex items-center gap-2.5 rounded-2xl border border-border px-4 py-3">
+          <span className="flex-1 text-heading">Socks (mine)</span>
+          <DeleteIconButton
+            label="Socks"
+            onClick={() => toast("Deleted Socks (demo)")}
+          />
+        </div>
+        <div className="flex items-center gap-2.5 rounded-2xl border border-border px-4 py-3">
+          <span className="flex-1 text-heading">T-shirts (system)</span>
+          <SystemBadge />
+        </div>
+        <Button variant="dashed" onClick={() => toast("New item (demo)")}>
+          + New item
+        </Button>
       </div>
 
       {modalOpen && (

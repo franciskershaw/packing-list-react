@@ -1,13 +1,31 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
+// Shared base for every button-shaped atom so cursor/type aren't repeated per-component.
+export function InteractiveButton({
+  className = "",
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      type="button"
+      className={`cursor-pointer ${className}`}
+      {...props}
+    />
+  );
+}
+
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: ReactNode;
-  variant?: "default" | "danger";
+  variant?: "default" | "danger" | "dashed";
 }
 
 const VARIANT_CLASSES: Record<NonNullable<ButtonProps["variant"]>, string> = {
-  default: "border border-border bg-bg text-heading",
-  danger: "border-0 bg-notice-bg text-notice-text",
+  default:
+    "rounded-card border border-border bg-bg px-6 py-4 font-body text-base font-semibold text-heading shadow-sm",
+  danger:
+    "rounded-card border-0 bg-notice-bg px-6 py-4 font-body text-base font-semibold text-notice-text shadow-sm",
+  dashed:
+    "w-full rounded-2xl border border-dashed border-[#c9bba6] py-3 text-sm font-bold text-tertiary",
 };
 
 export function Button({
@@ -18,12 +36,12 @@ export function Button({
   ...props
 }: ButtonProps) {
   return (
-    <button
-      className={`inline-flex cursor-pointer items-center justify-center gap-3 rounded-card px-6 py-4 font-body text-base font-semibold shadow-sm ${VARIANT_CLASSES[variant]} ${className}`}
+    <InteractiveButton
+      className={`inline-flex items-center justify-center gap-3 ${VARIANT_CLASSES[variant]} ${className}`}
       {...props}
     >
       {icon}
       {children}
-    </button>
+    </InteractiveButton>
   );
 }

@@ -315,8 +315,9 @@ start one, rather than writing it all up front.
         PACKFE-003's screenshots (mobile anatomy, desktop list, desktop +
         mobile New-item modal, desktop Manage-categories, chevron
         before/after, category-rename-in-place) plus `library-screen-handoff.html`
-        §3.2–3.5. `SearchField`, `Chip` (filter variant), `SystemBadge`,
-        `DeleteIconButton`, `DashedAddRow` — straight into
+        §3.2–3.5. `TextField`, `Chip` (filter variant), `SystemBadge`,
+        `DeleteIconButton`, plus a new `dashed` variant on the existing
+        `Button` (see consolidation note below) — straight into
         `src/components/ui/` (stays flat despite passing 8 files; the
         `src/features/<name>/` 8-file threshold in `CLAUDE.md`'s Structure
         conventions was confirmed feature-folder-specific, not extended to
@@ -341,37 +342,70 @@ start one, rather than writing it all up front.
           internal responsive behavior (mobile horizontal-scroll vs.
           desktop `flex-wrap` is the containing row's concern, not the
           atom's).
-    - [ ] `SearchField`: controlled `{ value, onChange, placeholder }`
-          wrapping a plain `<input>` — not built on a generic shared
-          `Input` primitive (PACKFE-001's unbuilt "Input primitive" line is
-          superseded by naming specific atoms as they're actually needed).
+    - [ ] **Renamed `SearchField` → `TextField`** during build (2026-07-25):
+          re-checking the New-item modal screenshot for the styling
+          question showed its "e.g. Bum bag" name field uses the identical
+          `bg-subtle`/border/`rounded-xl` treatment as "Search your
+          stuff…", for a plain name-entry purpose, not search. The
+          component itself has no search-specific behavior (no debounce,
+          icon, or clear button — just `value`/`onChange`/`placeholder`),
+          so the name now matches what it actually is rather than one call
+          site's purpose. Still not built on a generic `Input` primitive
+          per se (PACKFE-001's unbuilt "Input primitive" line is
+          superseded by naming specific atoms as they're actually
+          needed) — `TextField` _is_ that atom, just named for its shape
+          rather than left unbuilt.
     - [ ] `SystemBadge`: no props beyond standard HTML attrs — literal
           "BUILT-IN" text hardcoded, no variant seen across any of the 4
           screenshots it appears in.
-    - [ ] `DeleteIconButton`: required `label: string` prop (the item/category
-          name), builds `aria-label={\`Delete ${label}\`}`internally —
-    guarantees an accessible name at every call site by construction
-    rather than trusting each of the ~2 callers to pass one
-    (icon-only button, oxlint's`jsx-a11y`would otherwise flag it).
-    26px circle,`notice-bg`/`notice-text`, "×" glyph. Purely
-    presentational — the "blocked, here's the count" rejection-toast
-    behavior the handoff mentions already lives in Piece 1's
-    `useApiMutation` wrapper, not in this atom.
-    - [ ] `DashedAddRow`: `{ label: string; onClick: () => void }`, full-width
-          dashed-border button. Confirms the Piece 5 note above: the
-          Manage-categories sheet's "New category name…" input+button row
-          is a distinct, separately-built element, **not** a consumer of
-          this atom, despite the handoff's §3.5 text implying otherwise.
-    - [ ] No automated tests — all 5 atoms are prop-driven presentational
-          markup with no real branching/state, matching `CLAUDE.md`'s
-          testing carve-out (suggestion-only, and this doesn't clear the
-          bar for a suggested test).
+    - [ ] `DeleteIconButton`: required `label: string` prop (the
+          item/category name), builds `aria-label={`Delete ${label}`}`
+          internally — guarantees an accessible name at every call site by
+          construction rather than trusting each of the ~2 callers to pass
+          one (icon-only button, oxlint's `jsx-a11y` would otherwise flag
+          it). 26px circle, `notice-bg`/`notice-text`, "×" glyph. Purely
+          presentational — the "blocked, here's the count" rejection-toast
+          behavior the handoff mentions already lives in Piece 1's
+          `useApiMutation` wrapper, not in this atom.
+    - [ ] **`DashedAddRow` folded into `Button` as a `dashed` variant**,
+          revised during build (2026-07-25) after review: it's an
+          action-firing button like `default`/`danger` (no toggle state,
+          unlike `Chip`), just visually distinct — exactly what `Button`'s
+          existing `VARIANT_CLASSES` pattern exists to express. Raw
+          `className` overrides weren't the right mechanism (Tailwind
+          resolves same-property conflicts by each utility's position in
+          the _generated_ stylesheet, not by source order in the
+          `className` string, so passing a conflicting `rounded-*`/`px-*`
+          class isn't guaranteed to win without a merge library like
+          `tailwind-merge`, not a current dependency). Instead
+          `VARIANT_CLASSES["dashed"]` is a fully self-contained class
+          string (`w-full rounded-2xl border border-dashed
+border-[#c9bba6] py-3 text-sm font-bold text-tertiary`),
+          matching how `default`/`danger` already work — `default` and
+          `danger`'s own classes were relocated from a shared base string
+          into their own complete entries too, byte-identical output, no
+          visible change to `SignInScreen`/`ProfileScreen`'s existing
+          `Button` usage. `DeleteIconButton` stays its own component (26px
+          icon-only circle, no text/children slot — structurally
+          incompatible with `Button`'s icon+children layout); `Chip` stays
+          separate too (runtime toggle state per the note above, a
+          different contract from `Button`'s developer-chosen variant).
+          Confirms the Piece 5 note above: the Manage-categories sheet's
+          "New category name…" input+button row is a distinct,
+          separately-built element, **not** a consumer of the dashed
+          variant — it likely reuses `TextField` instead, per the rename
+          note above.
+    - [ ] No automated tests — all 4 new atoms plus `Button`'s `dashed`
+          variant are prop-driven presentational markup with no real
+          branching/state, matching `CLAUDE.md`'s testing carve-out
+          (suggestion-only, and this doesn't clear the bar for a suggested
+          test).
     - [ ] Manual verification: temporary demo harness on
-          `LibraryScreen.tsx` rendering all 5 atoms with their key states
+          `LibraryScreen.tsx` rendering all 5 pieces with their key states
           (chip selected/unselected, a `mine`- and `sys`-style row each
-          with `DeleteIconButton`/`SystemBadge`, `SearchField`,
-          `DashedAddRow`) — same precedent as PACKFE-008's throwaway "Open
-          modal" trigger. Screenshot it, compare against the source
+          with `DeleteIconButton`/`SystemBadge`, `TextField`, `Button
+variant="dashed"`) — same precedent as PACKFE-008's throwaway
+          "Open modal" trigger. Screenshot it, compare against the source
           screenshots above, then remove once Piece 3/6 wire the atoms
           into the real screen.
   - [ ] **Piece 3 — `LibraryItemRow`** (screenshot-grounded: chevron
