@@ -958,12 +958,24 @@ want to do it.
   screens' worth of real experience exists, rather than assuming the
   original all-or-nothing tradeoff still holds. Not tied to a specific
   epic — revisit when it feels due.
-- A real loading-state visual treatment (noticed during PACKFE-003 Piece
-  6, 2026-07-25 — first screen to hit this gap). No screen in this
-  project has a designed loading pattern yet; Piece 6 renders nothing
-  during its brief fetch window rather than a plain "Loading…" text.
-  Worth designing something real (skeleton rows, etc.) once it comes up
-  again enough to be worth a shared pattern rather than a one-off.
-- Manage-categories modal (`CategoriesModal.tsx`) scrolling UX needs
-  improvement (noticed at PACKFE-003 close-out, 2026-07-25) — not
-  diagnosed further yet, just flagged.
+- **[UX polish]** A real loading-state visual treatment (noticed during
+  PACKFE-003 Piece 6, 2026-07-25 — first screen to hit this gap). No
+  screen in this project has a designed loading pattern yet; Piece 6
+  renders nothing during its brief fetch window rather than a plain
+  "Loading…" text. Worth designing something real (skeleton rows, etc.)
+  once it comes up again enough to be worth a shared pattern rather than
+  a one-off.
+- **[UX polish]** Manage-categories modal (`CategoriesModal.tsx`)
+  scrolling UX needs improvement (noticed at PACKFE-003 close-out,
+  2026-07-25) — not diagnosed further yet, just flagged.
+- **[UX polish]** `ItemFormModal` closes on successful add — poor for
+  adding several items in a row (noticed 2026-07-25, real usage after
+  PACKFE-003 closed: adding many items one at a time meant repeatedly
+  reopening the modal). Instead: on successful create, keep the modal
+  open and just clear the name field (leave the selected category as-is,
+  since consecutive adds are often to the same category), so entry can
+  continue without a re-open per item. Only applies to the create flow —
+  edit-mode save should still close as it does now. Not scoped/decided
+  beyond this note; revisit at grill-me when picked up. If this list of
+  `[UX polish]` items keeps growing, worth grouping into its own epic —
+  not yet, with just three.
