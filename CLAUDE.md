@@ -128,6 +128,12 @@ designs when it had only read a loading shell. If asked about a screen
 and a fresh screenshot isn't available, say so explicitly rather than
 guessing.
 
+**Dev server ownership**: the developer runs and checks `npm run dev`
+(and `packing-list-go` on `:8080`) themselves — AI should not start,
+poll, or drive them to self-verify UI work. Build whatever
+manual-verification harness a piece needs; the developer does the actual
+checking.
+
 ## AI's role on this branch
 
 Split by whether the file renders a screen or visual component with

@@ -311,7 +311,7 @@ start one, rather than writing it all up front.
           toast from `ApiError.message` in `onError` — guarantees the
           behavior without repeating the wiring at each of the 8 hooks (or
           each future call site).
-  - [ ] **Piece 2 — Shared atoms**. Grilled 2026-07-25 against all 7 of
+  - [x] **Piece 2 — Shared atoms** — **Done** (2026-07-25). Grilled 2026-07-25 against all 7 of
         PACKFE-003's screenshots (mobile anatomy, desktop list, desktop +
         mobile New-item modal, desktop Manage-categories, chevron
         before/after, category-rename-in-place) plus `library-screen-handoff.html`
@@ -324,7 +324,7 @@ start one, rather than writing it all up front.
         `components/ui/`) since each has ≥2 real consumers already (this
         screen + the Manage-categories sheet, some also the future item
         picker).
-    - [ ] **Chip selected-state conflict, resolved**: the handoff's §3.3
+    - [x] **Chip selected-state conflict, resolved**: the handoff's §3.3
           prose ("solid `heading`-fill/`on-accent`-text") and the mobile
           anatomy screenshot both describe/show a solid dark fill, but
           three other real screenshots — desktop list's active "Clothing"
@@ -336,13 +336,13 @@ start one, rather than writing it all up front.
           anatomy diagram and handoff prose are treated as the stale
           source here, consistent with `CLAUDE.md`'s screenshot-over-markup
           rule.
-    - [ ] `Chip`: `{ label: string; selected: boolean; onClick: () => void }`,
+    - [x] `Chip`: `{ label: string; selected: boolean; onClick: () => void }`,
           stateless/presentational — selection state lives in the parent
           (filter row or category picker). No count-badge variant; no
           internal responsive behavior (mobile horizontal-scroll vs.
           desktop `flex-wrap` is the containing row's concern, not the
           atom's).
-    - [ ] **Renamed `SearchField` → `TextField`** during build (2026-07-25):
+    - [x] **Renamed `SearchField` → `TextField`** during build (2026-07-25):
           re-checking the New-item modal screenshot for the styling
           question showed its "e.g. Bum bag" name field uses the identical
           `bg-subtle`/border/`rounded-xl` treatment as "Search your
@@ -355,10 +355,10 @@ start one, rather than writing it all up front.
           superseded by naming specific atoms as they're actually
           needed) — `TextField` _is_ that atom, just named for its shape
           rather than left unbuilt.
-    - [ ] `SystemBadge`: no props beyond standard HTML attrs — literal
+    - [x] `SystemBadge`: no props beyond standard HTML attrs — literal
           "BUILT-IN" text hardcoded, no variant seen across any of the 4
           screenshots it appears in.
-    - [ ] `DeleteIconButton`: required `label: string` prop (the
+    - [x] `DeleteIconButton`: required `label: string` prop (the
           item/category name), builds `aria-label={`Delete ${label}`}`
           internally — guarantees an accessible name at every call site by
           construction rather than trusting each of the ~2 callers to pass
@@ -367,7 +367,7 @@ start one, rather than writing it all up front.
           presentational — the "blocked, here's the count" rejection-toast
           behavior the handoff mentions already lives in Piece 1's
           `useApiMutation` wrapper, not in this atom.
-    - [ ] **`DashedAddRow` folded into `Button` as a `dashed` variant**,
+    - [x] **`DashedAddRow` folded into `Button` as a `dashed` variant**,
           revised during build (2026-07-25) after review: it's an
           action-firing button like `default`/`danger` (no toggle state,
           unlike `Chip`), just visually distinct — exactly what `Button`'s
@@ -395,19 +395,34 @@ border-[#c9bba6] py-3 text-sm font-bold text-tertiary`),
           separately-built element, **not** a consumer of the dashed
           variant — it likely reuses `TextField` instead, per the rename
           note above.
-    - [ ] No automated tests — all 4 new atoms plus `Button`'s `dashed`
+    - [x] **Second pass, post-review**: `Chip` and `DeleteIconButton` both
+          shipped without `cursor-pointer` — caught by the developer
+          twice, independently, direct evidence the "keep them fully
+          separate" call above was incomplete. Extracted
+          `InteractiveButton`, a shared low-level `<button>` primitive
+          (`cursor-pointer`, `type="button"` so nothing built on it can
+          accidentally submit a form) — colocated inside `Button.tsx`
+          rather than its own file (too small to warrant one), exported
+          for `Chip`/`DeleteIconButton` to build on. `Button` itself now
+          renders through it too. Considered `tailwind-merge` first to let
+          `className` reliably override conflicting base classes;
+          rejected — no real case anywhere needed conflict resolution,
+          every actual need fit as either a self-contained variant or a
+          non-conflicting additive `className`, so the dependency would
+          have solved a problem that doesn't exist.
+    - [x] No automated tests — all 4 new atoms plus `Button`'s `dashed`
           variant are prop-driven presentational markup with no real
           branching/state, matching `CLAUDE.md`'s testing carve-out
           (suggestion-only, and this doesn't clear the bar for a suggested
           test).
-    - [ ] Manual verification: temporary demo harness on
+    - [x] Manual verification: temporary demo harness on
           `LibraryScreen.tsx` rendering all 5 pieces with their key states
           (chip selected/unselected, a `mine`- and `sys`-style row each
           with `DeleteIconButton`/`SystemBadge`, `TextField`, `Button
 variant="dashed"`) — same precedent as PACKFE-008's throwaway
-          "Open modal" trigger. Screenshot it, compare against the source
-          screenshots above, then remove once Piece 3/6 wire the atoms
-          into the real screen.
+          "Open modal" trigger. Checked against the source screenshots by
+          the developer (2026-07-25) — held up. Demo harness still to be
+          removed once Piece 3/6 wire the atoms into the real screen.
   - [ ] **Piece 3 — `LibraryItemRow`** (screenshot-grounded: chevron
         before/after screenshot + handoff §2's code sample). `mine` vs `sys`
         item states; chevron always visible (no hover dependency); row tap

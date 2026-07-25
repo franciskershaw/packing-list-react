@@ -91,3 +91,27 @@ before the four real use cases build on top of `Modal.tsx`.
   any future exit animation) won't fire. Revisit only if exit animations
   are wanted later; would mean switching `Modal` to an `open` prop with
   Radix's Presence managing unmount timing instead of the parent.
+
+## 2026-07-25 — PACKFE-003 Piece 2 — Button-family split needed a second pass; two skill/CLAUDE.md frictions fixed at the source
+
+- First pass folded only `DashedAddRow` into `Button` (`dashed` variant),
+  keeping `Chip`/`DeleteIconButton` as separate hand-rolled `<button>`s on
+  the theory their styles differed too much to share. Incomplete —
+  `cursor-pointer` got forgotten on both independently. Fixed by
+  extracting a shared `InteractiveButton` primitive (cursor,
+  `type="button"`), colocated in `Button.tsx` rather than a new file
+  since it's two lines.
+- **Pattern**: when several atoms render the same element, separate
+  whatever differs but still extract a shared primitive for whatever's
+  universal and easy to forget — "these look different" isn't evidence to
+  share nothing.
+- `SearchField` renamed to `TextField` mid-build — named for its first
+  call site rather than what it actually is; a screenshot recheck against
+  a second, unrelated consumer caught it.
+- Dev-server ownership (developer runs/checks, AI doesn't) codified
+  directly in this project's `CLAUDE.md`, not just AI memory — more
+  durable, visible to future work here too.
+- `grill-me`'s handoff-doc section updated to check for a project
+  override before assuming its default applies — this project's override
+  was re-litigated as a "conflict" at the start of nearly every session;
+  now checked and deferred to silently.
