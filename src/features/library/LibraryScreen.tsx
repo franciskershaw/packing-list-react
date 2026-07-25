@@ -4,11 +4,10 @@ import { useCategories } from "../../api/categories";
 import { useItems } from "../../api/items";
 import { Button } from "../../components/ui/Button";
 import { Chip } from "../../components/ui/Chip";
-import { DeleteIconButton } from "../../components/ui/DeleteIconButton";
 import { Modal } from "../../components/ui/Modal";
-import { SystemBadge } from "../../components/ui/SystemBadge";
 import { TextField } from "../../components/ui/TextField";
 import { useToast } from "../../components/ui/Toast";
+import { LibraryItemRow } from "./LibraryItemRow";
 
 export function LibraryScreen() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -60,17 +59,26 @@ export function LibraryScreen() {
             />
           ))}
         </div>
-        <div className="flex items-center gap-2.5 rounded-2xl border border-border px-4 py-3">
-          <span className="flex-1 text-heading">Socks (mine)</span>
-          <DeleteIconButton
-            label="Socks"
-            onClick={() => toast("Deleted Socks (demo)")}
-          />
-        </div>
-        <div className="flex items-center gap-2.5 rounded-2xl border border-border px-4 py-3">
-          <span className="flex-1 text-heading">T-shirts (system)</span>
-          <SystemBadge />
-        </div>
+        <LibraryItemRow
+          item={{
+            id: "demo-1",
+            name: "Socks",
+            categoryId: "demo",
+            isSystem: false,
+          }}
+          onEdit={() => toast("Edit Socks (demo)")}
+          onDelete={() => toast("Deleted Socks (demo)")}
+        />
+        <LibraryItemRow
+          item={{
+            id: "demo-2",
+            name: "T-shirts",
+            categoryId: "demo",
+            isSystem: true,
+          }}
+          onEdit={() => toast("Edit T-shirts (demo)")}
+          onDelete={() => toast("Deleted T-shirts (demo)")}
+        />
         <Button variant="dashed" onClick={() => toast("New item (demo)")}>
           + New item
         </Button>

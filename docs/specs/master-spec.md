@@ -423,12 +423,12 @@ variant="dashed"`) — same precedent as PACKFE-008's throwaway
           "Open modal" trigger. Checked against the source screenshots by
           the developer (2026-07-25) — held up. Demo harness still to be
           removed once Piece 3/6 wire the atoms into the real screen.
-  - [ ] **Piece 3 — `LibraryItemRow`** (screenshot-grounded: chevron
-        before/after screenshot + handoff §2's code sample). Grilled
-        2026-07-26. `mine` vs `sys` item states; chevron always visible (no
-        hover dependency); row tap opens Edit-item modal; `×` delete keeps
-        its own `stopPropagation`; row padding `py-3.5` so the tap target
-        clears 44px.
+  - [x] **Piece 3 — `LibraryItemRow`** — **Done** (2026-07-26).
+        (screenshot-grounded: chevron before/after screenshot + handoff
+        §2's code sample). Grilled 2026-07-26. `mine` vs `sys` item states;
+        chevron always visible (no hover dependency); row tap opens
+        Edit-item modal; `×` delete keeps its own `stopPropagation`; row
+        padding `py-3.5` so the tap target clears 44px.
     - Uses the real `Item.isSystem` field (`src/api/items.ts`), not the
       handoff code sample's illustrative `item.sys` shorthand.
     - **A11y gap in the handoff's own sample, resolved during grill-me**:
@@ -469,7 +469,8 @@ variant="dashed"`) — same precedent as PACKFE-008's throwaway
       temporary toast (`"Edit Socks (demo)"`) — same placeholder-via-toast
       pattern the harness already uses for delete, since Piece 4's real
       Edit-item modal doesn't exist yet. Demo harness still to be removed
-      once Piece 6 assembles the real screen.
+      once Piece 6 assembles the real screen. Checked against the chevron
+      before/after screenshot by the developer (2026-07-26) — held up.
   - [ ] **Piece 4 — New/Edit-item modal content** (screenshot-grounded for
         New; Edit is the named inference above). Built as `Modal` content,
         wired to `POST /items` (create) / `PATCH /items/:id` (edit). Conflict
