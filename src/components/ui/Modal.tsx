@@ -17,6 +17,8 @@ interface ModalProps {
   /** Top-right close (X) button. Defaults on — deliberate deviation from
    *  the design handoff, which specified backdrop-only dismiss. */
   showCloseButton?: boolean;
+  /** preventDefault() to swallow Escape instead of closing the modal. */
+  onEscapeKeyDown?: (event: KeyboardEvent) => void;
   children: ReactNode;
 }
 
@@ -28,6 +30,7 @@ export function Modal({
   desktopWidth,
   footer,
   showCloseButton = true,
+  onEscapeKeyDown,
   children,
 }: ModalProps) {
   // Radix only restores focus to a <Dialog.Trigger>, which we don't use —
@@ -47,6 +50,7 @@ export function Modal({
         <Dialog.Overlay className="fixed inset-0 z-60 bg-heading/35 motion-safe:animate-[overlayFadeIn_.2s_ease-out]" />
         <div className="pointer-events-none fixed inset-0 z-60 flex items-end justify-center lg:items-center lg:p-10">
           <Dialog.Content
+            onEscapeKeyDown={onEscapeKeyDown}
             className={`pointer-events-auto relative flex w-full flex-col
               bg-bg px-5 pt-5.5 pb-11
               rounded-t-[26px]

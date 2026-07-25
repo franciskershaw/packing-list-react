@@ -7,11 +7,13 @@ import { Button } from "../../components/ui/Button";
 import { Chip } from "../../components/ui/Chip";
 import { TextField } from "../../components/ui/TextField";
 import { useToast } from "../../components/ui/Toast";
+import { CategoriesModal } from "./CategoriesModal";
 import { ItemFormModal } from "./ItemFormModal";
 import { LibraryItemRow } from "./LibraryItemRow";
 
 export function LibraryScreen() {
   const [formModal, setFormModal] = useState<{ item?: Item } | null>(null);
+  const [categoriesModalOpen, setCategoriesModalOpen] = useState(false);
   const [demoChip, setDemoChip] = useState("All");
   const [demoSearch, setDemoSearch] = useState("");
   const { toast } = useToast();
@@ -26,6 +28,9 @@ export function LibraryScreen() {
       <div className="flex flex-col items-center gap-2">
         <Button onClick={() => toast("This is a test toast (temporary)")}>
           Test toast (temporary)
+        </Button>
+        <Button onClick={() => setCategoriesModalOpen(true)}>
+          Manage categories (temporary)
         </Button>
         <p className="text-xs text-secondary">
           categories:{" "}
@@ -87,6 +92,10 @@ export function LibraryScreen() {
           item={formModal.item}
           onClose={() => setFormModal(null)}
         />
+      )}
+
+      {categoriesModalOpen && (
+        <CategoriesModal onClose={() => setCategoriesModalOpen(false)} />
       )}
     </div>
   );

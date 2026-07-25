@@ -134,6 +134,20 @@ one stops fitting; no formal record-keeping process around it.
   Piece 5's grill-me), wired to Enter. First use: the category-rename
   input and the persistent "New category name…" input. `ItemFormModal`'s
   existing `TextField` usage is unaffected (prop is optional).
+- **`Modal.tsx` gains `onEscapeKeyDown?: (event: KeyboardEvent) => void`**,
+  forwarded to Radix's `Dialog.Content` (found while building Piece 5,
+  not anticipated during grill-me). The interview decided Escape should
+  cancel rename mode rather than close the whole `CategoriesModal`; the
+  first attempt handled Escape on the rename `TextField` itself with
+  `stopPropagation()`, but Radix's own Escape-to-close listener is
+  registered on `document` with `{ capture: true }` (see
+  `@radix-ui/react-dismissable-layer`), which always runs before a
+  descendant's bubble-phase handler — `stopPropagation` from inside a
+  nested input can never win that race. Radix's actual supported
+  extension point is `onEscapeKeyDown` on `Dialog.Content` itself,
+  checked via `event.preventDefault()` before the internal dismiss
+  fires — `Modal` now forwards that prop, and `CategoriesModal` uses it:
+  `if (renamingId) { e.preventDefault(); setRenamingId(null); }`.
 - **Toast/notification primitive** (decided 2026-07-24 during PACKFE-003's
   grill-me): built on `@radix-ui/react-toast` for the same reason as
   `Modal.tsx` above — auto-dismiss timing, ARIA live-region announcement,
@@ -648,63 +662,104 @@ variables)` has it. No real call sites exist yet, so this is a
         `LibraryItemRow.test.tsx` assertions split into two (dialog-opens
         vs. confirm-fires-onDelete) since the old single-click
         immediate-`onDelete` contract no longer holds.
-  - [ ] **Piece 5 — Manage-categories modal content** (screenshot-grounded:
-        desktop list + rename-in-place screenshots, both reviewed fresh
-        2026-07-26 — `Screenshot 2026-07-24 at 12.49.59.png` and
-        `Screenshot 2026-07-24 at 13.00.14.png` respectively, from the
-        original Piece-0 grill-me's 7 supporting screenshots). System
-        categories show the `BUILT-IN` badge, non-tappable; user-owned
-        rows tap anywhere to enter rename mode (no chevron — unlike
-        `LibraryItemRow`, this is inline rename in the same modal, not
-        navigation), row's `×` hidden while renaming.
-    - [ ] `CategoriesModal.tsx` + `CategoryRow.tsx` in
+  - [x] **Piece 5 — Manage-categories modal content** — implementation +
+        tests done 2026-07-26; **manual browser verification against the
+        screenshots still outstanding** (dev-server checking is the
+        developer's job per this project's `CLAUDE.md` — not run here).
+        Screenshot-grounded: desktop list + rename-in-place screenshots,
+        both reviewed fresh 2026-07-26 — `Screenshot 2026-07-24 at
+12.49.59.png` and `Screenshot 2026-07-24 at 13.00.14.png`
+        respectively, from the original Piece-0 grill-me's 7 supporting
+        screenshots. System categories show the `BUILT-IN` badge,
+        non-tappable; user-owned rows tap anywhere to enter rename mode
+        (no chevron — unlike `LibraryItemRow`, this is inline rename in
+        the same modal, not navigation), row's `×` hidden while renaming.
+    - [x] `CategoriesModal.tsx` + `CategoryRow.tsx` in
           `src/features/library/` (still flat — 7 files total, under the
           8-file split threshold). `CategoriesModal` owns
           `renamingId: string | null` (only one row editable at a time,
           confirmed during grill-me) and passes it + a setter down to each
           `CategoryRow`; opening one row's rename mode implicitly closes
           any other via that single piece of state.
-    - [ ] Item counts (`"7 items"` etc. in the screenshot): no backend
+    - [x] Item counts (`"7 items"` etc. in the screenshot): no backend
           count field exists (`Category` has no `itemCount`,
           `packing-list-go` doesn't return one). Derived client-side —
           `CategoriesModal` calls the existing unparameterized
           `useItems()` (already warm in TanStack Query's cache from
           `LibraryScreen`, so no extra request in practice) and counts by
           `categoryId`.
-    - [ ] Rename mode: inline `TextField` (autofocused) + compact
-          `success`-variant "Save" button (see Architecture section
-          above) + a **Cancel button next to Save** — a deliberate
-          deviation from the screenshot (which shows no cancel
-          affordance), added during grill-me since "there is enough room
-          for both." Escape also cancels rename mode — handled on the
-          input itself (`stopPropagation`) so it doesn't bubble to
-          Radix's `Dialog` and close the whole modal instead. Save
-          disabled only on blank/whitespace name (mirrors
-          `ItemFormModal`'s `submitDisabled` precedent exactly — an
-          unchanged name is allowed through, harmless no-op if
-          resubmitted). Enter in the input submits Save (new
-          `TextField.onSubmit`, see Architecture section above).
-    - [ ] Persistent "New category name…" `TextField` + compact
+    - [x] Rename mode: inline `TextField` (autofocused — accepted
+          `jsx-a11y(no-autofocus)` warning, deliberate reveal-on-click
+          UX, not autofocus-on-page-load) + compact `success`-variant
+          "Save" button (see Architecture section above) + a **Cancel
+          button next to Save** — a deliberate deviation from the
+          screenshot (which shows no cancel affordance), added during
+          grill-me since "there is enough room for both." Escape also
+          cancels rename mode — **not** via `stopPropagation` on the
+          input as originally planned (Radix's Escape-to-close listener
+          runs in the capture phase on `document`, so a descendant's
+          bubble-phase `stopPropagation` can never win that race — found
+          while implementing, see Architecture section's `Modal.tsx`
+          entry for the actual fix: a new `onEscapeKeyDown` pass-through
+          prop, Radix's real supported extension point). Save disabled
+          only on blank/whitespace name (mirrors `ItemFormModal`'s
+          `submitDisabled` precedent exactly — an unchanged name is
+          allowed through, harmless no-op if resubmitted). Enter in the
+          input submits Save (`TextField.onSubmit`, see Architecture
+          section above).
+    - [x] Persistent "New category name…" `TextField` + compact
           `accent`-variant "Add" button, always visible at the bottom of
           the modal (in `Modal`'s `footer` prop, so it never scrolls away
           — same pattern as `ItemFormModal`'s submit button) — a
           distinct, always-visible input+button, **not** the same
           dashed-border `Button variant="dashed"` used for "+ New item"
           elsewhere. Enter submits Add, same as rename's Save.
-    - [ ] Category delete reuses `DeleteIconButton` (already gates
+    - [x] Category delete reuses `DeleteIconButton` (already gates
           `onClick` behind `ConfirmDialog` — Piece 5 is its confirmed
           second consumer per the Architecture section above) as-is, no
-          changes needed to either primitive.
-    - [ ] Duplicate-name (create and rename) and delete-has-items
+          changes needed to either primitive. `CategoryRow`'s clickable
+          row wrapper carries the same accepted
+          `jsx-a11y(prefer-tag-over-role)` warning as `LibraryItemRow`
+          (a `<div role="button">`, not a real `<button>`, because it
+          nests `DeleteIconButton` — a real `<button>` can't contain
+          another interactive `<button>`).
+    - [x] Duplicate-name (create and rename) and delete-has-items
           conflicts need no client-side handling — `useApiMutation`
           already auto-toasts any `ApiError` message, and
           `packing-list-go`'s handler already returns clean messages for
           both (`category_handler.go`) — confirmed by reading current
           source during grill-me, not assumed.
-    - [ ] Temporary "Manage categories (temporary)" trigger button on
+    - [x] Temporary "Manage categories (temporary)" trigger button on
           `LibraryScreen`, same throwaway-harness pattern as
           `ItemFormModal`'s existing temporary triggers — removed once
           Piece 6 wires the real `Categories` pill.
+    - [x] `CategoriesModal.test.tsx` — item-count derivation, rename
+          state (enter/switch/blank-disables-Save/PATCH-on-save),
+          Escape-cancels-without-closing-modal (the regression this piece
+          found), Cancel button, persistent Add row
+          (disabled/POST/clears-on-success), and delete wiring
+          (`DeleteIconButton` → `ConfirmDialog` → DELETE). 7 tests, same
+          `QueryClientProvider` + mocked-`fetch` + RTL harness as
+          `ItemFormModal.test.tsx`, mock setup cited from that file's
+          current source rather than rebuilt from memory.
+    - [x] **Post-verification feedback, addressed same day (2026-07-26)**:
+      - `Button`'s `default`/`danger` variants (`px-6 py-4`) are sized for
+        full-page CTAs, comically oversized in `ConfirmDialog`'s 360px
+        dialog and the rename row's Cancel button. Added `size?: "default"
+| "compact"` to `Button.tsx`, applied to both.
+      - **Layout-shift bug, pre-existing (Piece 4) but only now spotted**:
+        clicking a delete `×` shifted the row's content — `ConfirmDialog`'s
+        `stopPropagation` wrapper `<div>` (needed since React bubbles
+        portal events through the component tree, not the DOM tree) still
+        renders as a real, empty DOM node at its original position even
+        though Radix portals the actual dialog elsewhere — as a 4th flex
+        item in the row's `gap-2.5` container it ate a 10px gap, shrinking
+        the name's `flex-1` span. Confirmed via live DOM measurement
+        (`getBoundingClientRect` before/after: button `x` moved 337→327).
+        Fixed with `className="contents"` on that wrapper — removes it
+        from flex layout entirely while keeping it as a real node for the
+        event-bubbling fix. Affects every `DeleteIconButton` consumer
+        (`LibraryItemRow` too), not just this piece's `CategoryRow`.
   - [ ] **Piece 6 — Screen assembly** (screenshot-grounded: mobile anatomy +
         desktop list screenshots). Header/subtitle, search filtering
         (substring match, ANDed with the active chip, not ORed), category

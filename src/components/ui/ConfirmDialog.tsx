@@ -19,17 +19,22 @@ export function ConfirmDialog({
   return (
     // React bubbles portal events through the component tree, not the DOM
     // tree — stops clicks here from reaching a clickable parent (e.g. a row).
-    <div onClick={(e) => e.stopPropagation()}>
+    <div onClick={(e) => e.stopPropagation()} className="contents">
       <Modal
         title={title}
         onClose={onCancel}
         desktopWidth="lg:w-[360px]"
         footer={
           <div className="flex gap-3">
-            <Button className="flex-1" onClick={onCancel}>
+            <Button size="compact" className="flex-1" onClick={onCancel}>
               Cancel
             </Button>
-            <Button variant="danger" className="flex-1" onClick={onConfirm}>
+            <Button
+              variant="danger"
+              size="compact"
+              className="flex-1"
+              onClick={onConfirm}
+            >
               {confirmLabel}
             </Button>
           </div>
