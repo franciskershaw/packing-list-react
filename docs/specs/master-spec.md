@@ -1261,22 +1261,117 @@ deleteTemplate(id, name) }`. Desktop consumes every field
           state. First pass surfaced the two bugs above (409 on repeat
           create, spurious 404 toast on delete) — developer confirmed
           both fixed on the second pass.
-  - [ ] **Piece 4a — Inline title/description editing.** Screenshot-
-        grounded for the static look (all 10 screenshots show the saved
-        state); focused-state visual is the named inference above.
+  - [ ] **Piece 4a — Inline title/description editing.** Grilled
+        2026-07-26 against `Screenshot 2026-07-26 at 09.13.59.png` (desktop
+        list+detail — saved title+description), `...09.14.16.png` (desktop
+        empty-template detail — confirms the placeholder-styled "Add a
+        description…" treatment used in the edit view itself, distinct
+        from the list/rail's "No description yet" fallback), and
+        `...09.16.02.png` (mobile detail). Focused-state visual has
+        neither screenshot nor spec (ticket intro's named-inference note,
+        line ~979) — ships with a reasonable default focus treatment
+        (`InlineEditableHeading` currently sets a blanket `outline-none`
+        with nothing replacing it, so this piece must add a real
+        `focus-visible` treatment, not just leave focus invisible),
+        developer eyeballs/corrects after.
+    - [ ] **New interaction pattern, recorded here per this project's
+          no-ADR override**: an always-editable field (no separate view/
+          edit mode toggle) that saves on blur/Enter and reverts on
+          Escape isn't precedented elsewhere in this codebase —
+          `CategoryRow`'s inline rename is an explicit toggle-mode
+          Save/Cancel form (`isRenaming` flips a whole different JSX
+          branch), not applicable here. Will recur for trip detail's title
+          later (this epic's Piece 4c entry, line ~1074), so this is a
+          real cross-cutting decision, not a one-off.
+    - [ ] **Composition, decided during grill-me**: new
+          `detail/TemplateDetailHeader.tsx` wraps two
+          `InlineEditableHeading` instances (title, description), each
+          driven by a new colocated `detail/useInlineEditableField.ts`
+          hook — two real call sites (title + description) inside this
+          one component already clears the structure-convention bar, no
+          speculative extraction. `TemplatesDesktop`/`TemplatesMobile` each
+          render `<TemplateDetailHeader template={selectedTemplate} />` in
+          place of Piece 3's placeholder `<p>{selectedTemplate.name}</p>`
+          line — nothing else in either placeholder changes:
+          `BackHeader`/the "TEMPLATE" eyebrow label, group-card assembly,
+          the delete button, and loading/no-selection states all stay
+          Piece 6/4c's job, not pulled forward into this piece.
+      - [ ] `useInlineEditableField({ savedValue, onSave, allowBlank })`
+            returns `{ value, onChange, onBlur, onKeyDown }` to spread onto
+            `InlineEditableHeading`. `allowBlank` is `true` for
+            description, `false` for title — derived by
+            `TemplateDetailHeader` from `InlineEditableHeading`'s existing
+            `variant` prop, not duplicated as a second prop on the atom.
+      - [ ] `InlineEditableHeading` gains passthrough `onBlur`/`onKeyDown`
+            props (optional) — the only change to the atom itself; Piece
+            2's exclusion of the save-strategy machine from the atom
+            stays intact, the state machine lives entirely in the new
+            hook.
+      - [ ] **Double-commit guard, decided during grill-me**: Enter and
+            Escape both call `.blur()` after handling the key (to defocus
+            per the checklist below), which fires the input's native
+            `blur` event right after — without a guard, `onBlur`'s own
+            commit-or-revert logic would then re-run against a `savedValue`
+            prop that hasn't caught up yet (mutations are async), double-
+            firing the PATCH (Enter) or clobbering the just-reverted value
+            (Escape). Fixed with a `useRef<boolean>` "suppress next blur"
+            flag: Enter/Escape's `onKeyDown` sets it before calling
+            `.blur()`; `onBlur` checks and consumes it first, skipping its
+            own logic when set. A genuine blur with no preceding
+            Enter/Escape (click away, Tab) leaves the flag unset, so
+            `onBlur` runs its normal commit logic untouched.
     - [ ] Locally-controlled while focused; PATCH fires on blur and Enter,
           only if the value changed (§4.2)
+      - [ ] **Enter behavior, decided during grill-me**: Enter commits
+            (save-if-changed, or revert-if-blank-title, same logic `onBlur`
+            uses) and then blurs — mirrors Escape's explicit "reverts and
+            blurs" symmetry, and gives a visible commit confirmation (the
+            focus treatment disappears).
+      - [ ] **Trimming, decided during grill-me**: title is trimmed for
+            both the blank-check and the saved value (matches
+            `CategoryRow`'s existing `trimmedName` precedent) — the input
+            also visually snaps to the trimmed text on commit, even when
+            unchanged from `savedValue` (e.g. only whitespace was added).
+            Description is trimmed before saving too, but whitespace-only
+            never reverts — blank description is explicitly legal.
     - [ ] Blank name on blur reverts to the previous value, no error shown
           (consistent with the no-inline-field-errors rule; a duplicate-
-          name conflict still surfaces via the automatic toast)
+          name conflict still surfaces via the automatic toast — no
+          client-side special-casing needed, `useApiMutation`'s existing
+          global error handling already covers it, same as every other
+          rejected mutation in this project). Whatever the user typed
+          stays visible (blurred) after a failed save — no inline error
+          state, matching the no-inline-field-errors rule; the toast is
+          the only signal, and re-focusing the field to fix and resubmit
+          is on the user.
     - [ ] Escape reverts to last-saved value and blurs
+    - [ ] **Desktop remount-on-switch, decided during grill-me**: unlike
+          mobile (whose list↔detail conditional already unmounts/remounts
+          the whole detail block on every selection change), desktop's
+          detail pane stays mounted across different truthy selections.
+          `TemplateDetailHeader` is keyed by `key={selectedTemplate.id}` in
+          `TemplatesDesktop` (harmless no-op to also key it in
+          `TemplatesMobile` for consistency) so switching templates resets
+          draft state via natural remount — no resync-on-prop-change
+          `useEffect`.
     - [ ] Empty description is legal — list/rail falls back to "No
           description yet" (already visible in the mobile-list and
           desktop-empty-state screenshots)
     - [ ] Save invalidates the templates list query too, not just detail —
-          the rail/card name must update after a rename
-    - [ ] Vitest test for the save/revert state machine (see Architecture
-          section's test-candidate list)
+          the rail/card name must update after a rename. **Already true**:
+          `useUpdateTemplate` invalidates the broad `TEMPLATES_QUERY_KEY`
+          (Piece 1's existing "Invalidation scope" decision covers list +
+          any mounted detail query), no change needed here.
+    - [ ] Vitest test for the save/revert state machine — targets
+          `useInlineEditableField` directly via `renderHook`
+          (`@testing-library/react`), same precedent as
+          `useMediaQuery.test.ts`. Cases: no PATCH when blurred unchanged;
+          PATCH with the trimmed value when changed; blank title on blur
+          reverts without a PATCH; blank description on blur saves (no
+          revert); Enter commits and blurs; Escape reverts and blurs
+          without a PATCH regardless of draft content; a blur immediately
+          following a programmatic Enter/Escape blur doesn't double-commit
+          (guards the double-commit fix above).
   - [ ] **Piece 4b — Item row + quantity stepper.** Screenshot-grounded
         (all detail-view screenshots).
     - [ ] `CollectionItemRow` wired with `×` (leading, `confirm={false}`) + name + notes (read-only) + `QuantityStepper` (trailing)
