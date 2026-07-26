@@ -184,6 +184,20 @@ Feature folders (`src/features/<name>/`) stay flat — no
 `components/`/`hooks/` subfolders — until a folder passes 8 files.
 Revisit the split only then.
 
+`src/components/` is split by reusability shape, not by feature/domain:
+`ui/` holds primitives with zero domain assumptions (`Button`, `Modal`,
+`Toast`, `TextField`, `Avatar`, `ConfirmDialog`, `Chip`,
+`DeleteIconButton`, `SystemBadge`, `GoogleIcon` — could work in any app);
+`nav/` holds the app-shell navigation components (`MobileTabBar`,
+`DesktopSidebar`); `detail/` (added 2026-07-26, PACKFE-004 Piece 2) holds
+composites shaped around this app's specific recurring "grouped-collection
+list+detail screen" pattern shared by Library/Templates/Trips
+(`CategoryGroupCard`, `CollectionItemRow`, `RailRow`, `BackHeader`,
+`EmptyStatePanel`, `QuantityStepper`, `InlineEditableHeading`) — `ui/` had
+grown to 17 files mixing both shapes before this split. A new atom goes in
+`detail/` only if it's shaped around that specific list/detail pattern;
+everything else defaults to `ui/` unless it's nav-shell-specific.
+
 Apply this by default while writing new code, not just when asked to
 simplify — self-check new files/components against it before calling a
 feature done.
