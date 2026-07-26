@@ -1,3 +1,4 @@
+import { TemplateDetailHeader } from "../../components/detail/TemplateDetailHeader";
 import type { UseTemplatesScreenResult } from "./useTemplatesScreen";
 
 // Placeholder body for PACKFE-004 Piece 3 — proves the route-driven
@@ -32,7 +33,10 @@ export function TemplatesDesktop({
       <main>
         {selectedTemplate ? (
           <>
-            <p>{selectedTemplate.name}</p>
+            <TemplateDetailHeader
+              key={selectedTemplate.id}
+              template={selectedTemplate}
+            />
             <button
               onClick={() =>
                 deleteTemplate(selectedTemplate.id, selectedTemplate.name)

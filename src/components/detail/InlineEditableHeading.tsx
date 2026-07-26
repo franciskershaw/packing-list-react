@@ -1,8 +1,12 @@
+import type { KeyboardEvent } from "react";
+
 interface InlineEditableHeadingProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   variant: "title" | "description";
+  onBlur?: () => void;
+  onKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
 }
 
 const VARIANT_CLASSES: Record<InlineEditableHeadingProps["variant"], string> = {
@@ -16,14 +20,18 @@ export function InlineEditableHeading({
   onChange,
   placeholder,
   variant,
+  onBlur,
+  onKeyDown,
 }: InlineEditableHeadingProps) {
   return (
     <input
       type="text"
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      onBlur={onBlur}
+      onKeyDown={onKeyDown}
       placeholder={placeholder}
-      className={`w-full border-0 bg-transparent outline-none ${VARIANT_CLASSES[variant]}`}
+      className={`w-full rounded-sm border-0 bg-transparent outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${VARIANT_CLASSES[variant]}`}
     />
   );
 }
