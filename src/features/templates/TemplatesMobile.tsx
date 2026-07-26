@@ -1,5 +1,7 @@
+import { Fragment } from "react";
+
 import { TemplateDetailHeader } from "../../components/detail/TemplateDetailHeader";
-import { TemplateItemRow } from "./TemplateItemRow";
+import { TemplateDetailBody } from "./TemplateDetailBody";
 import type { UseTemplatesScreenResult } from "./useTemplatesScreen";
 
 // Placeholder body for PACKFE-004 Piece 3 — proves the route-driven
@@ -24,26 +26,13 @@ export function TemplatesMobile({
       <div className="flex flex-col gap-4 p-6">
         <button onClick={goToList}>Back</button>
         {selectedTemplate && (
-          <>
-            <TemplateDetailHeader
-              key={selectedTemplate.id}
+          <Fragment key={selectedTemplate.id}>
+            <TemplateDetailHeader template={selectedTemplate} />
+            <TemplateDetailBody
               template={selectedTemplate}
+              deleteTemplate={deleteTemplate}
             />
-            {selectedTemplate.items.map((item) => (
-              <TemplateItemRow
-                key={item.itemId}
-                templateId={selectedTemplate.id}
-                item={item}
-              />
-            ))}
-            <button
-              onClick={() =>
-                deleteTemplate(selectedTemplate.id, selectedTemplate.name)
-              }
-            >
-              Delete
-            </button>
-          </>
+          </Fragment>
         )}
       </div>
     );

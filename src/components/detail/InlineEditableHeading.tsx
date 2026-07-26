@@ -11,8 +11,8 @@ interface InlineEditableHeadingProps {
 
 const VARIANT_CLASSES: Record<InlineEditableHeadingProps["variant"], string> = {
   title:
-    "font-heading text-[25px] lg:text-[27px] font-bold text-heading placeholder:text-muted",
-  description: "text-sm text-secondary placeholder:text-muted",
+    "truncate font-heading text-[25px] lg:text-[27px] font-bold text-heading placeholder:text-muted",
+  description: "truncate text-sm text-secondary placeholder:text-muted",
 };
 
 export function InlineEditableHeading({

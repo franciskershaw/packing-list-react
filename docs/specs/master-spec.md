@@ -1492,8 +1492,15 @@ template={selectedTemplate} />` in place of Piece 3's placeholder
         for the mobile empty-template state specifically (not among the 10) — treated as a named inference (same `EmptyStatePanel`, which
         has no `lg:`-prefixed classes of its own, so it's breakpoint-
         agnostic already), same treatment as this ticket's other
-        screenshot gaps noted above.
-    - [ ] `TemplateDetailBody.tsx` (`src/features/templates/`) — new
+        screenshot gaps noted above. **Second layout finding, confirmed
+        while implementing**: the desktop empty-template screenshot
+        (`...09.14.16.png`) shows "Use for a new trip" and "Delete" inline
+        on one row (Delete to the right); the mobile populated-detail
+        screenshot (`...09.16.07.png`) shows the CTA full-width with
+        "Delete template" centered on its own line below — a genuine
+        breakpoint difference, not an inconsistency to normalize away
+        (built as `flex-col` → `lg:flex-row`).
+    - [x] `TemplateDetailBody.tsx` (`src/features/templates/`) — new
           shared component owning everything from the group list through
           the delete flow, consumed identically by `TemplatesDesktop`/
           `TemplatesMobile` (mirrors `TemplateDetailHeader`'s existing
@@ -1502,24 +1509,26 @@ template={selectedTemplate} />` in place of Piece 3's placeholder
           screen files — that's genuinely breakpoint-specific and is
           Piece 6's territory. Fetches its own `useItems()`/
           `useCategories()` to build `groupTemplateItems`' input.
-    - [ ] `CategoryGroupCard` per non-empty category, single column,
+    - [x] `CategoryGroupCard` per non-empty category, single column,
           empty groups omitted (same rule as Library)
-    - [ ] Empty-template state: `EmptyStatePanel` replaces both the group
+    - [x] Empty-template state: `EmptyStatePanel` replaces both the group
           list and the dashed "+ Add items" row (matches the desktop
-          empty-template screenshot)
-    - [ ] **Gap caught this grill-me**: the dashed "+ Add items" row and
+          empty-template screenshot — exact copy confirmed from
+          `...09.14.16.png`: title "Nothing in here yet", message "Click
+          here to start building it.", action "+ Add items")
+    - [x] **Gap caught this grill-me**: the dashed "+ Add items" row and
           the empty panel's own action button both nominally "open the
           picker (Piece 5)", but Piece 5 doesn't exist yet — 4c is built
           first. Decided: stub both to a toast, same treatment as the CTA
           below, rather than pulling Piece 5 forward. `toast("The
-    add-items picker is coming soon", "success")` for both triggers.
-    - [ ] "Use for a new trip" green block CTA (`Button variant="secondary"`
+add-items picker is coming soon", "success")` for both triggers.
+    - [x] "Use for a new trip" green block CTA (`Button variant="secondary"`
           — exact copy confirmed from the desktop empty-template
           screenshot, not the roadmap's earlier paraphrase "New list from
           template") — stubbed action per the Architecture section's
           scope-boundary decision: `toast("Trip creation is coming soon",
-    "success")`.
-    - [ ] "Delete template" — bare `notice-text` button (`InteractiveButton`
+"success")`.
+    - [x] "Delete template" — bare `notice-text` button (`InteractiveButton`
           with `text-sm font-bold text-notice-text`, not a `Button`
           variant — none of the existing variants are bare/backgroundless),
           goes through `ConfirmDialog` directly (not `DeleteIconButton` —
@@ -1535,20 +1544,75 @@ template={selectedTemplate} />` in place of Piece 3's placeholder
           no-selection state" simultaneously, since selection is
           route-driven) are already built and tested by Piece 3; no new
           logic needed here.
-    - [ ] **Test approach, decided during grill-me**: no new automated
+    - [x] **Test approach, decided during grill-me**: no new automated
           test. Matches `LibraryScreen.tsx`'s own precedent — its
           equivalent assembly has never had a direct test, because the
           real logic underneath (`groupLibraryItems`/`groupTemplateItems`)
           already has its own. Verified manually instead.
-    - [ ] **Manual verification, decided during grill-me**: the temporary
-          seed control built (and then removed) for Piece 4b's own
-          verification is gone, and Piece 5 doesn't exist yet, so there's
-          no in-app way to get multi-category items onto a template.
-          `packing-list-go/requests/seed-piece-4c-groups.http` — a new,
-          explicitly scratch/ticket-scoped `.http` file (not permanent
-          endpoint documentation like its siblings) that creates a few
-          categories and items and attaches them to a template across
-          categories, so the grouped layout has something real to render.
+    - [x] **Manual verification, approach corrected after the first attempt
+          failed**: a `.http` seed file
+          (`packing-list-go/requests/seed-piece-4c-groups.http`) was tried
+          first, but it required pasting a real access token by hand and
+          broke partway through category creation (item names collided
+          with the developer's real library — item names are unique
+          per-user, not just per-category) — deleted, wrong approach for
+          a personal app that already has real seeded data. Replaced with
+          `AddTestItemControl.tsx` (`src/features/templates/`) —
+          reintroduced from Piece 4b's own precedent, this time adding
+          **existing** library items (already spread across the
+          developer's real categories) to a template rather than needing
+          any new ones. Temporarily wired into both `TemplatesDesktop`/
+          `TemplatesMobile` next to `TemplateDetailBody`; same
+          replace-wholesale-later precedent as the rest of the Piece 3
+          placeholder scaffold, removed once verification is done (see
+          Piece 4b's own entry above for the identical lifecycle).
+    - [x] **Two real bugs caught during this manual verification, both
+          fixed**: (1) `TemplatesDesktop`/`TemplatesMobile` put
+          `key={selectedTemplate.id}` on _two_ sibling elements
+          (`TemplateDetailHeader` and `TemplateDetailBody`) — React logged
+          a duplicate-key warning; fixed by wrapping both in a single
+          `<Fragment key={selectedTemplate.id}>` instead, preserving the
+          Piece 4a remount-on-switch behavior with one key, not two. (2)
+          the desktop `<main>` (Piece 3's placeholder scaffold) had no
+          `flex-1`, so as a flex child it shrank to its content's width
+          instead of filling the pane — the whole detail view rendered as
+          a narrow column against a wall of empty space, not matching the
+          screenshot at all. Fixed with `flex-1 min-w-0` on `<main>`; full
+          rail/sidebar styling is still Piece 6's job, this only fixes the
+          space-filling behavior the placeholder should have had from
+          Piece 3. Both confirmed fixed by reloading in a real browser
+          (console clean, layout matches the screenshot at both
+          breakpoints) — caught only because the developer asked for an
+          actual look rather than trusting the code read.
+    - [x] **Deliberate deviations from the Claude Design export, decided
+          after using the built screen**: the developer flagged two real
+          UX problems only visible once real (not mocked) data was in the
+          template — a screenshot review wouldn't have caught either.
+          (1) The bottom dashed "+ Add items" row required scrolling past
+          every category to reach the most frequent action on this
+          screen. Moved into `TemplateDetailHeader`'s own row instead —
+          `flex items-start justify-between gap-3`, title/description in
+          a `min-w-0 flex-1` column (now `truncate`d — added to
+          `InlineEditableHeading`'s `VARIANT_CLASSES` for both variants),
+          `Button variant="accent"` pinned `shrink-0` on the right. The
+          bottom dashed row and its `InteractiveButton` import in
+          `TemplateDetailBody` are removed entirely — one add-items
+          entry point, not two — `EmptyStatePanel`'s own centered CTA
+          still covers the zero-items case. (2) "Use for a new trip" at
+          full-width `secondary`-variant size read as oversized next to
+          "Delete template" — this was actually masked before the
+          `flex-1`/`min-w-0` fix above, since the pane rendered too
+          narrow for the button to visually dominate; fixing the width
+          bug is what made this visible. Kept `variant="secondary"` as
+          the base (mobile is unchanged — still full-width, thumb-
+          friendly) and added `lg:w-auto lg:rounded-full lg:px-5 lg:py-2
+    lg:text-sm` so desktop only gets a compact pill next to
+          Delete — a genuine breakpoint difference, same treatment as
+          the Delete-copy and CTA/Delete-row-layout findings above, not
+          a new variant (rejected reusing the existing `success` variant
+          verbatim — it's `rounded-full`, which would have silently
+          changed mobile's shape too, not just resized desktop). Verified
+          at both breakpoints in a real browser after each change.
     - [ ] **Open question for the API, flagged not assumed**: whether
           trips already seeded from a template block its deletion. If the
           backend rejects it, the automatic error toast already covers the
