@@ -38,6 +38,11 @@ export interface UseTemplatesScreenResult {
   isAddItemsOpen: boolean;
   openAddItems: () => void;
   closeAddItems: () => void;
+  /** The id of the template `createTemplate` just navigated to, if any —
+   * lets the title field autofocus/select-all only right after creation,
+   * not on every ordinary selection. Cleared on the next explicit
+   * navigation (selectTemplate/goToList). */
+  justCreatedTemplateId: string | null;
 }
 
 export function useTemplatesScreen(): UseTemplatesScreenResult {
@@ -49,6 +54,9 @@ export function useTemplatesScreen(): UseTemplatesScreenResult {
   const createTemplateMutation = useCreateTemplate();
   const deleteTemplateMutation = useDeleteTemplate();
   const [isAddItemsOpen, setIsAddItemsOpen] = useState(false);
+  const [justCreatedTemplateId, setJustCreatedTemplateId] = useState<
+    string | null
+  >(null);
 
   return {
     templates: templates.data ?? [],
@@ -56,12 +64,23 @@ export function useTemplatesScreen(): UseTemplatesScreenResult {
     selectedTemplateId: templateId,
     selectedTemplate: selected.data,
     isSelectedLoading: selected.isLoading,
-    selectTemplate: (id) => navigate(`/templates/${id}`),
-    goToList: () => navigate("/templates"),
+    selectTemplate: (id) => {
+      setJustCreatedTemplateId(null);
+      navigate(`/templates/${id}`);
+    },
+    goToList: () => {
+      setJustCreatedTemplateId(null);
+      navigate("/templates");
+    },
     createTemplate: () => {
       createTemplateMutation.mutate(
         { name: nextUntitledName(templates.data ?? []) },
-        { onSuccess: (template) => navigate(`/templates/${template.id}`) },
+        {
+          onSuccess: (template) => {
+            setJustCreatedTemplateId(template.id);
+            navigate(`/templates/${template.id}`);
+          },
+        },
       );
     },
     deleteTemplate: (id, name) => {
@@ -73,5 +92,6 @@ export function useTemplatesScreen(): UseTemplatesScreenResult {
     isAddItemsOpen,
     openAddItems: () => setIsAddItemsOpen(true),
     closeAddItems: () => setIsAddItemsOpen(false),
+    justCreatedTemplateId,
   };
 }

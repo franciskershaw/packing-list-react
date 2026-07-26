@@ -10,6 +10,7 @@ export interface Template {
   name: string;
   description: string | null;
   items: TemplateItem[];
+  itemCount: number;
 }
 
 export interface TemplateItem {

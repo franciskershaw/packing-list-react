@@ -7,6 +7,7 @@ interface InlineEditableHeadingProps {
   variant: "title" | "description";
   onBlur?: () => void;
   onKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
+  autoFocus?: boolean;
 }
 
 const VARIANT_CLASSES: Record<InlineEditableHeadingProps["variant"], string> = {
@@ -22,6 +23,7 @@ export function InlineEditableHeading({
   variant,
   onBlur,
   onKeyDown,
+  autoFocus,
 }: InlineEditableHeadingProps) {
   return (
     <input
@@ -31,6 +33,8 @@ export function InlineEditableHeading({
       onBlur={onBlur}
       onKeyDown={onKeyDown}
       placeholder={placeholder}
+      autoFocus={autoFocus}
+      onFocus={(e) => autoFocus && e.target.select()}
       className={`w-full rounded-sm border-0 bg-transparent outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${VARIANT_CLASSES[variant]}`}
     />
   );

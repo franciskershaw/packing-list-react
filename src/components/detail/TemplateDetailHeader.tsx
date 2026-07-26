@@ -7,11 +7,13 @@ import { useInlineEditableField } from "./useInlineEditableField";
 interface TemplateDetailHeaderProps {
   template: Template;
   onAddItems: () => void;
+  autoFocusTitle?: boolean;
 }
 
 export function TemplateDetailHeader({
   template,
   onAddItems,
+  autoFocusTitle,
 }: TemplateDetailHeaderProps) {
   const updateTemplate = useUpdateTemplate();
 
@@ -31,7 +33,11 @@ export function TemplateDetailHeader({
   return (
     <div className="flex items-start justify-between gap-3">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <InlineEditableHeading variant="title" {...titleField} />
+        <InlineEditableHeading
+          variant="title"
+          autoFocus={autoFocusTitle}
+          {...titleField}
+        />
         <InlineEditableHeading
           variant="description"
           placeholder="Add a description…"

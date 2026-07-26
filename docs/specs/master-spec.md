@@ -1736,33 +1736,105 @@ categories[0]?.id` precedent exactly (both screenshots show the
           real browser at both breakpoints against the 5 screenshots
           above: search/filter, both create-inline steps, bulk-add,
           incrementing an already-added item, and Done. Held up.
-  - [ ] **Piece 6 — List/rail assembly + states.** Screenshot-grounded:
-        desktop list+detail, desktop empty-template detail, mobile list.
-        Depends on the companion `packing-list-go` ticket for real item
-        counts (Architecture section above).
-    - [ ] Mobile: card list (name + count same line, description below,
-          whole card is the tap target — same `div role="button"
-tabIndex={0}` + Enter/Space pattern as `LibraryItemRow`)
-    - [ ] Desktop: fixed 330px rail (`RailRow`, selected treatment
-          corrected during Piece 2's grill-me — see that piece's entry
-          below, not `bg-accent-subtle`) beside an independently-scrolling
-          detail pane; no-selection state built from the written-spec
-          inference above
-    - [ ] "+ New"/"+ New template": creates immediately (`POST` with name
+  - [x] **Piece 6 — List/rail assembly + states.** Screenshot-grounded:
+        desktop list+detail (`...09.13.59.png`), desktop empty-template
+        detail (`...09.14.16.png`), mobile list (`...09.15.57.png`) — all
+        re-viewed fresh for this piece. Depended on PACK-034
+        (`packing-list-go`), now shipped — `Template` gained `itemCount`
+        on the frontend type to match. Talked through before coding per
+        this project's "conversation, not grill-me" override; no
+        sub-piece split needed, most of the hard atoms (`RailRow`,
+        `BackHeader`, `EmptyStatePanel`, `Button`'s existing variants)
+        already existed from Piece 2.
+    - [x] **Header subtitle correction, caught re-checking the actual
+          screenshots**: "Build once, pack forever." — confirmed
+          pixel-for-pixel across all 3 screenshots above, not the
+          handoff's own annotation text ("Reusable starting points.",
+          which matches no actual screenshot). Screenshot wins per this
+          project's hard rule. Header shape (`h1.text-3xl.font-bold` +
+          `p.text-sm.text-secondary`, action button trailing) mirrors
+          `LibraryScreen.tsx`'s existing header precedent exactly.
+    - [x] Mobile: card list (name + count same line, description below,
+          whole card is the tap target). New `TemplateListCard.tsx`
+          (`src/features/templates/`, feature-local — single consumer).
+          **Deviated from the ticket's own `div role="button"` +
+          `LibraryItemRow` precedent**: oxlint's `prefer-tag-over-role`
+          caught that this card, unlike `LibraryItemRow`, nests no
+          interactive children (no delete button) — the `div`
+          workaround exists there specifically to avoid nesting a real
+          `<button>` inside another. A plain `<button type="button">`
+          here is simpler, gets Enter/Space activation for free, and
+          clears the lint warning outright. No dedicated test (no
+          branching like `LibraryItemRow`'s system/non-system split —
+          confirmed with the developer before skipping) — manual
+          verification only.
+    - [x] Desktop: fixed 330px rail (`w-[330px] shrink-0`, `RailRow`,
+          selected treatment per Piece 2's correction, not
+          `bg-accent-subtle`) beside an independently-scrolling detail
+          pane. **First screen needing independently-scrolling sibling
+          panes** — required a `h-full` root (filling `AppShell`'s
+          `<main>`, itself already `overflow-y-auto`) with `min-h-0` on
+          both scrolling children so their own `overflow-y-auto` clips
+          instead of growing the outer container (a flex nested-scroll
+          gotcha, not obvious from the screenshot alone). Detail pane
+          content, when a template is selected, gets the written-spec's
+          `max-w-[640px]` centered box with `40px`/`30px`/`70px`
+          padding; the no-selection state bypasses that box entirely and
+          centers directly in the full scroll region instead (needed its
+          own `flex h-full items-center justify-center`, since the 640px
+          box has no explicit height to center within).
+          **Also swapped the detail pane's outer element from `<main>`
+          to a plain `<div>`** — Piece 3's placeholder had nested a
+          second `<main>` landmark inside `AppShell`'s own `<main>`,
+          invalid/confusing for a11y; caught and fixed while doing this
+          piece's full wholesale rewrite of the same markup, not a
+          separate out-of-scope fix.
+    - [x] No-selection state copy — **named inference, no screenshot or
+          exact copy exists anywhere** (confirmed searching the
+          handoff's full text, only the written layout spec exists):
+          "No template selected" / "Pick one from the list to see
+          what's inside." Developer confirmed shipping this default,
+          same treatment as this ticket's other screenshot/copy gaps.
+    - [x] "+ New"/"+ New template": creates immediately (`POST` with name
           "Untitled template", empty description) and navigates straight
-          into detail — no New-template dialog, matches the handoff's own
-          "create immediately" call and the empty-template screenshot's
-          "Untitled template" row. Consider focusing/selecting the name
-          input on arrival (ties into Piece 4a and the autofocus-race
-          reasoning in the Architecture section)
-    - [ ] Zero-templates state: `EmptyStatePanel` in the list/rail,
-          matching-voice copy, CTA fires the same create action as "+ New"
-          (see decision above)
-    - [ ] Loading: render header + "+ New" immediately (data-independent),
-          withhold the list/rail/detail until queries resolve — same
-          precedent as PACKFE-003 Piece 6. Still not done — this is the
-          full Piece 6 loading-state design, not just the isolated fix
-          below.
+          into detail — already fully wired by Piece 3's `createTemplate`,
+          no new logic needed. Desktop's full-width block button reuses
+          `Button variant="primary"` verbatim (exact visual match, no new
+          variant); mobile's small pill reuses `variant="accent"`
+          (matches "+ Add items"'s existing treatment).
+    - [x] **Autofocus-on-create, implemented (not skipped) after checking
+          with the developer**: phrased as a "consider" in both the
+          handoff and this checklist, so confirmed before building rather
+          than assuming either way. `useTemplatesScreen` gained
+          `justCreatedTemplateId` (cleared on any explicit
+          `selectTemplate`/`goToList` navigation, so only the create
+          flow's own auto-navigation triggers it, not re-visiting the
+          same template later) — passed down as `autoFocusTitle` to
+          `TemplateDetailHeader`'s title field only (not description).
+          `InlineEditableHeading` gained `autoFocus` + an `onFocus`
+          handler that selects all text, so typing immediately replaces
+          "Untitled template" rather than inserting mid-word. Vitest
+          coverage added to `useTemplatesScreen.test.tsx`: `createTemplate`
+          sets it, an explicit `goToList` clears it (real state-transition
+          logic, not presentational — worth testing per this project's
+          testing guidance).
+    - [x] Zero-templates state: `EmptyStatePanel` in the list/rail —
+          **also a named inference** (neither export shows a brand-new
+          account with zero templates; confirmed via the handoff's own
+          "NO DESIGN EXISTS" flag for this exact gap). Copy: "No
+          templates yet" / "Click below to build your first one." / "+
+          New template", echoing the empty-template-detail panel's
+          existing tone. CTA fires the same `createTemplate` action as
+          "+ New".
+    - [x] Loading: header + "+ New"/"+ New template" render immediately
+          (data-independent — outside the `isLoading` guard entirely in
+          both `TemplatesDesktop`/`TemplatesMobile`), list/rail/detail
+          withheld until queries resolve — same precedent as PACKFE-003
+          Piece 6. Desktop's detail pane also withholds the no-selection
+          copy during the templates-list's own initial load (not just
+          during a single template's own fetch, which the isolated fix
+          below already covered) — avoids a flash of "no template
+          selected" before the list has even arrived.
       - [x] **Desktop-specific wrinkle, pulled forward on its own
             (2026-07-26), ahead of the rest of Piece 6**: while a
             selected template's detail is still loading, don't flash the
@@ -1778,8 +1850,34 @@ tabIndex={0}` + Enter/Space pattern as `LibraryItemRow`)
 template selected</p>`. Mobile doesn't have this bug — its
             placeholder has no equivalent "no selection" copy in the
             loading branch, so no change needed there.
-    - [ ] Delete-and-return: mobile pops back to the list, desktop returns
-          to the no-selection state (ties into Piece 4c)
+    - [x] Delete-and-return: mobile pops back to the list, desktop returns
+          to the no-selection state — already fully wired by Piece 3's
+          `deleteTemplate` (navigates to `/templates`); this piece just
+          renders the correct resulting UI per breakpoint, no new logic.
+    - [x] `tsc --noEmit`, oxlint, and prettier all clean; full 91-test
+          suite green (90 going in, +1 for the autofocus-clearing state
+          transition). Frontend `Template` type gained `itemCount:
+    number` to match PACK-034's response shape — a stale `tsc`
+          incremental cache initially masked 4 now-invalid test
+          fixtures missing the field; cleared the cache and fixed all 4
+          once caught.
+    - [ ] **Manual verification** — not done yet. Needs a real look in
+          the browser at both breakpoints: list/rail rendering with real
+          item counts, zero-templates state (temporarily, on a fresh
+          account or by archiving test data), "+ New"/"+ New template"
+          creating and autofocusing/select-all on the title, desktop's
+          independently-scrolling rail vs. detail pane with enough
+          templates/items to actually overflow, delete-and-return on
+          both breakpoints. `npm run dev` + `packing-list-go` on `:8080`
+          — developer's job, not automatable on this project.
+    - [ ] **Flagged, not fixed**: `src/features/templates/` is now at 11
+          files (`TemplateListCard.tsx` pushed it further past the
+          8-file threshold `CLAUDE.md`'s Structure conventions section
+          sets for flat feature folders — it was already at 10 after
+          Piece 5's `TemplateAddItemsModal.tsx`, not something this piece
+          introduced alone). Not restructured here — a folder split is a
+          real judgement call (by concern vs. by shape) that's its own
+          decision, not a silent side effect of this piece's own work.
 
 ### Epic 5: Trips
 

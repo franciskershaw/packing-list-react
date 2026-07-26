@@ -11,12 +11,14 @@ export function RailRow({ title, meta, selected, onClick }: RailRowProps) {
   return (
     <InteractiveButton
       onClick={onClick}
-      className={`w-full rounded-2xl border px-4 py-3 text-left ${
+      className={`w-full min-w-0 rounded-2xl border px-4 py-3 text-left ${
         selected ? "border-accent bg-bg" : "border-transparent"
       }`}
     >
-      <p className="font-heading text-base font-bold text-heading">{title}</p>
-      <p className="mt-0.5 text-sm text-secondary">{meta}</p>
+      <p className="truncate font-heading text-base font-bold text-heading">
+        {title}
+      </p>
+      <p className="mt-0.5 truncate text-sm text-secondary">{meta}</p>
     </InteractiveButton>
   );
 }

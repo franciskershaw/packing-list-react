@@ -38,12 +38,14 @@ const templates: Template[] = [
     name: "Festival essentials",
     description: "Mud-proof and music-ready.",
     items: [],
+    itemCount: 0,
   },
   {
     id: "t-2",
     name: "Beach holiday",
     description: null,
     items: [],
+    itemCount: 0,
   },
 ];
 
@@ -150,6 +152,7 @@ describe("useTemplatesScreen", () => {
       name: "Untitled template",
       description: null,
       items: [],
+      itemCount: 0,
     };
     mockFetch({
       "GET /api/templates": () => jsonResponse(200, templates),
@@ -173,6 +176,33 @@ describe("useTemplatesScreen", () => {
         body: JSON.stringify({ name: "Untitled template" }),
       }),
     );
+    expect(latest?.justCreatedTemplateId).toBe("t-new");
+  });
+
+  it("justCreatedTemplateId is cleared by an explicit selectTemplate/goToList navigation, not just any render", async () => {
+    const created: Template = {
+      id: "t-new",
+      name: "Untitled template",
+      description: null,
+      items: [],
+      itemCount: 0,
+    };
+    mockFetch({
+      "GET /api/templates": () => jsonResponse(200, templates),
+      "POST /api/templates": () => jsonResponse(201, created),
+    });
+
+    renderAt("/templates");
+    await waitFor(() => expect(latest?.templates).toEqual(templates));
+
+    act(() => latest?.createTemplate());
+    await waitFor(() => expect(latest?.justCreatedTemplateId).toBe("t-new"));
+
+    act(() => latest?.goToList());
+    await waitFor(() =>
+      expect(screen.getByTestId("pathname")).toHaveTextContent("/templates"),
+    );
+    expect(latest?.justCreatedTemplateId).toBeNull();
   });
 
   it("createTemplate avoids the backend's duplicate-name 409 by suffixing when the default name is taken", async () => {
@@ -183,6 +213,7 @@ describe("useTemplatesScreen", () => {
         name: "Untitled template",
         description: null,
         items: [],
+        itemCount: 0,
       },
     ];
     const created: Template = {
@@ -190,6 +221,7 @@ describe("useTemplatesScreen", () => {
       name: "Untitled template 2",
       description: null,
       items: [],
+      itemCount: 0,
     };
     mockFetch({
       "GET /api/templates": () => jsonResponse(200, existing),
