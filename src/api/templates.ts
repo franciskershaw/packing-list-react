@@ -146,7 +146,12 @@ export function useDeleteTemplate() {
   return useApiMutation({
     mutationFn: ({ id }: { id: string; name: string }) => deleteTemplate(id),
     onSuccess: (_data, variables) => {
-      void queryClient.invalidateQueries({ queryKey: TEMPLATES_QUERY_KEY });
+      // exact: true — a prefix match would refetch (and 404) the
+      // still-mounted detail query for the id just deleted.
+      void queryClient.invalidateQueries({
+        queryKey: TEMPLATES_QUERY_KEY,
+        exact: true,
+      });
       toast(`${variables.name} removed`, "success");
     },
   });

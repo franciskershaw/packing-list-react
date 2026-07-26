@@ -175,11 +175,58 @@ describe("useTemplatesScreen", () => {
     );
   });
 
-  it("deleteTemplate removes the template and navigates back to the list", async () => {
+  it("createTemplate avoids the backend's duplicate-name 409 by suffixing when the default name is taken", async () => {
+    const existing = [
+      ...templates,
+      {
+        id: "t-3",
+        name: "Untitled template",
+        description: null,
+        items: [],
+      },
+    ];
+    const created: Template = {
+      id: "t-new",
+      name: "Untitled template 2",
+      description: null,
+      items: [],
+    };
+    mockFetch({
+      "GET /api/templates": () => jsonResponse(200, existing),
+      "POST /api/templates": () => jsonResponse(201, created),
+    });
+
+    renderAt("/templates");
+    await waitFor(() => expect(latest?.templates).toEqual(existing));
+
+    act(() => latest?.createTemplate());
+
+    await waitFor(() =>
+      expect(screen.getByTestId("pathname")).toHaveTextContent(
+        "/templates/t-new",
+      ),
+    );
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      "/api/templates",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ name: "Untitled template 2" }),
+      }),
+    );
+  });
+
+  it("deleteTemplate removes the template, navigates back to the list, and doesn't also error-toast from refetching the now-gone detail query", async () => {
+    let templateDeleted = false;
     mockFetch({
       "GET /api/templates": () => jsonResponse(200, templates),
-      "GET /api/templates/t-1": () => jsonResponse(200, templates[0]),
-      "DELETE /api/templates/t-1": () => jsonResponse(204, undefined),
+      "GET /api/templates/t-1": () =>
+        templateDeleted
+          ? jsonResponse(404, { error: "template not found" })
+          : jsonResponse(200, templates[0]),
+      "DELETE /api/templates/t-1": () => {
+        templateDeleted = true;
+        return jsonResponse(204, undefined);
+      },
     });
 
     renderAt("/templates/t-1");
@@ -187,6 +234,7 @@ describe("useTemplatesScreen", () => {
 
     act(() => latest?.deleteTemplate("t-1", "Festival essentials"));
 
+    await screen.findByText("Festival essentials removed");
     await waitFor(() =>
       expect(screen.getByTestId("pathname")).toHaveTextContent("/templates"),
     );
@@ -194,5 +242,6 @@ describe("useTemplatesScreen", () => {
       "/api/templates/t-1",
       expect.objectContaining({ method: "DELETE" }),
     );
+    expect(screen.queryByText("template not found")).not.toBeInTheDocument();
   });
 });

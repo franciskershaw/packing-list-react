@@ -1021,6 +1021,12 @@ categoryId }) → { category, items }[]` — colocated in
           `packing-list-go` ticket), so there's nothing on it for these
           to affect. Piece 5 will need to widen this once that ticket
           lands.
+      - [x] **Correction, found during Piece 3's manual verification**:
+            delete's broad invalidate refetched the just-deleted id's own
+            still-mounted detail query (navigate-away happens in a later,
+            separate callback), 404ing on an entity that no longer exists
+            and double-toasting. `useDeleteTemplate` now invalidates with
+            `exact: true` — list-only, matching create/update unaffected.
     - [x] **Toast scope, decided during grill-me — two deliberate
           deviations from the categories/items precedent**: only
           `useDeleteTemplate` fires a success toast
@@ -1155,11 +1161,11 @@ text-secondary`). Save-strategy state machine still deferred to
         own grill-me (JS-driven breakpoint switch, route-driven selection,
         `useActiveNavKey` needing no changes) — this piece's own grill-me
         settled the concrete hook/component shapes below.
-    - [ ] `/templates/:templateId` route added to `AppRoutes.tsx`
+    - [x] `/templates/:templateId` route added to `AppRoutes.tsx`
           alongside the existing `/templates`
-    - [ ] `useMediaQuery` hook + its Vitest test (mocked `matchMedia`) —
+    - [x] `useMediaQuery` hook + its Vitest test (mocked `matchMedia`) —
           see Architecture section above
-      - [ ] **Breakpoint constant, decided during grill-me**:
+      - [x] **Breakpoint constant, decided during grill-me**:
             `export const DESKTOP_QUERY = "(min-width: 1024px)"`, a named
             export colocated in `useMediaQuery.ts` itself — no new file,
             matches Tailwind's `lg:` prefix already used app-wide for the
@@ -1167,13 +1173,13 @@ text-secondary`). Save-strategy state machine still deferred to
             Named export over an inline literal per call site because
             Trips (PACKFE-005/006) is already a named future consumer of
             this exact value, not a speculative one.
-      - [ ] jsdom doesn't implement `matchMedia` at all — the test needs a
+      - [x] jsdom doesn't implement `matchMedia` at all — the test needs a
             full hand-rolled mock (`matches`, `addEventListener`/
             `removeEventListener`, dispatching a `change` event), not a
             partial stub.
-    - [ ] `useTemplatesScreen.ts` — all state/data (list, selected
+    - [x] `useTemplatesScreen.ts` — all state/data (list, selected
           template detail, create/delete mutations), no JSX
-      - [ ] **Return shape, decided during grill-me**: flat fields, not a
+      - [x] **Return shape, decided during grill-me**: flat fields, not a
             discriminated union — `{ templates, isLoading,
 selectedTemplateId, selectedTemplate, isSelectedLoading,
 selectTemplate(id), goToList(), createTemplate(),
@@ -1185,18 +1191,24 @@ deleteTemplate(id, name) }`. Desktop consumes every field
             union was considered and rejected — Desktop always needs the
             list regardless of mode, an awkward fit for the one screen
             showing both panes at once.
-      - [ ] `createTemplate()` posts immediately with name
+      - [x] `createTemplate()` posts immediately with name
             `"Untitled template"`, empty description, then navigates to
             the new template's detail route — the same default Piece 6
             uses for the real "+ New" button, so this isn't throwaway
             logic.
-      - [ ] `deleteTemplate(id, name)` wraps `useDeleteTemplate`'s existing
+      - [x] **Correction, found during Piece 3's manual verification**:
+            the backend rejects duplicate template names per user (409), so
+            a literal `"Untitled template"` 409s on a second create.
+            `nextUntitledName()` suffixes against the already-loaded list
+            (`"Untitled template 2"`, `3`, ...) before posting — Piece 6's
+            "+ New" inherits this for free via the same function.
+      - [x] `deleteTemplate(id, name)` wraps `useDeleteTemplate`'s existing
             `{ id, name }` mutate shape and navigates to `/templates` on
             success — the same `navigate("/templates")` call serves both
             mobile's "pop back to list" and desktop's "return to
             no-selection state" from Piece 4c's checklist, since those are
             the same state once selection is route-driven.
-      - [ ] **Vitest test, decided during grill-me**: written now, not
+      - [x] **Vitest test, decided during grill-me**: written now, not
             deferred to Piece 4c/6 — route-driven selection is this
             ticket's core architectural bet (replacing local `selectedId`
             state), and a future refactor silently reverting to local
@@ -1209,12 +1221,13 @@ deleteTemplate(id, name) }`. Desktop consumes every field
             `selectTemplate`/`goToList` navigate to the right route;
             `createTemplate` posts the default name and navigates to the
             new id; `deleteTemplate` deletes and navigates back to the
-            list.
-    - [ ] `TemplatesScreen.tsx` (breakpoint switch only) →
+            list. All 10 new tests pass; full 67-test suite, `tsc
+--noEmit`, oxlint, and prettier all clean.
+    - [x] `TemplatesScreen.tsx` (breakpoint switch only) →
           `TemplatesMobile.tsx` / `TemplatesDesktop.tsx` with placeholder
           bodies, wired to real data — proves the split works end-to-end
           before any real markup exists
-      - [ ] **Placeholder scope, decided during grill-me**: bare, unstyled
+      - [x] **Placeholder scope, decided during grill-me**: bare, unstyled
             trigger elements wired to the real mutations, not just the
             read path — a plain "+ New" button and (when a template is
             selected) a plain "Delete" button, proving the full
@@ -1224,17 +1237,25 @@ deleteTemplate(id, name) }`. Desktop consumes every field
             buttons (styling, `ConfirmDialog`, etc.) — same
             replace-wholesale-don't-build-alongside precedent as this
             piece replacing Piece 2's demo harness.
-      - [ ] No `detail/` atoms (`RailRow`, `CategoryGroupCard`, etc.) used
+      - [x] No `detail/` atoms (`RailRow`, `CategoryGroupCard`, etc.) used
             here — plain list/button markup only, to keep this piece
             squarely logic-plus-trivial-JSX (no design-artifact gate) and
             avoid pre-committing to layout Piece 4c/6 will actually
             screenshot-ground.
-      - [ ] Loading/error states not specially handled — `useApiQuery`'s
+      - [x] Loading/error states not specially handled — `useApiQuery`'s
             existing toast-on-failure covers errors, and Piece 6
             explicitly owns the real loading-state design; the placeholder
             can render nothing (or omit content) while loading.
-    - [ ] No `useActiveNavKey` changes needed — verified already correct
+    - [x] No `useActiveNavKey` changes needed — verified already correct
           (see Architecture section above)
+    - [ ] **Manual verification** (developer, via `npm run dev`): resizing
+          across the 1024px breakpoint swaps `TemplatesMobile`/
+          `TemplatesDesktop` live; navigating `/templates` ↔
+          `/templates/:id` (via the placeholder buttons, and directly by
+          URL/back-button) drives the correct body/pane on both
+          breakpoints; "+ New" creates a template and lands on its detail
+          route; "Delete" removes it and returns to the list/no-selection
+          state.
   - [ ] **Piece 4a — Inline title/description editing.** Screenshot-
         grounded for the static look (all 10 screenshots show the saved
         state); focused-state visual is the named inference above.

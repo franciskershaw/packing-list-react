@@ -1,5 +1,21 @@
+import { useCallback, useSyncExternalStore } from "react";
+
 export const DESKTOP_QUERY = "(min-width: 1024px)";
 
-export function useMediaQuery(_query: string): boolean {
-  throw new Error("useMediaQuery not implemented yet");
+export function useMediaQuery(query: string): boolean {
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      const mql = window.matchMedia(query);
+      mql.addEventListener("change", callback);
+      return () => mql.removeEventListener("change", callback);
+    },
+    [query],
+  );
+
+  const getSnapshot = useCallback(
+    () => window.matchMedia(query).matches,
+    [query],
+  );
+
+  return useSyncExternalStore(subscribe, getSnapshot);
 }

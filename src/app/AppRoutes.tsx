@@ -49,6 +49,7 @@ export function AppRoutes() {
       >
         <Route path="/trips" element={<TripsScreen />} />
         <Route path="/templates" element={<TemplatesScreen />} />
+        <Route path="/templates/:templateId" element={<TemplatesScreen />} />
         <Route path="/library" element={<LibraryScreen />} />
         <Route path="/profile" element={<ProfileScreen />} />
       </Route>
