@@ -1053,9 +1053,8 @@ items, categories)` — pure helper, fully generic over the entry
           omission, missing-item drop, empty-entries, generic-field
           passthrough) — all pass, along with the existing 52-test suite
           and `tsc --noEmit`.
-  - [ ] **Piece 2 — Shared atoms + the one refactor** — code complete
-        (2026-07-26), **not yet Done**: manual visual verification against
-        the screenshots is still pending (see that item below). Grilled
+  - [x] **Piece 2 — Shared atoms + the one refactor** — **Done**
+        (2026-07-26). Grilled
         2026-07-26 against the same 10 screenshots
         as the ticket's own grill-me (desktop list+detail, desktop
         empty-template detail, mobile list, mobile detail) plus
@@ -1101,12 +1100,12 @@ items, categories)` — pure helper, fully generic over the entry
           the mobile detail screenshot's "‹ TEMPLATE" treatment.
     - [x] **`ui/InlineEditableHeading` scope, decided during grill-me**:
           one generic atom parameterized by `variant: "title" |
-    "description"` rather than two components or a title-only atom
+"description"` rather than two components or a title-only atom
           with description built ad hoc — both fields share the exact
           same interaction shape (borderless, transparent, single-line
           input), differing only in typography
           (`text-[25px] lg:text-[27px] font-bold` vs. `text-sm
-    text-secondary`). Save-strategy state machine still deferred to
+text-secondary`). Save-strategy state machine still deferred to
           Piece 4a, not inside this atom.
     - [x] `ui/CollectionItemRow` — the shared row shape (§3.4): leading
           control as a `ReactNode` slot · name + optional muted notes
@@ -1132,16 +1131,13 @@ items, categories)` — pure helper, fully generic over the entry
     - [x] `tsc --noEmit`, oxlint, and prettier all clean; full 57-test
           suite still green (no new tests — presentational/prop-driven,
           same as PACKFE-003 Piece 2).
-    - [ ] **Manual verification**: temporary demo harness built directly
+    - [x] **Manual verification**: temporary demo harness built directly
           on `TemplatesScreen.tsx`'s existing "coming soon" placeholder
           (same precedent as PACKFE-003's own throwaway demo harnesses),
           rendering all 7 new atoms plus the `secondary` button variant
-          with representative content against the screenshots
-          (2026-07-26). **Not yet visually confirmed by the developer** —
-          the folder-reorganization question below came up before that
-          check happened; still an open item, not to be marked done
-          without it. Harness stays in place until Piece 3/4 replace it
-          with the real screen.
+          with representative content against the screenshots. Developer
+          confirmed 2026-07-26 — held up. Harness stays in place until
+          Piece 3/4 replace it with the real screen.
     - [x] **Post-build reorganization, same day**: `src/components/ui/`
           had grown to 17 files mixing true zero-domain primitives
           (`Button`, `Modal`, `Toast`, etc.) with this piece's 7
@@ -1154,17 +1150,87 @@ items, categories)` — pure helper, fully generic over the entry
           `detail/`. See `CLAUDE.md`'s Structure conventions section for
           the durable rule this established. `tsc`/oxlint/prettier/tests
           all reconfirmed green after the move.
-  - [ ] **Piece 3 — Routing + the breakpoint split.**
+  - [ ] **Piece 3 — Routing + the breakpoint split.** Grilled 2026-07-26.
+        Mostly executes architecture already decided during the ticket's
+        own grill-me (JS-driven breakpoint switch, route-driven selection,
+        `useActiveNavKey` needing no changes) — this piece's own grill-me
+        settled the concrete hook/component shapes below.
     - [ ] `/templates/:templateId` route added to `AppRoutes.tsx`
           alongside the existing `/templates`
     - [ ] `useMediaQuery` hook + its Vitest test (mocked `matchMedia`) —
           see Architecture section above
+      - [ ] **Breakpoint constant, decided during grill-me**:
+            `export const DESKTOP_QUERY = "(min-width: 1024px)"`, a named
+            export colocated in `useMediaQuery.ts` itself — no new file,
+            matches Tailwind's `lg:` prefix already used app-wide for the
+            nav-shell split (`AppShell.tsx`'s `hidden lg:flex`/`lg:hidden`).
+            Named export over an inline literal per call site because
+            Trips (PACKFE-005/006) is already a named future consumer of
+            this exact value, not a speculative one.
+      - [ ] jsdom doesn't implement `matchMedia` at all — the test needs a
+            full hand-rolled mock (`matches`, `addEventListener`/
+            `removeEventListener`, dispatching a `change` event), not a
+            partial stub.
     - [ ] `useTemplatesScreen.ts` — all state/data (list, selected
           template detail, create/delete mutations), no JSX
+      - [ ] **Return shape, decided during grill-me**: flat fields, not a
+            discriminated union — `{ templates, isLoading,
+    selectedTemplateId, selectedTemplate, isSelectedLoading,
+    selectTemplate(id), goToList(), createTemplate(),
+    deleteTemplate(id, name) }`. Desktop consumes every field
+            directly with no branching (it renders list + detail
+            simultaneously); Mobile derives its single-mode view from
+            whether `selectedTemplateId` is set (already mirrors the
+            route). A `{ mode: "list" } | { mode: "detail", template }`
+            union was considered and rejected — Desktop always needs the
+            list regardless of mode, an awkward fit for the one screen
+            showing both panes at once.
+      - [ ] `createTemplate()` posts immediately with name
+            `"Untitled template"`, empty description, then navigates to
+            the new template's detail route — the same default Piece 6
+            uses for the real "+ New" button, so this isn't throwaway
+            logic.
+      - [ ] `deleteTemplate(id, name)` wraps `useDeleteTemplate`'s existing
+            `{ id, name }` mutate shape and navigates to `/templates` on
+            success — the same `navigate("/templates")` call serves both
+            mobile's "pop back to list" and desktop's "return to
+            no-selection state" from Piece 4c's checklist, since those are
+            the same state once selection is route-driven.
+      - [ ] **Vitest test, decided during grill-me**: written now, not
+            deferred to Piece 4c/6 — route-driven selection is this
+            ticket's core architectural bet (replacing local `selectedId`
+            state), and a future refactor silently reverting to local
+            state would be an easy, hard-to-notice regression. First test
+            combining `MemoryRouter` + `QueryClientProvider` — no existing
+            precedent does both (`ItemFormModal.test.tsx`/
+            `CategoriesModal.test.tsx` use `QueryClientProvider` alone).
+            Cases: no `:templateId` → no selected-template query fires;
+            `:templateId` present → detail query enabled with that id;
+            `selectTemplate`/`goToList` call `navigate` with the right
+            path.
     - [ ] `TemplatesScreen.tsx` (breakpoint switch only) →
           `TemplatesMobile.tsx` / `TemplatesDesktop.tsx` with placeholder
           bodies, wired to real data — proves the split works end-to-end
           before any real markup exists
+      - [ ] **Placeholder scope, decided during grill-me**: bare, unstyled
+            trigger elements wired to the real mutations, not just the
+            read path — a plain "+ New" button and (when a template is
+            selected) a plain "Delete" button, proving the full
+            create→navigate-to-new-id and delete→navigate-back loops work
+            now, not only that selecting a row updates the detail pane.
+            Piece 4c/6 replace these wholesale with the real polished
+            buttons (styling, `ConfirmDialog`, etc.) — same
+            replace-wholesale-don't-build-alongside precedent as this
+            piece replacing Piece 2's demo harness.
+      - [ ] No `detail/` atoms (`RailRow`, `CategoryGroupCard`, etc.) used
+            here — plain list/button markup only, to keep this piece
+            squarely logic-plus-trivial-JSX (no design-artifact gate) and
+            avoid pre-committing to layout Piece 4c/6 will actually
+            screenshot-ground.
+      - [ ] Loading/error states not specially handled — `useApiQuery`'s
+            existing toast-on-failure covers errors, and Piece 6
+            explicitly owns the real loading-state design; the placeholder
+            can render nothing (or omit content) while loading.
     - [ ] No `useActiveNavKey` changes needed — verified already correct
           (see Architecture section above)
   - [ ] **Piece 4a — Inline title/description editing.** Screenshot-
