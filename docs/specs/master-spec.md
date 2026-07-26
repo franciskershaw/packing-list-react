@@ -1156,11 +1156,14 @@ text-secondary`). Save-strategy state machine still deferred to
           `detail/`. See `CLAUDE.md`'s Structure conventions section for
           the durable rule this established. `tsc`/oxlint/prettier/tests
           all reconfirmed green after the move.
-  - [ ] **Piece 3 — Routing + the breakpoint split.** Grilled 2026-07-26.
-        Mostly executes architecture already decided during the ticket's
-        own grill-me (JS-driven breakpoint switch, route-driven selection,
-        `useActiveNavKey` needing no changes) — this piece's own grill-me
-        settled the concrete hook/component shapes below.
+  - [x] **Piece 3 — Routing + the breakpoint split** — **Done** (2026-07-26).
+        Grilled 2026-07-26. Mostly executes architecture already decided
+        during the ticket's own grill-me (JS-driven breakpoint switch,
+        route-driven selection, `useActiveNavKey` needing no changes) —
+        this piece's own grill-me settled the concrete hook/component
+        shapes below. Manual verification surfaced two real bugs (409 on
+        a second create, spurious 404 toast on delete) — both fixed and
+        developer-confirmed; see the correction notes below.
     - [x] `/templates/:templateId` route added to `AppRoutes.tsx`
           alongside the existing `/templates`
     - [x] `useMediaQuery` hook + its Vitest test (mocked `matchMedia`) —
@@ -1248,14 +1251,16 @@ deleteTemplate(id, name) }`. Desktop consumes every field
             can render nothing (or omit content) while loading.
     - [x] No `useActiveNavKey` changes needed — verified already correct
           (see Architecture section above)
-    - [ ] **Manual verification** (developer, via `npm run dev`): resizing
+    - [x] **Manual verification** (developer, via `npm run dev`): resizing
           across the 1024px breakpoint swaps `TemplatesMobile`/
           `TemplatesDesktop` live; navigating `/templates` ↔
           `/templates/:id` (via the placeholder buttons, and directly by
           URL/back-button) drives the correct body/pane on both
           breakpoints; "+ New" creates a template and lands on its detail
           route; "Delete" removes it and returns to the list/no-selection
-          state.
+          state. First pass surfaced the two bugs above (409 on repeat
+          create, spurious 404 toast on delete) — developer confirmed
+          both fixed on the second pass.
   - [ ] **Piece 4a — Inline title/description editing.** Screenshot-
         grounded for the static look (all 10 screenshots show the saved
         state); focused-state visual is the named inference above.

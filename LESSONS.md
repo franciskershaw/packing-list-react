@@ -201,3 +201,24 @@ before the four real use cases build on top of `Modal.tsx`.
   (`Button` compact variants, `TextField` `onSubmit`, chip selected-state
   resolution) are already stated as concrete precedents, not incident
   narratives.
+
+## 2026-07-26 — PACKFE-004 Piece 3 — Routing + breakpoint split shipped; manual verification caught two real bugs again
+
+- Grill-me/tests-first/implementation all went smoothly (68/68 green,
+  clean `tsc`/oxlint/prettier first pass). The real friction was
+  post-implementation: manual use in the running app caught a
+  duplicate-name 409 on a second "+ New" and a delete-triggered spurious
+  404 toast (broad query invalidation refetching the just-deleted
+  detail query before navigate-away unmounted it) — neither surfaced by
+  the test suite or code review.
+- **Pattern**: at least the third piece running where hands-on use, not
+  tests or review, caught the real bug (see Piece 4/5 entries above) —
+  keep treating manual verification as load-bearing, not a formality.
+- Verified the delete-bug fix's test actually guards the regression by
+  temporarily reverting the fix and watching that specific test fail
+  with the reported symptom, then restoring it — worth doing whenever a
+  bug-fix test wasn't already proven to fail without the fix.
+- Comment-verbosity lapse recurred once more despite being promoted to
+  `CLAUDE.md` in an earlier session — caught by the user, not
+  self-corrected; logged as a second recurrence in the existing memory
+  file rather than re-promoted (already covered).
