@@ -6,24 +6,33 @@ import { ConfirmDialog } from "./ConfirmDialog";
 interface DeleteIconButtonProps {
   label: string;
   onClick: () => void;
+  confirm?: boolean;
 }
 
-export function DeleteIconButton({ label, onClick }: DeleteIconButtonProps) {
+export function DeleteIconButton({
+  label,
+  onClick,
+  confirm = true,
+}: DeleteIconButtonProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   return (
     <>
       <InteractiveButton
-        aria-label={`Delete ${label}`}
+        aria-label={confirm ? `Delete ${label}` : `Remove ${label}`}
         onClick={(e) => {
           e.stopPropagation();
-          setConfirmOpen(true);
+          if (confirm) {
+            setConfirmOpen(true);
+          } else {
+            onClick();
+          }
         }}
-        className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-notice-bg text-sm font-bold text-notice-text"
+        className="flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-full bg-notice-bg text-sm font-bold text-notice-text"
       >
         ×
       </InteractiveButton>
-      {confirmOpen && (
+      {confirm && confirmOpen && (
         <ConfirmDialog
           title={`Delete ${label}?`}
           message="This can't be undone."

@@ -238,14 +238,33 @@ already tested for `/trips/123`→`"trips"`) already treats
   `aria-label` reads `Remove ${name}` when `confirm={false}` is passed —
   different verb, different consequence from "Delete". Existing
   `DeleteIconButton.test.tsx` gains one case for the no-confirm path.
-- **`Button` gains a block-sized green variant** (decided 2026-07-26,
-  PACKFE-004's grill-me): "New list from template" CTA is full-width and
-  uses `--color-accent-secondary`, but the existing `success` variant is
-  a compact pill (built for the category-rename Save button) — a
-  self-contained `VARIANT_CLASSES` entry, not a `className` override, per
-  the Tailwind-precedence lesson already recorded above (PACKFE-003
-  Piece 2). Its `onClick` is a stub (toast) until PACKFE-005 wires the
-  real New Trip modal — see PACKFE-004's roadmap entry.
+- **`Button` gains a block-sized green variant, named `secondary`**
+  (decided 2026-07-26, PACKFE-004 Piece 2's grill-me): "New list from
+  template" CTA is full-width and uses `--color-accent-secondary`, but the
+  existing `success` variant is a compact pill (built for the
+  category-rename Save button) — a self-contained `VARIANT_CLASSES` entry,
+  not a `className` override, per the Tailwind-precedence lesson already
+  recorded above (PACKFE-003 Piece 2). Named to directly parallel
+  `primary` (same full-width/`rounded-2xl` shape, sibling color from the
+  same `accent`/`accent-secondary` token family) rather than
+  `successBlock`/similar. Its `onClick` is a stub (toast) until PACKFE-005
+  wires the real New Trip modal — see PACKFE-004's roadmap entry.
+- **`src/components/` split by reusability shape, not feature/domain**
+  (decided 2026-07-26, PACKFE-004 Piece 2, post-build): `ui/` had grown to
+  17 files mixing zero-domain primitives (`Button`, `Modal`, `Toast`,
+  `TextField`, `Avatar`, `ConfirmDialog`, `Chip`, `DeleteIconButton`,
+  `SystemBadge`, `GoogleIcon`) with composites shaped around this app's
+  specific recurring grouped-collection list+detail screen pattern
+  (Library/Templates/Trips). Split into `ui/` (kept, the 10 primitives
+  above) and a new `detail/` (`CategoryGroupCard`, `CollectionItemRow`,
+  `RailRow`, `BackHeader`, `EmptyStatePanel`, `QuantityStepper`,
+  `InlineEditableHeading`) — `nav/`'s existing app-shell split (PACKFE-001/ 007) was already the same idea, just not yet named as a general rule.
+  Considered `collection/` first, rejected as confusingly close to
+  `CollectionItemRow`'s own name without being obviously distinct from
+  `ui/` at a glance; `detail/` reuses vocabulary already established in
+  this roadmap ("list+detail" split, PACKFE-004's Architecture entry
+  above). See `CLAUDE.md`'s Structure conventions section for the durable
+  placement rule this established.
 - **Cross-repo gap, `packing-list-go`**: the template List endpoint
   doesn't return item counts — `GetTemplates`'s `scanTemplate` helper
   intentionally leaves `Items: []` (only `GetTemplateByID`, the detail
@@ -1020,7 +1039,7 @@ categoryId }) → { category, items }[]` — colocated in
           candidate for one, rejected for the same instant-feedback
           reason.
     - [x] `groupTemplateItems<T extends { itemId: string }>(entries,
-    items, categories)` — pure helper, fully generic over the entry
+items, categories)` — pure helper, fully generic over the entry
           shape (confirmed during grill-me, not narrowed to
           `TemplateItem` specifically) so trip entries (which add a
           `packed` field later) pass through unchanged; an entry whose
@@ -1034,39 +1053,107 @@ categoryId }) → { category, items }[]` — colocated in
           omission, missing-item drop, empty-entries, generic-field
           passthrough) — all pass, along with the existing 52-test suite
           and `tsc --noEmit`.
-  - [ ] **Piece 2 — Shared atoms + the one refactor.** No design artifact
-        needed beyond the handoff's §3 component specs; presentational,
-        prop-driven — no tests, same precedent as PACKFE-003 Piece 2's
-        atoms.
-    - [ ] **Extract `ui/CategoryGroupCard`** from `LibraryScreen.tsx`'s
-          current inline markup (bordered card → `bg-bg-subtle` header
-          strip with name + count → children rows — read directly from
-          `LibraryScreen.tsx`'s current source during grill-me) and
-          repoint `LibraryScreen` at it. Do this first, while Library is
-          still fresh — third real consumer (this screen + trip detail
-          later) clears `CLAUDE.md`'s structure-convention bar. Verify
-          Library is visually unchanged after the swap.
-    - [ ] `ui/QuantityStepper { value, onChange, min = 1 }` — presentational
-          shell only (28px outline buttons, fixed 20px-wide centred value,
-          `−` disabled not hidden at min). Debounce/optimistic-update
-          logic is a consumer concern, wired in Piece 4b, not inside this
-          atom.
-    - [ ] `ui/EmptyStatePanel { title, message, actionLabel, onAction }`
-    - [ ] `ui/RailRow { title, meta, selected, onClick }`
-    - [ ] `ui/BackHeader { label, onBack }`
-    - [ ] `ui/InlineEditableHeading` — presentational shell (borderless
-          transparent inputs, 25px/27px heading font). Save-strategy state
-          machine wired in Piece 4a, not inside this atom.
-    - [ ] `ui/CollectionItemRow` — the shared row shape (§3.4): leading
-          control as a `ReactNode` slot (template's `×`/remove today, a
-          trip's checkbox later) · name + optional muted notes line ·
-          trailing slot for the stepper. Not itself clickable — every
-          affordance inside is a real button, no `role="button"` wrapper
-          needed.
-    - [ ] `DeleteIconButton` extended with `confirm?: boolean` (see
-          Architecture section above)
-    - [ ] `Button` gains its block-sized green variant (see Architecture
-          section above)
+  - [ ] **Piece 2 — Shared atoms + the one refactor** — code complete
+        (2026-07-26), **not yet Done**: manual visual verification against
+        the screenshots is still pending (see that item below). Grilled
+        2026-07-26 against the same 10 screenshots
+        as the ticket's own grill-me (desktop list+detail, desktop
+        empty-template detail, mobile list, mobile detail) plus
+        `LibraryScreen.tsx`'s current source for the extraction target.
+        Presentational, prop-driven — no tests, same precedent as
+        PACKFE-003 Piece 2's atoms.
+    - [x] **Extracted `ui/CategoryGroupCard`** from `LibraryScreen.tsx`'s
+          inline markup (bordered card → `bg-bg-subtle` header strip with
+          name + count → children rows), `LibraryScreen` repointed at it,
+          1:1 same output. Third real consumer (this screen + Templates
+          Piece 4c + trip detail later) clears `CLAUDE.md`'s
+          structure-convention bar.
+    - [x] `ui/QuantityStepper { value, onChange, min = 1 }` — 28px
+          (`h-7 w-7`) outline buttons, fixed 20px-wide (`w-5`) centred
+          value, `−` disabled (`opacity-40`, not hidden) at min.
+          Debounce/optimistic-update logic deferred to Piece 4b as
+          planned, not inside this atom.
+    - [x] `ui/EmptyStatePanel { title, message, actionLabel, onAction }` —
+          dashed border (reusing `Button`'s existing `dashed` variant's
+          `border-[#c9bba6]` custom color for visual consistency), centred
+          title/message, action button reuses the existing `accent`
+          pill variant as-is (matches the empty-template screenshot's
+          orange "+ Add items" pill) — no new `Button` variant needed
+          for this one.
+    - [x] **`ui/RailRow { title, meta, selected, onClick }` — correction
+          to this ticket's own Architecture-section note, found by
+          zooming into the actual screenshot pixels rather than trusting
+          the already-written `bg-accent-subtle` claim**: the selected
+          row is a white card (`bg-bg`) with a visible `border-accent`
+          outline; unselected rows have **no card treatment at all** — no
+          border, no fill, text sits flush on the page background. Not
+          `Chip`'s pattern either (`Chip` keeps a visible `border-border`
+          outline when unselected; `RailRow` doesn't). Implemented as
+          `border-accent bg-bg` (selected) vs. `border-transparent`
+          (unselected, not no-border) so toggling selection never shifts
+          layout by a border's width — same defensive reasoning as
+          `ConfirmDialog`'s `stopPropagation` wrapper fix in PACKFE-003
+          Piece 5. Piece 6's own checklist entry (which also cited the
+          stale `bg-accent-subtle` claim) corrected to point here instead.
+    - [x] `ui/BackHeader { label, onBack }` — circular back button
+          (`lucide-react`'s `ChevronLeft`, already a dependency via
+          `Modal.tsx`'s close button) + uppercase muted label, matching
+          the mobile detail screenshot's "‹ TEMPLATE" treatment.
+    - [x] **`ui/InlineEditableHeading` scope, decided during grill-me**:
+          one generic atom parameterized by `variant: "title" |
+    "description"` rather than two components or a title-only atom
+          with description built ad hoc — both fields share the exact
+          same interaction shape (borderless, transparent, single-line
+          input), differing only in typography
+          (`text-[25px] lg:text-[27px] font-bold` vs. `text-sm
+    text-secondary`). Save-strategy state machine still deferred to
+          Piece 4a, not inside this atom.
+    - [x] `ui/CollectionItemRow` — the shared row shape (§3.4): leading
+          control as a `ReactNode` slot · name + optional muted notes
+          line · trailing slot for the stepper. Row separator uses
+          `border-[#f3eada]` (matching `LibraryItemRow`'s existing
+          separator color exactly, confirmed against its current source
+          — not `--color-border`, which is reserved for outer card
+          borders like `CategoryGroupCard`'s). Not itself clickable —
+          every affordance inside is a real button, no `role="button"`
+          wrapper needed.
+    - [x] `DeleteIconButton` extended with `confirm?: boolean` (default
+          `true`) — `confirm={false}` skips `ConfirmDialog` entirely and
+          fires `onClick` immediately; `aria-label` switches to
+          `` `Remove ${label}` `` in that case (see Architecture section
+          above).
+    - [x] **`Button` gains a `secondary` variant** (not `successBlock` or
+          similar — named to directly parallel `primary`: same
+          full-width/`rounded-2xl`/shape, sibling color from the same
+          token family, `bg-accent-secondary`/`text-on-accent`). No hover
+          class, matching the existing `success` variant's precedent (no
+          `--color-accent-secondary-hover` token exists). Self-contained
+          `VARIANT_CLASSES` entry per the established pattern.
+    - [x] `tsc --noEmit`, oxlint, and prettier all clean; full 57-test
+          suite still green (no new tests — presentational/prop-driven,
+          same as PACKFE-003 Piece 2).
+    - [ ] **Manual verification**: temporary demo harness built directly
+          on `TemplatesScreen.tsx`'s existing "coming soon" placeholder
+          (same precedent as PACKFE-003's own throwaway demo harnesses),
+          rendering all 7 new atoms plus the `secondary` button variant
+          with representative content against the screenshots
+          (2026-07-26). **Not yet visually confirmed by the developer** —
+          the folder-reorganization question below came up before that
+          check happened; still an open item, not to be marked done
+          without it. Harness stays in place until Piece 3/4 replace it
+          with the real screen.
+    - [x] **Post-build reorganization, same day**: `src/components/ui/`
+          had grown to 17 files mixing true zero-domain primitives
+          (`Button`, `Modal`, `Toast`, etc.) with this piece's 7
+          list/detail-screen-shaped composites. Split into `ui/` (kept)
+          and a new `src/components/detail/`, holding exactly the 7 atoms
+          named above (`CategoryGroupCard`, `CollectionItemRow`,
+          `RailRow`, `BackHeader`, `EmptyStatePanel`, `QuantityStepper`,
+          `InlineEditableHeading`) — every `ui/X` reference above reflects
+          where each atom was originally built; all 7 now live in
+          `detail/`. See `CLAUDE.md`'s Structure conventions section for
+          the durable rule this established. `tsc`/oxlint/prettier/tests
+          all reconfirmed green after the move.
   - [ ] **Piece 3 — Routing + the breakpoint split.**
     - [ ] `/templates/:templateId` route added to `AppRoutes.tsx`
           alongside the existing `/templates`
@@ -1170,10 +1257,11 @@ onClose }`, caller owns mutations) so Trips reuses it unchanged.
     - [ ] Mobile: card list (name + count same line, description below,
           whole card is the tap target — same `div role="button"
 tabIndex={0}` + Enter/Space pattern as `LibraryItemRow`)
-    - [ ] Desktop: fixed 330px rail (`RailRow`, selected =
-          `bg-accent-subtle`) beside an independently-scrolling detail
-          pane; no-selection state built from the written-spec inference
-          above
+    - [ ] Desktop: fixed 330px rail (`RailRow`, selected treatment
+          corrected during Piece 2's grill-me — see that piece's entry
+          below, not `bg-accent-subtle`) beside an independently-scrolling
+          detail pane; no-selection state built from the written-spec
+          inference above
     - [ ] "+ New"/"+ New template": creates immediately (`POST` with name
           "Untitled template", empty description) and navigates straight
           into detail — no New-template dialog, matches the handoff's own

@@ -16,7 +16,14 @@ export function InteractiveButton({
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: ReactNode;
-  variant?: "default" | "danger" | "dashed" | "primary" | "success" | "accent";
+  variant?:
+    | "default"
+    | "danger"
+    | "dashed"
+    | "primary"
+    | "success"
+    | "accent"
+    | "secondary";
   /** Only affects default/danger — other variants are sized already. */
   size?: "default" | "compact";
 }
@@ -34,6 +41,8 @@ const VARIANT_CLASSES: Record<NonNullable<ButtonProps["variant"]>, string> = {
     "rounded-full border-0 bg-accent-secondary px-5 py-2 text-sm font-bold text-on-accent shadow-sm disabled:opacity-50",
   accent:
     "rounded-full border-0 bg-accent px-5 py-2 text-sm font-bold text-on-accent shadow-sm hover:bg-accent-hover disabled:opacity-50",
+  secondary:
+    "w-full rounded-2xl border-0 bg-accent-secondary px-6 py-4 font-body text-base font-bold text-on-accent shadow-sm disabled:opacity-50",
 };
 
 const COMPACT_VARIANT_CLASSES: Partial<

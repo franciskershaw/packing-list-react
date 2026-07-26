@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useCategories } from "../../api/categories";
 import { useDeleteItem, useItems } from "../../api/items";
 import type { Item } from "../../api/items";
+import { CategoryGroupCard } from "../../components/detail/CategoryGroupCard";
 import { Button, InteractiveButton } from "../../components/ui/Button";
 import { Chip } from "../../components/ui/Chip";
 import { TextField } from "../../components/ui/TextField";
@@ -76,18 +77,11 @@ export function LibraryScreen() {
           {groups.length > 0 ? (
             <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:items-start lg:gap-5">
               {groups.map((group) => (
-                <div
+                <CategoryGroupCard
                   key={group.category.id}
-                  className="overflow-hidden rounded-card border border-border"
+                  name={group.category.name}
+                  count={group.items.length}
                 >
-                  <div className="flex items-center gap-2 bg-bg-subtle px-4 py-3">
-                    <span className="font-heading text-base font-bold text-heading">
-                      {group.category.name}
-                    </span>
-                    <span className="text-sm text-muted">
-                      {group.items.length}
-                    </span>
-                  </div>
                   {group.items.map((item) => (
                     <LibraryItemRow
                       key={item.id}
@@ -98,7 +92,7 @@ export function LibraryScreen() {
                       }
                     />
                   ))}
-                </div>
+                </CategoryGroupCard>
               ))}
             </div>
           ) : (
