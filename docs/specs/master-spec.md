@@ -961,35 +961,79 @@ categoryId }) → { category, items }[]` — colocated in
     with a reasonable default focus treatment, developer eyeballs and
     corrects after, same precedent as PACKFE-003 Piece 4's estimated
     `lg:w-[420px]` modal width.
-  - [ ] **Piece 1 — Data layer.** Pure logic, no design artifact needed,
-        unblocks everything below.
-    - [ ] `src/api/templates.ts` — `Template`/`TemplateItem` types
-          mirroring `packing-list-go`'s structs field-for-field (confirmed
-          against `internal/models/template.go`'s current source:
-          `Template { id, name, description, items, userId }`,
-          `TemplateItem { itemId, name, quantity, notes }` — note no
-          `categoryId` on `TemplateItem`; `groupTemplateItems` joins
-          against the already-loaded `useItems()` cache for that, same
-          pattern as `groupLibraryItems`). Detail fetch
-          (`GET /templates/:id`) already embeds real `items`; list fetch
-          (`GET /templates`) intentionally returns `items: []` — no
-          second call needed for detail, per the repository's own
-          current source.
-    - [ ] Hooks via `useApiQuery`/`useApiMutation` (error toasts free):
-          list, detail, create, update (name/desc), delete, add-item,
-          update-item (quantity/notes), remove-item, bulk-add
-          (`POST /templates/:id/items/bulk`, body `{ categoryId }` —
-          confirmed against `template_item_handler.go`'s `BulkAddItems`,
-          already skips items already on the template, no client-side
-          de-dup needed for the bulk path).
-    - [ ] Success toast on delete only: `` `${name} removed` `` — no toast
-          per quantity tick or per item add (the UI already reflects
-          those instantly; a toast per tick would be noise).
-    - [ ] `groupTemplateItems(entries, items, categories)` — pure helper,
-          same shape as `groupLibraryItems`, written generically enough
-          that trip entries (which add a `packed` field later) pass
-          through unchanged. Real branching → unit-tested first
-          (`groupTemplateItems.test.ts`).
+  - [x] **Piece 1 — Data layer** — **Done** (2026-07-26). Pure logic, no
+        design artifact needed, unblocks everything below. Grilled
+        2026-07-26: grounded every claim below against current source
+        (`internal/models/template.go`, `template_handler.go`,
+        `template_item_handler.go`, `main.go`'s route table,
+        `scanTemplate`/`GetTemplateItems` in `internal/repository/`)
+        rather than trusting this ticket's own already-grilled prose —
+        one real correction surfaced doing that (see below).
+    - [x] **Correction to this ticket's own earlier wording**: the
+          `Template { id, name, description, items, userId }` line above
+          describes the Go struct's fields, not the JSON contract —
+          `UserID` is tagged `json:"-"` (confirmed, and same treatment on
+          `Item`/`Category`'s `UserID`), so it's never actually in the API
+          response. The frontend `Template` type has **no `userId`
+          field**, matching `Item`/`Category`'s existing precedent of
+          only mirroring what's actually serialized:
+          `Template { id, name, description, items }`,
+          `TemplateItem { itemId, name, quantity, notes }` (no
+          `categoryId` on `TemplateItem` — confirmed as originally noted;
+          `groupTemplateItems` joins against the already-loaded
+          `useItems()` cache for that).
+    - [x] `src/api/templates.ts` — one file, matching
+          `categories.ts`/`items.ts`'s established shape despite covering
+          9 hooks (list, detail, create, update, delete, add-item,
+          update-item, remove-item, bulk-add) — per the Architecture
+          section's existing "hooks live with their fetch functions, not
+          split out" decision. `TEMPLATES_QUERY_KEY = ["templates"]`;
+          `useTemplate(id: string | undefined)` keys
+          `[...TEMPLATES_QUERY_KEY, id]` and sets `enabled: !!id` so
+          Piece 3's route-driven `useParams()` value (possibly
+          `undefined`) can be passed straight through.
+    - [x] **Invalidation scope, decided during grill-me**: template CRUD
+          (`create`/`update`/`delete`) invalidates the broad
+          `TEMPLATES_QUERY_KEY` (covers the list and, via TanStack's
+          default prefix match, any mounted detail query too). Item-level
+          mutations (`add`/`update`/`remove`/`bulk-add`) invalidate only
+          the specific `[...TEMPLATES_QUERY_KEY, templateId]` detail
+          key — the list doesn't show item counts yet (the deferred
+          `packing-list-go` ticket), so there's nothing on it for these
+          to affect. Piece 5 will need to widen this once that ticket
+          lands.
+    - [x] **Toast scope, decided during grill-me — two deliberate
+          deviations from the categories/items precedent**: only
+          `useDeleteTemplate` fires a success toast
+          (`` `${name} removed` ``, `{ id, name }` mutate shape matching
+          `useDeleteCategory`/`useDeleteItem`). Unlike `useUpdateCategory`
+          (which toasts `` `Renamed to ${name}` ``), `useUpdateTemplate`
+          gets **no** success toast — category rename happens inside a
+          modal that stays open, so the toast is the only save-confirmed
+          signal; template rename is inline-editable directly on the
+          screen (Piece 4a), so the visibly-saved text already is the
+          feedback. Same reasoning extends to every item-level mutation
+          (add/update/remove/bulk-add): each is reflected instantly in
+          the UI (a pill flips state, a row disappears), so none of them
+          gets a success toast either — confirmed explicitly for
+          bulk-add specifically, since "added N items" was a real
+          candidate for one, rejected for the same instant-feedback
+          reason.
+    - [x] `groupTemplateItems<T extends { itemId: string }>(entries,
+    items, categories)` — pure helper, fully generic over the entry
+          shape (confirmed during grill-me, not narrowed to
+          `TemplateItem` specifically) so trip entries (which add a
+          `packed` field later) pass through unchanged; an entry whose
+          `itemId` doesn't resolve to a known `Item` is silently dropped
+          rather than erroring, matching `groupLibraryItems`'s style. No
+          `filters` param (unlike `groupLibraryItems`) — nothing in this
+          ticket needs search/filter on the template detail view.
+          `src/features/templates/groupTemplateItems.ts` (+ `.test.ts`),
+          feature-local same as `groupLibraryItems.ts`. Real branching →
+          unit-tested first, 5 cases (category-join order, zero-match
+          omission, missing-item drop, empty-entries, generic-field
+          passthrough) — all pass, along with the existing 52-test suite
+          and `tsc --noEmit`.
   - [ ] **Piece 2 — Shared atoms + the one refactor.** No design artifact
         needed beyond the handoff's §3 component specs; presentational,
         prop-driven — no tests, same precedent as PACKFE-003 Piece 2's
@@ -1092,7 +1136,7 @@ categoryId }) → { category, items }[]` — colocated in
         search-results, desktop create-inline (both steps), mobile
         search-results-with-existing-quantity-pills, mobile create-inline
         (step 2). Built target-agnostic (`{ entries, onAdd, onIncrement,
-    onClose }`, caller owns mutations) so Trips reuses it unchanged.
+onClose }`, caller owns mutations) so Trips reuses it unchanged.
         Its own build piece per the handoff's own sizing call.
     - [ ] `Modal` with `size="fixed"`, `desktopWidth="lg:w-[560px]"` (the
           only current consumer needing `size="fixed"`)
@@ -1125,7 +1169,7 @@ categoryId }) → { category, items }[]` — colocated in
         counts (Architecture section above).
     - [ ] Mobile: card list (name + count same line, description below,
           whole card is the tap target — same `div role="button"
-    tabIndex={0}` + Enter/Space pattern as `LibraryItemRow`)
+tabIndex={0}` + Enter/Space pattern as `LibraryItemRow`)
     - [ ] Desktop: fixed 330px rail (`RailRow`, selected =
           `bg-accent-subtle`) beside an independently-scrolling detail
           pane; no-selection state built from the written-spec inference
