@@ -1478,7 +1478,11 @@ template={selectedTemplate} />` in place of Piece 3's placeholder
           seed control used to add test items is removed now that
           verification is done — Piece 5's real add-items picker is the
           actual way items get added going forward.
-  - [ ] **Piece 4c — Group-card assembly, empty panel, action buttons.**
+  - [x] **Piece 4c — Group-card assembly, empty panel, action buttons.**
+        **Done** (2026-07-26) — verified live in-browser at both
+        breakpoints by the developer after the design-deviation pass
+        below; committed as "Implement grouped items on templates
+        screen".
         Screenshot-grounded: re-reviewed all 10 of this ticket's screenshots
         (grilled 2026-07-26). Follows precedent, no new pattern:
         `CategoryGroupCard`/`EmptyStatePanel`/`ConfirmDialog` all already
@@ -1606,7 +1610,7 @@ add-items picker is coming soon", "success")` for both triggers.
           bug is what made this visible. Kept `variant="secondary"` as
           the base (mobile is unchanged — still full-width, thumb-
           friendly) and added `lg:w-auto lg:rounded-full lg:px-5 lg:py-2
-    lg:text-sm` so desktop only gets a compact pill next to
+lg:text-sm` so desktop only gets a compact pill next to
           Delete — a genuine breakpoint difference, same treatment as
           the Delete-copy and CTA/Delete-row-layout findings above, not
           a new variant (rejected reusing the existing `success` variant
@@ -1618,37 +1622,120 @@ add-items picker is coming soon", "success")` for both triggers.
           backend rejects it, the automatic error toast already covers the
           UI side — don't build special handling ahead of confirming this
           actually happens.
-  - [ ] **Piece 5 — Add-items picker.** Screenshot-grounded: desktop
-        search-results, desktop create-inline (both steps), mobile
-        search-results-with-existing-quantity-pills, mobile create-inline
-        (step 2). Built target-agnostic (`{ entries, onAdd, onIncrement,
-onClose }`, caller owns mutations) so Trips reuses it unchanged.
-        Its own build piece per the handoff's own sizing call.
-    - [ ] `Modal` with `size="fixed"`, `desktopWidth="lg:w-[560px]"` (the
-          only current consumer needing `size="fixed"`)
-    - [ ] Search field (`TextField` as-is, placeholder "Search — or type
+  - [x] **Piece 5 — Add-items picker.** Screenshot-grounded: desktop
+        search-results (`...09.14.25.png`), desktop create-inline step 1
+        (`...09.14.54.png`) and step 2 (`...09.15.05.png`), mobile
+        search-results-with-existing-quantity-pills (`...09.16.16.png`),
+        mobile create-inline step 2 (`...09.16.23.png`) — all re-grounded
+        against the actual PNGs, not the handoff's markup, per this
+        project's hard rule. Talked through before any code per this
+        project's "conversation, not grill-me" override; built in one
+        pass (no 5a/5b/5c split — most of the hard groundwork turned out
+        to already be established precedent, see below).
+    - [x] **Confirmed from screenshots + the handoff's own §3.9/§4.5 prose
+          before writing code** (not new decisions, just verified against
+          the real artifacts rather than assumed): bulk chip `(n)` is the
+          not-yet-added count in that category, not the category's total
+          size (confirmed pixel-counting the mobile screenshot: Clothing
+          shows "(3)" with exactly 3 of 7 items unadded) — and the
+          backend's `BulkAddItems` already skips items already on the
+          template server-side, so the frontend just calls
+          `useBulkAddItems({templateId, categoryId})` with no client-side
+          filtering. Default category in create-inline step 2 matches
+          `ItemFormModal.tsx`'s existing `categoryId ||
+categories[0]?.id` precedent exactly (both screenshots show the
+          first category pre-selected) — reused as-is, not a new pattern.
+    - [x] **Modal-open state lives in `useTemplatesScreen`** (not
+          duplicated in `TemplatesDesktop`/`TemplatesMobile`, and not a
+          new wrapper component) — `isAddItemsOpen` / `openAddItems()` /
+          `closeAddItems()`, plain `useState`, no new mutation logic.
+          Corrected mid-conversation from an initial proposal to
+          duplicate this across the two screen files: `useTemplatesScreen`
+          is called exactly once (`TemplatesScreen.tsx`), so this is a
+          single call site, not two. Went one step further and moved the
+          modal's own render out of `TemplatesDesktop`/`TemplatesMobile`
+          entirely too — `Modal` already handles both breakpoints
+          internally, so `TemplatesScreen.tsx` renders it once, gated on
+          `isAddItemsOpen && selectedTemplate`. `TemplateDetailHeader`/
+          `TemplateDetailBody` each gained an `onAddItems` callback prop
+          in place of their Piece 4c toast stubs.
+    - [x] **No explicit search-field reset** after "Add" or "Create it &
+          add" — decided during the pre-work conversation. Tapping "Add"
+          leaves the query in place so multiple results from one search
+          stay addable; after "Create it & add" the newly-created item
+          naturally matches its own search text and reappears in the
+          result list with its pill flipped to green once the query
+          invalidates, so the create-inline panel disappears on its own
+          — no special-case reset logic either way.
+    - [x] `Modal` with `size="fixed"`, `desktopWidth="lg:w-[560px]"` (the
+          only current consumer needing `size="fixed"`) — pre-built ahead
+          of time in Piece 2/earlier, unused until now.
+    - [x] Search field (`TextField` as-is, placeholder "Search — or type
           something new…")
-    - [ ] Create-inline flow, verified as a real 2-step interaction from
-          the screenshots (not assumed from the handoff's prose alone):
-          step 1 shows a dashed `+ Create "X" as a new item` button; only
-          after tapping it does step 2 reveal the category-chip picker +
-          "Create it & add". Creates the library item and adds it to the
-          template in one gesture.
-    - [ ] Bulk chips (`+ All {category} (n)`), horizontally scrolling
-    - [ ] Result list: name + category sub-line, trailing pill — tan
+    - [x] Create-inline flow, a real 2-step interaction confirmed from the
+          screenshots: step 1 shows a dashed accent-bordered `+ Create
+"X" as a new item` trigger; tapping it reveals step 2 inside
+          the same dashed panel — category chips (first pre-selected) +
+          "Create it & add" — which creates the library item and adds it
+          to the template in one gesture (`useCreateItem` →
+          `useAddTemplateItem` on success). Editing the search text while
+          in step 2 resets back to step 1 (the create target changed).
+          The dashed panel itself is a new accent-colored treatment
+          (`border-accent`, not the existing tan `dashed` Button variant)
+          — no shared atom extracted for it yet, single consumer today.
+    - [x] Bulk chips (`+ All {category} (n)`), horizontally scrolling —
+          green outline/text (`border-accent-secondary`), not `Chip`'s
+          existing selected/unselected treatment (these aren't toggles).
+    - [x] Result list: name + category sub-line, trailing pill — tan
           "Add" for not-yet-added items, solid green `` `×${quantity}` ``
-          for items already on the template (exact pill treatment
-          confirmed from the mobile search-results screenshot)
-    - [ ] Adding an already-present item calls `UpdateItem`
+          for items already on the template (confirmed from the mobile
+          search-results screenshot). Reuses `CollectionItemRow` for the
+          row shape — its `leading` prop generalized from required to
+          optional (second real evidence it doesn't apply universally,
+          per the structure-convention bar) — passing the category name
+          into the existing `notes` slot for the muted subtext line.
+          `Button` gains a `subtle` variant (`bg-bg-subtle`, tan pill) for
+          the "Add" pill; the `×${quantity}` pill reuses the existing
+          `success` variant verbatim, exact color match confirmed against
+          the theme tokens (`--color-accent-secondary`).
+    - [x] Adding an already-present item calls `UpdateItem`
           (quantity + 1), not `AddItem` — see Architecture section's
           add-vs-increment resolution
-    - [ ] Pinned "Done" in `Modal`'s `footer` — dark `heading` fill,
+    - [x] Pinned "Done" in `Modal`'s `footer` — dark `heading` fill,
           closes only (every add already applied, not a staged basket)
-    - [ ] On close: invalidate template detail (and the list query too,
-          once Piece 6/the Go ticket give it item counts)
-    - [ ] Vitest test (`QueryClientProvider` + mocked `fetch` + RTL, same
-          harness as `ItemFormModal.test.tsx`) — see Architecture
-          section's test-candidate list
+    - [x] On close: invalidate template detail — **already true**, every
+          item-level mutation hook (Piece 1) invalidates its own detail
+          key on success, so no new invalidation code was needed here.
+          List-query invalidation (once item counts exist) is still
+          Piece 6/the Go ticket's job, unchanged from the original note.
+    - [x] `prepareAddItemsPickerData(items, categories, entries, search)`
+          — new pure helper (`src/components/detail/`, shared-shape since
+          the modal itself is shared w/ Trips), real branching → unit
+          tested first, 5 cases (category-then-item ordering, substring
+          match, already-added quantity attachment, bulk remaining-count
+          with zero-remaining omission, create-inline show/hide). Deliberately not reusing `groupLibraryItems` directly — that
+          groups by category for card rendering; the picker needs a flat
+          list — though the filtering rule itself is the same
+          case-insensitive substring match.
+    - [x] Vitest test (`QueryClientProvider` + mocked `fetch` + RTL, same
+          harness as `ItemFormModal.test.tsx`) — 6 cases covering the
+          modal's own interaction state machine (Add vs. increment pill,
+          bulk-add, Done, the full create-inline 2-step flow with its
+          defaulted category, and the search-edit-resets-step-1 case).
+          Mutations are caller-owned (per the target-agnostic prop
+          contract) so this tests callback-calling behavior against fake
+          `vi.fn()`s, not real API calls — the thin `TemplateAddItemsModal`
+          adapter that wires those callbacks to the real template
+          mutations is untested directly (trivial pass-through wiring
+          onto already-tested hooks), per this project's
+          skip-trivial-wiring testing guidance.
+    - [x] `tsc --noEmit`, oxlint, and prettier all clean; full 90-test
+          suite green (79 going in, +5 for the pure helper, +6 for the
+          modal's own interaction tests).
+    - [x] **Manual verification** — developer confirmed 2026-07-26 in a
+          real browser at both breakpoints against the 5 screenshots
+          above: search/filter, both create-inline steps, bulk-add,
+          incrementing an already-added item, and Done. Held up.
   - [ ] **Piece 6 — List/rail assembly + states.** Screenshot-grounded:
         desktop list+detail, desktop empty-template detail, mobile list.
         Depends on the companion `packing-list-go` ticket for real item
@@ -1673,10 +1760,24 @@ tabIndex={0}` + Enter/Space pattern as `LibraryItemRow`)
           (see decision above)
     - [ ] Loading: render header + "+ New" immediately (data-independent),
           withhold the list/rail/detail until queries resolve — same
-          precedent as PACKFE-003 Piece 6. Desktop-specific wrinkle: while
-          a selected template's detail is still loading, don't flash the
-          no-selection copy — "loading" and "nothing selected" are
-          distinct states.
+          precedent as PACKFE-003 Piece 6. Still not done — this is the
+          full Piece 6 loading-state design, not just the isolated fix
+          below.
+      - [x] **Desktop-specific wrinkle, pulled forward on its own
+            (2026-07-26), ahead of the rest of Piece 6**: while a
+            selected template's detail is still loading, don't flash the
+            no-selection copy — "loading" and "nothing selected" are
+            distinct states. Root cause confirmed 2026-07-26 (developer
+            noticed while manually verifying Piece 4c): `useTemplatesScreen`
+            already returned `isSelectedLoading` for exactly this, but it
+            was unused in `TemplatesDesktop` — the placeholder body fell
+            through to the "no template selected" branch while the
+            newly-selected template's own query was still in flight
+            (first visit only; cached revisits didn't flash). Fixed by
+            gating the fallback: `isSelectedLoading ? null : <p>No
+template selected</p>`. Mobile doesn't have this bug — its
+            placeholder has no equivalent "no selection" copy in the
+            loading branch, so no change needed there.
     - [ ] Delete-and-return: mobile pops back to the list, desktop returns
           to the no-selection state (ties into Piece 4c)
 

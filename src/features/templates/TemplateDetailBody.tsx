@@ -14,11 +14,13 @@ import { TemplateItemRow } from "./TemplateItemRow";
 interface TemplateDetailBodyProps {
   template: Template;
   deleteTemplate: (id: string, name: string) => void;
+  onAddItems: () => void;
 }
 
 export function TemplateDetailBody({
   template,
   deleteTemplate,
+  onAddItems,
 }: TemplateDetailBodyProps) {
   const categories = useCategories();
   const items = useItems();
@@ -63,9 +65,7 @@ export function TemplateDetailBody({
           title="Nothing in here yet"
           message="Click here to start building it."
           actionLabel="+ Add items"
-          onAction={() =>
-            toast("The add-items picker is coming soon", "success")
-          }
+          onAction={onAddItems}
         />
       )}
 

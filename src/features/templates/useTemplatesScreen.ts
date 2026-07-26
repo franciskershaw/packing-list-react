@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import {
@@ -34,6 +35,9 @@ export interface UseTemplatesScreenResult {
   goToList: () => void;
   createTemplate: () => void;
   deleteTemplate: (id: string, name: string) => void;
+  isAddItemsOpen: boolean;
+  openAddItems: () => void;
+  closeAddItems: () => void;
 }
 
 export function useTemplatesScreen(): UseTemplatesScreenResult {
@@ -44,6 +48,7 @@ export function useTemplatesScreen(): UseTemplatesScreenResult {
   const selected = useTemplate(templateId);
   const createTemplateMutation = useCreateTemplate();
   const deleteTemplateMutation = useDeleteTemplate();
+  const [isAddItemsOpen, setIsAddItemsOpen] = useState(false);
 
   return {
     templates: templates.data ?? [],
@@ -65,5 +70,8 @@ export function useTemplatesScreen(): UseTemplatesScreenResult {
         { onSuccess: () => navigate("/templates") },
       );
     },
+    isAddItemsOpen,
+    openAddItems: () => setIsAddItemsOpen(true),
+    closeAddItems: () => setIsAddItemsOpen(false),
   };
 }

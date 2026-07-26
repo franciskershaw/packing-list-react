@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 interface CollectionItemRowProps {
-  leading: ReactNode;
+  leading?: ReactNode;
   name: string;
   notes?: string | null;
   trailing: ReactNode;

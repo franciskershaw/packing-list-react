@@ -11,9 +11,11 @@ export function TemplatesDesktop({
   templates,
   isLoading,
   selectedTemplate,
+  isSelectedLoading,
   selectTemplate,
   createTemplate,
   deleteTemplate,
+  openAddItems,
 }: UseTemplatesScreenResult) {
   if (isLoading) {
     return null;
@@ -36,13 +38,17 @@ export function TemplatesDesktop({
       <main className="flex min-w-0 flex-1 flex-col gap-4">
         {selectedTemplate ? (
           <Fragment key={selectedTemplate.id}>
-            <TemplateDetailHeader template={selectedTemplate} />
+            <TemplateDetailHeader
+              template={selectedTemplate}
+              onAddItems={openAddItems}
+            />
             <TemplateDetailBody
               template={selectedTemplate}
               deleteTemplate={deleteTemplate}
+              onAddItems={openAddItems}
             />
           </Fragment>
-        ) : (
+        ) : isSelectedLoading ? null : (
           <p>No template selected</p>
         )}
       </main>

@@ -16,6 +16,7 @@ export function TemplatesMobile({
   goToList,
   createTemplate,
   deleteTemplate,
+  openAddItems,
 }: UseTemplatesScreenResult) {
   if (isLoading) {
     return null;
@@ -27,10 +28,14 @@ export function TemplatesMobile({
         <button onClick={goToList}>Back</button>
         {selectedTemplate && (
           <Fragment key={selectedTemplate.id}>
-            <TemplateDetailHeader template={selectedTemplate} />
+            <TemplateDetailHeader
+              template={selectedTemplate}
+              onAddItems={openAddItems}
+            />
             <TemplateDetailBody
               template={selectedTemplate}
               deleteTemplate={deleteTemplate}
+              onAddItems={openAddItems}
             />
           </Fragment>
         )}

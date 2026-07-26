@@ -27,7 +27,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     | "primary"
     | "success"
     | "accent"
-    | "secondary";
+    | "secondary"
+    | "subtle";
   /** Only affects default/danger — other variants are sized already. */
   size?: "default" | "compact";
 }
@@ -47,6 +48,8 @@ const VARIANT_CLASSES: Record<NonNullable<ButtonProps["variant"]>, string> = {
     "rounded-full border-0 bg-accent px-5 py-2 text-sm font-bold text-on-accent shadow-sm hover:bg-accent-hover disabled:opacity-50",
   secondary:
     "w-full rounded-2xl border-0 bg-accent-secondary px-6 py-4 font-body text-base font-bold text-on-accent shadow-sm disabled:opacity-50",
+  subtle:
+    "rounded-full border-0 bg-bg-subtle px-5 py-2 text-sm font-bold text-heading disabled:opacity-50",
 };
 
 const COMPACT_VARIANT_CLASSES: Partial<

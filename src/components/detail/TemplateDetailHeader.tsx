@@ -1,17 +1,19 @@
 import type { Template } from "../../api/templates";
 import { useUpdateTemplate } from "../../api/templates";
 import { Button } from "../ui/Button";
-import { useToast } from "../ui/Toast";
 import { InlineEditableHeading } from "./InlineEditableHeading";
 import { useInlineEditableField } from "./useInlineEditableField";
 
 interface TemplateDetailHeaderProps {
   template: Template;
+  onAddItems: () => void;
 }
 
-export function TemplateDetailHeader({ template }: TemplateDetailHeaderProps) {
+export function TemplateDetailHeader({
+  template,
+  onAddItems,
+}: TemplateDetailHeaderProps) {
   const updateTemplate = useUpdateTemplate();
-  const { toast } = useToast();
 
   const titleField = useInlineEditableField({
     savedValue: template.name,
@@ -36,11 +38,7 @@ export function TemplateDetailHeader({ template }: TemplateDetailHeaderProps) {
           {...descriptionField}
         />
       </div>
-      <Button
-        variant="accent"
-        className="shrink-0"
-        onClick={() => toast("The add-items picker is coming soon", "success")}
-      >
+      <Button variant="accent" className="shrink-0" onClick={onAddItems}>
         + Add items
       </Button>
     </div>
