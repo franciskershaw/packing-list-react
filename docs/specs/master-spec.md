@@ -1479,21 +1479,76 @@ template={selectedTemplate} />` in place of Piece 3's placeholder
           verification is done — Piece 5's real add-items picker is the
           actual way items get added going forward.
   - [ ] **Piece 4c — Group-card assembly, empty panel, action buttons.**
-    - [ ] `CategoryGroupCard` per non-empty category, empty groups omitted
-          (same rule as Library)
+        Screenshot-grounded: re-reviewed all 10 of this ticket's screenshots
+        (grilled 2026-07-26). Follows precedent, no new pattern:
+        `CategoryGroupCard`/`EmptyStatePanel`/`ConfirmDialog` all already
+        exist as unused atoms from Piece 2 — this is their first real
+        wiring-in, not new build. `groupTemplateItems` already omits empty
+        groups (own passing test) — no code change needed for "same rule
+        as Library". One layout finding from the screenshots: the desktop
+        detail pane stacks groups in a **single column**, not Library's
+        `lg:grid-cols-2` — confirmed from the desktop populated-detail
+        screenshot, not carried over by assumption. No screenshot exists
+        for the mobile empty-template state specifically (not among the 10) — treated as a named inference (same `EmptyStatePanel`, which
+        has no `lg:`-prefixed classes of its own, so it's breakpoint-
+        agnostic already), same treatment as this ticket's other
+        screenshot gaps noted above.
+    - [ ] `TemplateDetailBody.tsx` (`src/features/templates/`) — new
+          shared component owning everything from the group list through
+          the delete flow, consumed identically by `TemplatesDesktop`/
+          `TemplatesMobile` (mirrors `TemplateDetailHeader`'s existing
+          precedent of one component called the same way from both).
+          Outer chrome (rail/sidebar/mobile back button) stays in the two
+          screen files — that's genuinely breakpoint-specific and is
+          Piece 6's territory. Fetches its own `useItems()`/
+          `useCategories()` to build `groupTemplateItems`' input.
+    - [ ] `CategoryGroupCard` per non-empty category, single column,
+          empty groups omitted (same rule as Library)
     - [ ] Empty-template state: `EmptyStatePanel` replaces both the group
           list and the dashed "+ Add items" row (matches the desktop
           empty-template screenshot)
-    - [ ] "+ Add items" dashed row (populated state) opens the picker
-          (Piece 5)
-    - [ ] "New list from template" green block CTA — stubbed action (toast)
-          per the Architecture section's scope-boundary decision
-    - [ ] "Delete template"/"Delete" — bare `notice-text` button, goes
-          through `ConfirmDialog` directly (not `DeleteIconButton` — that
-          atom is the 26px circle). Copy: title `` `Delete ${name}?` ``,
-          body "This can't be undone.", confirm "Delete". On success: toast
-          `` `${name} removed` ``, mobile pops back to the list, desktop
-          returns to the no-selection state.
+    - [ ] **Gap caught this grill-me**: the dashed "+ Add items" row and
+          the empty panel's own action button both nominally "open the
+          picker (Piece 5)", but Piece 5 doesn't exist yet — 4c is built
+          first. Decided: stub both to a toast, same treatment as the CTA
+          below, rather than pulling Piece 5 forward. `toast("The
+    add-items picker is coming soon", "success")` for both triggers.
+    - [ ] "Use for a new trip" green block CTA (`Button variant="secondary"`
+          — exact copy confirmed from the desktop empty-template
+          screenshot, not the roadmap's earlier paraphrase "New list from
+          template") — stubbed action per the Architecture section's
+          scope-boundary decision: `toast("Trip creation is coming soon",
+    "success")`.
+    - [ ] "Delete template" — bare `notice-text` button (`InteractiveButton`
+          with `text-sm font-bold text-notice-text`, not a `Button`
+          variant — none of the existing variants are bare/backgroundless),
+          goes through `ConfirmDialog` directly (not `DeleteIconButton` —
+          that atom is the 26px circle). Copy is "Delete template" on
+          **both** breakpoints — the desktop screenshot actually shows
+          bare "Delete", but decided during grill-me to normalize to the
+          more explicit label rather than replicate the discrepancy.
+          `ConfirmDialog` copy: title `` `Delete ${name}?` ``, body "This
+          can't be undone.", confirm "Delete". Wires directly to
+          `useTemplatesScreen`'s existing `deleteTemplate(id, name)` —
+          its toast-on-success and navigate-to-`/templates` (which is
+          mobile's "pop back to list" and desktop's "return to
+          no-selection state" simultaneously, since selection is
+          route-driven) are already built and tested by Piece 3; no new
+          logic needed here.
+    - [ ] **Test approach, decided during grill-me**: no new automated
+          test. Matches `LibraryScreen.tsx`'s own precedent — its
+          equivalent assembly has never had a direct test, because the
+          real logic underneath (`groupLibraryItems`/`groupTemplateItems`)
+          already has its own. Verified manually instead.
+    - [ ] **Manual verification, decided during grill-me**: the temporary
+          seed control built (and then removed) for Piece 4b's own
+          verification is gone, and Piece 5 doesn't exist yet, so there's
+          no in-app way to get multi-category items onto a template.
+          `packing-list-go/requests/seed-piece-4c-groups.http` — a new,
+          explicitly scratch/ticket-scoped `.http` file (not permanent
+          endpoint documentation like its siblings) that creates a few
+          categories and items and attaches them to a template across
+          categories, so the grouped layout has something real to render.
     - [ ] **Open question for the API, flagged not assumed**: whether
           trips already seeded from a template block its deletion. If the
           backend rejects it, the automatic error toast already covers the
