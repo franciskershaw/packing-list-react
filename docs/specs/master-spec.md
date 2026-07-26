@@ -1429,7 +1429,7 @@ template={selectedTemplate} />` in place of Piece 3's placeholder
           without a PATCH regardless of draft content; a blur immediately
           following a programmatic Enter/Escape blur doesn't double-commit
           (guards the double-commit fix above).
-  - [ ] **Piece 4b — Item row + quantity stepper.** Screenshot-grounded:
+  - [x] **Piece 4b — Item row + quantity stepper.** Screenshot-grounded:
         `Screenshot 2026-07-26 at 09.13.59.png` (desktop list+detail) and
         `...09.16.02.png` (mobile detail) — both already used for Piece
         4a, re-reviewed here for the row/stepper/delete layout
@@ -1437,7 +1437,7 @@ template={selectedTemplate} />` in place of Piece 3's placeholder
         matches what Piece 2 built (`CollectionItemRow`/`QuantityStepper`/
         `DeleteIconButton` unchanged) — this piece is pure wiring, no new
         atom needed.
-    - [ ] `TemplateItemRow.tsx` (`src/features/templates/`, feature-local
+    - [x] `TemplateItemRow.tsx` (`src/features/templates/`, feature-local
           — single consumer today, same precedent as `LibraryItemRow`)
           composes `CollectionItemRow` (`×` leading, `confirm={false}`,
           name, read-only notes) + `QuantityStepper` (trailing), calling
@@ -1445,19 +1445,19 @@ template={selectedTemplate} />` in place of Piece 3's placeholder
           `useDebouncedQuantity` hook (see Architecture section above for
           the local-state-vs-cache-patch decision and the split between
           the two files).
-    - [ ] Pending-timer cleanup: the debounce timer clears on unmount (row
+    - [x] Pending-timer cleanup: the debounce timer clears on unmount (row
           deleted, or template switched) so a stale commit can't fire —
           and therefore can't toast — for an item that's already gone.
-    - [ ] `−` floors at 1, disabled (not hidden) at min; never implies
+    - [x] `−` floors at 1, disabled (not hidden) at min; never implies
           removal — unchanged `QuantityStepper` behavior, no new logic
           needed.
-    - [ ] Touch targets: `InteractiveButton`'s universal hit-slop (see
+    - [x] Touch targets: `InteractiveButton`'s universal hit-slop (see
           Architecture section above) covers this for free — no
           per-component work needed here beyond using `QuantityStepper`/
           `DeleteIconButton` as-is.
-    - [ ] Rows keep their position on any quantity change — no reordering
+    - [x] Rows keep their position on any quantity change — no reordering
           (already true — `groupTemplateItems` doesn't sort by quantity).
-    - [ ] **Test approach, decided during grill-me**: first use of fake
+    - [x] **Test approach, decided during grill-me**: first use of fake
           timers in this codebase. `useDebouncedQuantity.test.ts` —
           `renderHook` (`@testing-library/react`) + `vi.useFakeTimers()` + `act(() => vi.advanceTimersByTime(400))`, not a rendered-DOM
           harness — unlike `useInlineEditableField`'s test, there's no
@@ -1466,7 +1466,7 @@ template={selectedTemplate} />` in place of Piece 3's placeholder
           matches the last tap, not the first; a rejected commit reverts
           the displayed value to the last-confirmed prop value; unmounting
           mid-debounce doesn't fire a commit.
-    - [ ] **Manual verification, decided during grill-me**: Piece 4c
+    - [x] **Manual verification, decided during grill-me**: Piece 4c
           (group-card assembly) doesn't exist yet, so this piece can't
           render inside a real `CategoryGroupCard`. Temporary flat-list
           harness — `selectedTemplate.items.map(...)` rendered directly as
@@ -1474,7 +1474,10 @@ template={selectedTemplate} />` in place of Piece 3's placeholder
           existing placeholder bodies (next to `TemplateDetailHeader`, no
           category grouping) — same replace-wholesale-don't-build-alongside
           precedent as Piece 3/4a's own placeholders, which Piece 4c
-          replaces wholesale.
+          replaces wholesale. Verified in-browser 2026-07-26; the temporary
+          seed control used to add test items is removed now that
+          verification is done — Piece 5's real add-items picker is the
+          actual way items get added going forward.
   - [ ] **Piece 4c — Group-card assembly, empty panel, action buttons.**
     - [ ] `CategoryGroupCard` per non-empty category, empty groups omitted
           (same rule as Library)

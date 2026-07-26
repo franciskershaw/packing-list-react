@@ -1,16 +1,20 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
-// Shared base for every button-shaped atom so cursor/type aren't repeated per-component.
+// Invisible inset expands every button's tap target to the 44px touch guideline.
 export function InteractiveButton({
   className = "",
+  children,
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
       type="button"
-      className={`cursor-pointer ${className}`}
+      className={`relative cursor-pointer ${className}`}
       {...props}
-    />
+    >
+      <span aria-hidden="true" className="absolute -inset-2.5" />
+      {children}
+    </button>
   );
 }
 
