@@ -1175,9 +1175,9 @@ text-secondary`). Save-strategy state machine still deferred to
           template detail, create/delete mutations), no JSX
       - [ ] **Return shape, decided during grill-me**: flat fields, not a
             discriminated union — `{ templates, isLoading,
-    selectedTemplateId, selectedTemplate, isSelectedLoading,
-    selectTemplate(id), goToList(), createTemplate(),
-    deleteTemplate(id, name) }`. Desktop consumes every field
+selectedTemplateId, selectedTemplate, isSelectedLoading,
+selectTemplate(id), goToList(), createTemplate(),
+deleteTemplate(id, name) }`. Desktop consumes every field
             directly with no branching (it renders list + detail
             simultaneously); Mobile derives its single-mode view from
             whether `selectedTemplateId` is set (already mirrors the
@@ -1206,8 +1206,10 @@ text-secondary`). Save-strategy state machine still deferred to
             `CategoriesModal.test.tsx` use `QueryClientProvider` alone).
             Cases: no `:templateId` → no selected-template query fires;
             `:templateId` present → detail query enabled with that id;
-            `selectTemplate`/`goToList` call `navigate` with the right
-            path.
+            `selectTemplate`/`goToList` navigate to the right route;
+            `createTemplate` posts the default name and navigates to the
+            new id; `deleteTemplate` deletes and navigates back to the
+            list.
     - [ ] `TemplatesScreen.tsx` (breakpoint switch only) →
           `TemplatesMobile.tsx` / `TemplatesDesktop.tsx` with placeholder
           bodies, wired to real data — proves the split works end-to-end
