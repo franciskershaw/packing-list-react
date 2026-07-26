@@ -1857,19 +1857,28 @@ template selected</p>`. Mobile doesn't have this bug — its
     - [x] `tsc --noEmit`, oxlint, and prettier all clean; full 91-test
           suite green (90 going in, +1 for the autofocus-clearing state
           transition). Frontend `Template` type gained `itemCount:
-    number` to match PACK-034's response shape — a stale `tsc`
+number` to match PACK-034's response shape — a stale `tsc`
           incremental cache initially masked 4 now-invalid test
           fixtures missing the field; cleared the cache and fixed all 4
           once caught.
-    - [ ] **Manual verification** — not done yet. Needs a real look in
-          the browser at both breakpoints: list/rail rendering with real
-          item counts, zero-templates state (temporarily, on a fresh
-          account or by archiving test data), "+ New"/"+ New template"
-          creating and autofocusing/select-all on the title, desktop's
-          independently-scrolling rail vs. detail pane with enough
-          templates/items to actually overflow, delete-and-return on
-          both breakpoints. `npm run dev` + `packing-list-go` on `:8080`
-          — developer's job, not automatable on this project.
+    - [x] **Manual verification** — developer confirmed 2026-07-26 across
+          several rounds of real-browser checks at both breakpoints
+          (list/rail with real counts, zero-templates state, create +
+          autofocus, delete-and-return, the rail/detail visual details
+          below). Caught real issues along the way, all fixed except one
+          parked separately: header→button spacing tightened twice
+          (`gap-4`→`gap-3`→`gap-1`), a missing vertical rail/detail
+          divider added, `html`'s background added alongside `body`'s
+          (overscroll-bounce white flash), a 167px unintended gap from
+          `mx-auto` centering the populated detail content removed
+          (checked directly against `...09.13.59.png` — the design
+          anchors content near the rail, doesn't center it in leftover
+          space; "centred" in the handoff prose only ever described the
+          no-selection empty state). **Horizontal scroll on the rail is
+          the one exception** — attempted (`min-w-0` + `truncate`) but
+          not resolved; not reproducible via automated browser testing
+          at 1600/1280/430px with current seed data, so parked in
+          "Later / polish" below rather than guessed at further.
     - [ ] **Flagged, not fixed**: `src/features/templates/` is now at 11
           files (`TemplateListCard.tsx` pushed it further past the
           8-file threshold `CLAUDE.md`'s Structure conventions section
@@ -2004,5 +2013,16 @@ want to do it.
   PACKFE-004's grill-me) — the data model carries them and rows display
   them, but neither design export has an affordance for _writing_ one.
   Needs a design before it can be built; not blocking PACKFE-004 itself.
+- **[UX polish]** Horizontal scroll on the Templates desktop rail
+  (reported 2026-07-26, developer testing PACKFE-004 Piece 6) — not
+  resolved. Tried `min-w-0` down the flex chain + `truncate` on
+  `RailRow`'s title/meta text (the classic flexbox-column content-forces-
+  width gotcha), but the developer still sees it after those changes and
+  a hard refresh. Couldn't reproduce via automated browser testing at
+  1600px/1280px/430px with the current seed data (`scrollWidth ===
+clientWidth` at every width tried) — likely needs the developer's own
+  exact viewport/zoom/data to repro. Next step when picked back up: get
+  a screenshot or screen recording of it actually happening, rather than
+  guessing at more defensive CSS.
   If this list of `[UX polish]` items keeps growing, worth grouping into
-  its own epic — not yet, with four.
+  its own epic — not yet, with five.
