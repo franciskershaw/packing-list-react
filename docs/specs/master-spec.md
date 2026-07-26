@@ -311,6 +311,54 @@ params]`) since the filtered variant's consumer is already confirmed
 - **Local dev connectivity**: Vite dev-server proxy (`/api` →
   `http://localhost:8080`), not CORS. Requires `packing-list-go` running
   locally on `:8080` alongside `npm run dev`.
+- **`useDebouncedQuantity` hook, local-state optimistic update — not a
+  TanStack `onMutate`/`onError` cache patch** (decided 2026-07-26 during
+  PACKFE-004 Piece 4b's grill-me): considered cache-patching first, since
+  it would make Piece 5's quantity-+1 optimistic "for free" too as a side
+  effect of any future `useUpdateTemplateItem` call. Rejected once traced
+  through: `onMutate`/`onError` fire once per `.mutate()` call, but Piece
+  4b needs "instant display on every tap, one debounced PATCH per burst"
+  — stacking several `.mutate()` calls (one per tap) each with their own
+  `onMutate` snapshot doesn't converge to the correct value on rollback
+  (traced a 3-tap failure case: out-of-order `onError` handlers land on a
+  mid-burst value, not the pre-burst one). The cache-patch approach's
+  actual payoff — consistency if something else changes this item's
+  quantity mid-burst — isn't a real risk: the NFR section already rules
+  out concurrency beyond one browser tab, and Piece 5's own increment gets
+  its instant feedback from the picker's own local pill state, not from
+  this mutation's cache behavior. Landed on: `detail/useDebouncedQuantity.ts`
+  — generic, no Template coupling (`{ value, min?, onCommit(value) }` →
+  `{ value, increment, decrement }`), draft-state shape mirrors
+  `useInlineEditableField` (instant local update, commit via callback,
+  revert to the last-confirmed `value` prop if `onCommit` rejects — the
+  automatic `useApiMutation` toast already explains the rejection) with
+  "commit on blur" swapped for "commit ~400ms after the last tap." Lives
+  in `detail/` next to `QuantityStepper` since Trips needs the identical
+  tap-instant/debounce/rollback behavior for its own item rows later (per
+  the Goals section's "add/remove/adjust items on a trip" use case, not
+  speculative). The Template-specific glue (which mutation to call) stays
+  feature-local in `features/templates/TemplateItemRow.tsx` — a
+  deliberate split from `TemplateDetailHeader`'s precedent (Piece 4a put a
+  Template-specific composite straight into `detail/`), justified here
+  because the debounce/rollback logic has no Template-specific surface to
+  extract, unlike `TemplateDetailHeader`. Overlapping in-flight requests
+  (a fast tap burst that outlasts one debounce window) are an accepted
+  edge case, not engineered around — each PATCH carries the full latest
+  quantity, not a delta, and blocking input until the first request
+  settles was rejected as it would break the instant-display requirement.
+- **`InteractiveButton` gains a universal touch-target hit-slop** (decided
+  2026-07-26 during PACKFE-004 Piece 4b's grill-me): an invisible
+  `absolute -inset-2.5` (~10px) element inside every button it renders —
+  clicks on the overflow still bubble to the button's own `onClick` since
+  it's a descendant, so the button's visual size is unaffected. Prompted
+  by `QuantityStepper`'s 28px buttons and `DeleteIconButton`'s 26px circle
+  sitting three-adjacent in `TemplateItemRow` (Piece 4b), the likeliest
+  mis-tap spot built so far, but applied unconditionally rather than
+  behind an opt-in prop — harmless for full-width buttons, and it fixes
+  the same touch-safety gap for free on `LibraryItemRow`'s/`CategoryRow`'s
+  existing `×` buttons too. Same "promote a one-off fix to a blanket
+  convention" reasoning as `CollectionItemRow`'s `py-3.5` bump (PACKFE-003
+  Piece 3).
 
 ## Non-functional requirements
 
@@ -1292,7 +1340,7 @@ deleteTemplate(id, name) }`. Desktop consumes every field
           one component already clears the structure-convention bar, no
           speculative extraction. `TemplatesDesktop`/`TemplatesMobile` each
           render `<TemplateDetailHeader key={selectedTemplate.id}
-    template={selectedTemplate} />` in place of Piece 3's placeholder
+template={selectedTemplate} />` in place of Piece 3's placeholder
           `<p>{selectedTemplate.name}</p>`
           line — nothing else in either placeholder changes:
           `BackHeader`/the "TEMPLATE" eyebrow label, group-card assembly,
@@ -1381,21 +1429,52 @@ deleteTemplate(id, name) }`. Desktop consumes every field
           without a PATCH regardless of draft content; a blur immediately
           following a programmatic Enter/Escape blur doesn't double-commit
           (guards the double-commit fix above).
-  - [ ] **Piece 4b — Item row + quantity stepper.** Screenshot-grounded
-        (all detail-view screenshots).
-    - [ ] `CollectionItemRow` wired with `×` (leading, `confirm={false}`) + name + notes (read-only) + `QuantityStepper` (trailing)
+  - [ ] **Piece 4b — Item row + quantity stepper.** Screenshot-grounded:
+        `Screenshot 2026-07-26 at 09.13.59.png` (desktop list+detail) and
+        `...09.16.02.png` (mobile detail) — both already used for Piece
+        4a, re-reviewed here for the row/stepper/delete layout
+        specifically. Grilled 2026-07-26. Confirms the row already
+        matches what Piece 2 built (`CollectionItemRow`/`QuantityStepper`/
+        `DeleteIconButton` unchanged) — this piece is pure wiring, no new
+        atom needed.
+    - [ ] `TemplateItemRow.tsx` (`src/features/templates/`, feature-local
+          — single consumer today, same precedent as `LibraryItemRow`)
+          composes `CollectionItemRow` (`×` leading, `confirm={false}`,
+          name, read-only notes) + `QuantityStepper` (trailing), calling
+          `useUpdateTemplateItem`/`useRemoveTemplateItem` via the new
+          `useDebouncedQuantity` hook (see Architecture section above for
+          the local-state-vs-cache-patch decision and the split between
+          the two files).
+    - [ ] Pending-timer cleanup: the debounce timer clears on unmount (row
+          deleted, or template switched) so a stale commit can't fire —
+          and therefore can't toast — for an item that's already gone.
     - [ ] `−` floors at 1, disabled (not hidden) at min; never implies
-          removal
-    - [ ] Optimistic update on tap, ~400ms trailing debounce before the
-          PATCH fires, displayed number is instant; rejected request rolls
-          back (automatic error toast explains it)
-    - [ ] Touch targets: keep the 28px visual, pad the hit area to 44px
-          (same fix pattern as `LibraryItemRow`'s `py-3.5` bump) — three
-          adjacent controls plus a remove button in one row makes mis-taps
-          the likeliest usability failure on this screen
+          removal — unchanged `QuantityStepper` behavior, no new logic
+          needed.
+    - [ ] Touch targets: `InteractiveButton`'s universal hit-slop (see
+          Architecture section above) covers this for free — no
+          per-component work needed here beyond using `QuantityStepper`/
+          `DeleteIconButton` as-is.
     - [ ] Rows keep their position on any quantity change — no reordering
-    - [ ] Vitest test for the debounce/optimistic-update/rollback logic
-          (see Architecture section's test-candidate list)
+          (already true — `groupTemplateItems` doesn't sort by quantity).
+    - [ ] **Test approach, decided during grill-me**: first use of fake
+          timers in this codebase. `useDebouncedQuantity.test.ts` —
+          `renderHook` (`@testing-library/react`) + `vi.useFakeTimers()` + `act(() => vi.advanceTimersByTime(400))`, not a rendered-DOM
+          harness — unlike `useInlineEditableField`'s test, there's no
+          blur-cascade timing gotcha here, just a timer to control. Cases:
+          rapid taps only commit once (trailing debounce); commit value
+          matches the last tap, not the first; a rejected commit reverts
+          the displayed value to the last-confirmed prop value; unmounting
+          mid-debounce doesn't fire a commit.
+    - [ ] **Manual verification, decided during grill-me**: Piece 4c
+          (group-card assembly) doesn't exist yet, so this piece can't
+          render inside a real `CategoryGroupCard`. Temporary flat-list
+          harness — `selectedTemplate.items.map(...)` rendered directly as
+          `TemplateItemRow`s inside `TemplatesDesktop`/`TemplatesMobile`'s
+          existing placeholder bodies (next to `TemplateDetailHeader`, no
+          category grouping) — same replace-wholesale-don't-build-alongside
+          precedent as Piece 3/4a's own placeholders, which Piece 4c
+          replaces wholesale.
   - [ ] **Piece 4c — Group-card assembly, empty panel, action buttons.**
     - [ ] `CategoryGroupCard` per non-empty category, empty groups omitted
           (same rule as Library)
