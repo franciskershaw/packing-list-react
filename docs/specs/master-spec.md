@@ -193,6 +193,75 @@ one stops fitting; no formal record-keeping process around it.
   focus-restore in PACKFE-008, so it gets a Vitest test (written first,
   before the provider) rather than being left to Radix's own test
   coverage.
+- **Breakpoint-switch mechanism, JS-driven** (decided 2026-07-26 during
+  PACKFE-004's grill-me): Templates is the first screen to fail the
+  existing "same elements, different arrangement → one component" test —
+  desktop renders list _and_ detail simultaneously (plus a no-selection
+  state mobile doesn't have), mobile renders exactly one of list/detail
+  with real back-navigation. New `useMediaQuery(query: string)` hook
+  (`src/lib/useMediaQuery.ts`, flat file — sibling to `lib/api/` and
+  `lib/Tanstack/`, the established home for cross-cutting non-feature
+  logic; not `components/ui/` since it has no JSX, not feature-scoped
+  since Trips needs it too) built on `matchMedia` +
+  `useSyncExternalStore` (no new dependency), live-reactive to resize —
+  first JS-driven (non-Tailwind) breakpoint decision in this codebase,
+  used only to choose which of `TemplatesMobile`/`TemplatesDesktop`
+  mounts. Considered mounting both and hiding one via `hidden lg:block`
+  (matches every other screen's mechanism); rejected because the
+  `useTemplatesScreen()` hook already lifts all data-fetching to the
+  parent regardless of which mounts (so "duplicate queries" wasn't the
+  real differentiator), but two simultaneously-mounted copies of the
+  inline-editable title input would race on the create-and-arrive
+  autofocus (§4.1 of the handoff) — whichever mounts last wins focus,
+  possibly the hidden copy. Precedent for Trips (PACKFE-005/006), which
+  needs the same rail+detail split. Gets a Vitest test (mocked
+  `matchMedia`) — first of its kind, real branching on initial value +
+  change events.
+- **Route-driven template selection** (decided 2026-07-26, PACKFE-004's
+  grill-me): `/templates` + `/templates/:templateId`, not local
+  `selectedId` state — mobile's back affordance is real router/browser
+  navigation (works with hardware/gesture back too), deep-linkable,
+  survives refresh. Library's local-state precedent (search/filter state)
+  doesn't transfer — that was about filters, not navigation/selection.
+  **Verified, not assumed**: `useActiveNavKey`'s existing prefix-match
+  (`pathname === item.path || pathname.startsWith(\`${item.path}/\`)`,
+already tested for `/trips/123`→`"trips"`) already treats
+`/templates/:id` as Templates-active with zero changes — the design
+  handoff flagged this as needing verification/extension; read the
+  current source during grill-me and confirmed it already just works.
+- **`DeleteIconButton` gains `confirm?: boolean`** (default `true`,
+  decided 2026-07-26, PACKFE-004's grill-me): opts out of the always-on
+  `ConfirmDialog` for template-item removal — non-destructive (the
+  library item survives), done repeatedly while curating a template, so
+  confirming every removal is hostile UX. Existing call sites
+  (`LibraryItemRow`, `CategoryRow`) unaffected by the default.
+  `aria-label` reads `Remove ${name}` when `confirm={false}` is passed —
+  different verb, different consequence from "Delete". Existing
+  `DeleteIconButton.test.tsx` gains one case for the no-confirm path.
+- **`Button` gains a block-sized green variant** (decided 2026-07-26,
+  PACKFE-004's grill-me): "New list from template" CTA is full-width and
+  uses `--color-accent-secondary`, but the existing `success` variant is
+  a compact pill (built for the category-rename Save button) — a
+  self-contained `VARIANT_CLASSES` entry, not a `className` override, per
+  the Tailwind-precedence lesson already recorded above (PACKFE-003
+  Piece 2). Its `onClick` is a stub (toast) until PACKFE-005 wires the
+  real New Trip modal — see PACKFE-004's roadmap entry.
+- **Cross-repo gap, `packing-list-go`**: the template List endpoint
+  doesn't return item counts — `GetTemplates`'s `scanTemplate` helper
+  intentionally leaves `Items: []` (only `GetTemplateByID`, the detail
+  fetch, populates it via a second query), confirmed by reading
+  `internal/repository/template.go`'s current source during PACKFE-004's
+  grill-me. Every screenshot shows counts on list/rail rows, so this
+  needs a small `ItemCount` field added to the list query (a `COUNT`
+  subquery), landing as its own small `packing-list-go` ticket — same
+  precedent PACKFE-003 set for the category-seeding gap. Doesn't block
+  PACKFE-004's Pieces 1–5, only Piece 6 (list/rail assembly).
+  **Related, resolved without a backend change**: the single-item
+  `AddItem` endpoint 409s on a duplicate `itemId` rather than
+  incrementing (confirmed by reading `template_item_handler.go`) — the
+  Add-items picker chooses `AddItem` vs. `UpdateItem` (quantity+1) itself
+  based on already-known local state (the pill it's rendering), rather
+  than relying on backend auto-increment.
 - **Auth/session**: httpOnly refresh cookie + refresh-on-load, access
   token in memory only, never in a URL or `localStorage`. Has a
   cross-repo dependency on `packing-list-go` — check that project before
@@ -850,11 +919,235 @@ categoryId }) → { category, items }[]` — colocated in
 
 ### Epic 4: Templates
 
-- **PACKFE-004** — Reusable packing templates
-  - [ ] Create a named template
-  - [ ] Add items to a template with quantity + notes, organized by
-        category
-  - [ ] Edit/delete a template
+- **PACKFE-004** — Reusable packing templates ("Templates screen")
+  - Grilled 2026-07-26 against `../../templates-screen-handoff.html` (a
+    Claude Design export, screenshotted the same day: 10 supporting
+    screenshots covering desktop list+detail, desktop empty-template
+    detail, desktop Add-items picker across its 3 states — search
+    results, create-inline step 1, create-inline step 2/category-pick —
+    and the mobile equivalents of all of the above). The handoff doc
+    itself is unusually thorough — it already proposes a build order and
+    names most design gaps — so this grill-me's job was mostly
+    **verification against current source** (both repos) rather than
+    fresh design decisions. Two real gaps surfaced that the handoff's
+    prose didn't catch (see Architecture section above): the list
+    endpoint has no item count, and the single-item add endpoint doesn't
+    auto-increment on duplicates. One thing the handoff _flagged_ as
+    needing verification turned out to already be handled:
+    `useActiveNavKey`'s prefix-match already covers `/templates/:id`,
+    confirmed by reading its current source and test file — no changes
+    needed there.
+  - **The first screen where mobile and desktop show genuinely different
+    elements**, not a rearrangement — two components sharing state via
+    `useTemplatesScreen()` (all data/state, no JSX), switched by the new
+    `useMediaQuery` hook (see Architecture section above for why, over
+    the `hidden lg:block` alternative every prior screen used).
+  - **Non-goals, explicitly deferred rather than dropped**:
+    - Item **notes** are read-only this ticket — the data model carries
+      them and rows display them, but no design exists anywhere for
+      _writing_ one. Added to the `[UX polish]`/parking-lot list below.
+    - **"New list from template"** opens PACKFE-005's not-yet-built New
+      Trip modal — button + green variant built now, action stubbed to a
+      toast, real wiring is PACKFE-005's job (see Architecture section).
+    - **`packing-list-go`'s item-count fix** is its own small ticket in
+      that project, not folded in here (see Architecture section) —
+      landing before Piece 6 needs it, not necessarily before Piece 1.
+  - **Screenshot gaps, resolved as named inferences** (same treatment as
+    PACKFE-003's Edit-item-modal gap): the desktop **no-selection state**
+    has no screenshot but a fairly complete written spec in the handoff's
+    §01b (centred copy, ~300px max-width, `30px 40px 70px` pane padding)
+    — built from that text directly. The inline title/description's
+    **focused/editing** visual has neither a screenshot nor a spec — ships
+    with a reasonable default focus treatment, developer eyeballs and
+    corrects after, same precedent as PACKFE-003 Piece 4's estimated
+    `lg:w-[420px]` modal width.
+  - [ ] **Piece 1 — Data layer.** Pure logic, no design artifact needed,
+        unblocks everything below.
+    - [ ] `src/api/templates.ts` — `Template`/`TemplateItem` types
+          mirroring `packing-list-go`'s structs field-for-field (confirmed
+          against `internal/models/template.go`'s current source:
+          `Template { id, name, description, items, userId }`,
+          `TemplateItem { itemId, name, quantity, notes }` — note no
+          `categoryId` on `TemplateItem`; `groupTemplateItems` joins
+          against the already-loaded `useItems()` cache for that, same
+          pattern as `groupLibraryItems`). Detail fetch
+          (`GET /templates/:id`) already embeds real `items`; list fetch
+          (`GET /templates`) intentionally returns `items: []` — no
+          second call needed for detail, per the repository's own
+          current source.
+    - [ ] Hooks via `useApiQuery`/`useApiMutation` (error toasts free):
+          list, detail, create, update (name/desc), delete, add-item,
+          update-item (quantity/notes), remove-item, bulk-add
+          (`POST /templates/:id/items/bulk`, body `{ categoryId }` —
+          confirmed against `template_item_handler.go`'s `BulkAddItems`,
+          already skips items already on the template, no client-side
+          de-dup needed for the bulk path).
+    - [ ] Success toast on delete only: `` `${name} removed` `` — no toast
+          per quantity tick or per item add (the UI already reflects
+          those instantly; a toast per tick would be noise).
+    - [ ] `groupTemplateItems(entries, items, categories)` — pure helper,
+          same shape as `groupLibraryItems`, written generically enough
+          that trip entries (which add a `packed` field later) pass
+          through unchanged. Real branching → unit-tested first
+          (`groupTemplateItems.test.ts`).
+  - [ ] **Piece 2 — Shared atoms + the one refactor.** No design artifact
+        needed beyond the handoff's §3 component specs; presentational,
+        prop-driven — no tests, same precedent as PACKFE-003 Piece 2's
+        atoms.
+    - [ ] **Extract `ui/CategoryGroupCard`** from `LibraryScreen.tsx`'s
+          current inline markup (bordered card → `bg-bg-subtle` header
+          strip with name + count → children rows — read directly from
+          `LibraryScreen.tsx`'s current source during grill-me) and
+          repoint `LibraryScreen` at it. Do this first, while Library is
+          still fresh — third real consumer (this screen + trip detail
+          later) clears `CLAUDE.md`'s structure-convention bar. Verify
+          Library is visually unchanged after the swap.
+    - [ ] `ui/QuantityStepper { value, onChange, min = 1 }` — presentational
+          shell only (28px outline buttons, fixed 20px-wide centred value,
+          `−` disabled not hidden at min). Debounce/optimistic-update
+          logic is a consumer concern, wired in Piece 4b, not inside this
+          atom.
+    - [ ] `ui/EmptyStatePanel { title, message, actionLabel, onAction }`
+    - [ ] `ui/RailRow { title, meta, selected, onClick }`
+    - [ ] `ui/BackHeader { label, onBack }`
+    - [ ] `ui/InlineEditableHeading` — presentational shell (borderless
+          transparent inputs, 25px/27px heading font). Save-strategy state
+          machine wired in Piece 4a, not inside this atom.
+    - [ ] `ui/CollectionItemRow` — the shared row shape (§3.4): leading
+          control as a `ReactNode` slot (template's `×`/remove today, a
+          trip's checkbox later) · name + optional muted notes line ·
+          trailing slot for the stepper. Not itself clickable — every
+          affordance inside is a real button, no `role="button"` wrapper
+          needed.
+    - [ ] `DeleteIconButton` extended with `confirm?: boolean` (see
+          Architecture section above)
+    - [ ] `Button` gains its block-sized green variant (see Architecture
+          section above)
+  - [ ] **Piece 3 — Routing + the breakpoint split.**
+    - [ ] `/templates/:templateId` route added to `AppRoutes.tsx`
+          alongside the existing `/templates`
+    - [ ] `useMediaQuery` hook + its Vitest test (mocked `matchMedia`) —
+          see Architecture section above
+    - [ ] `useTemplatesScreen.ts` — all state/data (list, selected
+          template detail, create/delete mutations), no JSX
+    - [ ] `TemplatesScreen.tsx` (breakpoint switch only) →
+          `TemplatesMobile.tsx` / `TemplatesDesktop.tsx` with placeholder
+          bodies, wired to real data — proves the split works end-to-end
+          before any real markup exists
+    - [ ] No `useActiveNavKey` changes needed — verified already correct
+          (see Architecture section above)
+  - [ ] **Piece 4a — Inline title/description editing.** Screenshot-
+        grounded for the static look (all 10 screenshots show the saved
+        state); focused-state visual is the named inference above.
+    - [ ] Locally-controlled while focused; PATCH fires on blur and Enter,
+          only if the value changed (§4.2)
+    - [ ] Blank name on blur reverts to the previous value, no error shown
+          (consistent with the no-inline-field-errors rule; a duplicate-
+          name conflict still surfaces via the automatic toast)
+    - [ ] Escape reverts to last-saved value and blurs
+    - [ ] Empty description is legal — list/rail falls back to "No
+          description yet" (already visible in the mobile-list and
+          desktop-empty-state screenshots)
+    - [ ] Save invalidates the templates list query too, not just detail —
+          the rail/card name must update after a rename
+    - [ ] Vitest test for the save/revert state machine (see Architecture
+          section's test-candidate list)
+  - [ ] **Piece 4b — Item row + quantity stepper.** Screenshot-grounded
+        (all detail-view screenshots).
+    - [ ] `CollectionItemRow` wired with `×` (leading, `confirm={false}`) + name + notes (read-only) + `QuantityStepper` (trailing)
+    - [ ] `−` floors at 1, disabled (not hidden) at min; never implies
+          removal
+    - [ ] Optimistic update on tap, ~400ms trailing debounce before the
+          PATCH fires, displayed number is instant; rejected request rolls
+          back (automatic error toast explains it)
+    - [ ] Touch targets: keep the 28px visual, pad the hit area to 44px
+          (same fix pattern as `LibraryItemRow`'s `py-3.5` bump) — three
+          adjacent controls plus a remove button in one row makes mis-taps
+          the likeliest usability failure on this screen
+    - [ ] Rows keep their position on any quantity change — no reordering
+    - [ ] Vitest test for the debounce/optimistic-update/rollback logic
+          (see Architecture section's test-candidate list)
+  - [ ] **Piece 4c — Group-card assembly, empty panel, action buttons.**
+    - [ ] `CategoryGroupCard` per non-empty category, empty groups omitted
+          (same rule as Library)
+    - [ ] Empty-template state: `EmptyStatePanel` replaces both the group
+          list and the dashed "+ Add items" row (matches the desktop
+          empty-template screenshot)
+    - [ ] "+ Add items" dashed row (populated state) opens the picker
+          (Piece 5)
+    - [ ] "New list from template" green block CTA — stubbed action (toast)
+          per the Architecture section's scope-boundary decision
+    - [ ] "Delete template"/"Delete" — bare `notice-text` button, goes
+          through `ConfirmDialog` directly (not `DeleteIconButton` — that
+          atom is the 26px circle). Copy: title `` `Delete ${name}?` ``,
+          body "This can't be undone.", confirm "Delete". On success: toast
+          `` `${name} removed` ``, mobile pops back to the list, desktop
+          returns to the no-selection state.
+    - [ ] **Open question for the API, flagged not assumed**: whether
+          trips already seeded from a template block its deletion. If the
+          backend rejects it, the automatic error toast already covers the
+          UI side — don't build special handling ahead of confirming this
+          actually happens.
+  - [ ] **Piece 5 — Add-items picker.** Screenshot-grounded: desktop
+        search-results, desktop create-inline (both steps), mobile
+        search-results-with-existing-quantity-pills, mobile create-inline
+        (step 2). Built target-agnostic (`{ entries, onAdd, onIncrement,
+    onClose }`, caller owns mutations) so Trips reuses it unchanged.
+        Its own build piece per the handoff's own sizing call.
+    - [ ] `Modal` with `size="fixed"`, `desktopWidth="lg:w-[560px]"` (the
+          only current consumer needing `size="fixed"`)
+    - [ ] Search field (`TextField` as-is, placeholder "Search — or type
+          something new…")
+    - [ ] Create-inline flow, verified as a real 2-step interaction from
+          the screenshots (not assumed from the handoff's prose alone):
+          step 1 shows a dashed `+ Create "X" as a new item` button; only
+          after tapping it does step 2 reveal the category-chip picker +
+          "Create it & add". Creates the library item and adds it to the
+          template in one gesture.
+    - [ ] Bulk chips (`+ All {category} (n)`), horizontally scrolling
+    - [ ] Result list: name + category sub-line, trailing pill — tan
+          "Add" for not-yet-added items, solid green `` `×${quantity}` ``
+          for items already on the template (exact pill treatment
+          confirmed from the mobile search-results screenshot)
+    - [ ] Adding an already-present item calls `UpdateItem`
+          (quantity + 1), not `AddItem` — see Architecture section's
+          add-vs-increment resolution
+    - [ ] Pinned "Done" in `Modal`'s `footer` — dark `heading` fill,
+          closes only (every add already applied, not a staged basket)
+    - [ ] On close: invalidate template detail (and the list query too,
+          once Piece 6/the Go ticket give it item counts)
+    - [ ] Vitest test (`QueryClientProvider` + mocked `fetch` + RTL, same
+          harness as `ItemFormModal.test.tsx`) — see Architecture
+          section's test-candidate list
+  - [ ] **Piece 6 — List/rail assembly + states.** Screenshot-grounded:
+        desktop list+detail, desktop empty-template detail, mobile list.
+        Depends on the companion `packing-list-go` ticket for real item
+        counts (Architecture section above).
+    - [ ] Mobile: card list (name + count same line, description below,
+          whole card is the tap target — same `div role="button"
+    tabIndex={0}` + Enter/Space pattern as `LibraryItemRow`)
+    - [ ] Desktop: fixed 330px rail (`RailRow`, selected =
+          `bg-accent-subtle`) beside an independently-scrolling detail
+          pane; no-selection state built from the written-spec inference
+          above
+    - [ ] "+ New"/"+ New template": creates immediately (`POST` with name
+          "Untitled template", empty description) and navigates straight
+          into detail — no New-template dialog, matches the handoff's own
+          "create immediately" call and the empty-template screenshot's
+          "Untitled template" row. Consider focusing/selecting the name
+          input on arrival (ties into Piece 4a and the autofocus-race
+          reasoning in the Architecture section)
+    - [ ] Zero-templates state: `EmptyStatePanel` in the list/rail,
+          matching-voice copy, CTA fires the same create action as "+ New"
+          (see decision above)
+    - [ ] Loading: render header + "+ New" immediately (data-independent),
+          withhold the list/rail/detail until queries resolve — same
+          precedent as PACKFE-003 Piece 6. Desktop-specific wrinkle: while
+          a selected template's detail is still loading, don't flash the
+          no-selection copy — "loading" and "nothing selected" are
+          distinct states.
+    - [ ] Delete-and-return: mobile pops back to the list, desktop returns
+          to the no-selection state (ties into Piece 4c)
 
 ### Epic 5: Trips
 
@@ -976,6 +1269,10 @@ want to do it.
   since consecutive adds are often to the same category), so entry can
   continue without a re-open per item. Only applies to the create flow —
   edit-mode save should still close as it does now. Not scoped/decided
-  beyond this note; revisit at grill-me when picked up. If this list of
-  `[UX polish]` items keeps growing, worth grouping into its own epic —
-  not yet, with just three.
+  beyond this note; revisit at grill-me when picked up.
+- **[UX polish]** Template-item notes are read-only (noticed 2026-07-26,
+  PACKFE-004's grill-me) — the data model carries them and rows display
+  them, but neither design export has an affordance for _writing_ one.
+  Needs a design before it can be built; not blocking PACKFE-004 itself.
+  If this list of `[UX polish]` items keeps growing, worth grouping into
+  its own epic — not yet, with four.
