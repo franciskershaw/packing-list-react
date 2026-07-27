@@ -2080,12 +2080,12 @@ number` to match PACK-034's response shape — a stale `tsc`
         Architecture section's entry below; no client-side grouping
         anywhere in this ticket). `TRIPS_QUERY_KEY = ["trips"] as const`,
         shared prefix for list and detail alike. `useTrips(archived =
-    false)` — one hook/fetch-function, boolean param selects
+false)` — one hook/fetch-function, boolean param selects
         `GET /lists` vs. `GET /lists?archived=true`, query key
         `[...TRIPS_QUERY_KEY, "list", archived]`; `useTripsScreen` (Piece 3) calls it twice. Detail: `useTrip(id)` (`enabled: !!id`, key
         `[...TRIPS_QUERY_KEY, id]`), create (optional `templateId` +
         `eventDate`), update (name/eventDate), archive (`DELETE
-    /lists/:id`, variables `{ id }` — no name needed, archive's toast
+/lists/:id`, variables `{ id }` — no name needed, archive's toast
         copy doesn't interpolate one, unlike `useDeleteTemplate`), restore
         (`POST .../unarchive`, `{ id }`), add-item, update-item
         (quantity/notes/isPacked — one hook, all three optional per the
@@ -2104,7 +2104,7 @@ number` to match PACK-034's response shape — a stale `tsc`
         query would 404. Re-verified against actual Go source while
         implementing this piece: `GetByID`'s own comment says archiving
         "doesn't change whether a list's detail is reachable" — `DELETE
-    /lists/:id` is a soft delete, so `GetByID` keeps resolving
+/lists/:id` is a soft delete, so `GetByID` keeps resolving
         correctly for an archived trip. Refetching its detail query on
         invalidate is harmless, not a 404 risk, so the protection
         Templates needed doesn't apply here. Toasts: archive ("Tucked
@@ -2172,12 +2172,12 @@ number` to match PACK-034's response shape — a stale `tsc`
           `onMutate`/`onError`/`onSettled` skeleton, differing only in how
           each patches an item — collapsed into a shared generic
           `useOptimisticTripPatch<TVariables, TData>(mutationFn,
-    patchItem)`, with `useUpdateTripItem` and `useBulkSetPacked` as
+patchItem)`, with `useUpdateTripItem` and `useBulkSetPacked` as
           its two thin call sites. Also trimmed several 2–3 line comments
           to one line each. `src/api/trips.ts`: 410 → 368 lines; re-ran
           the full verification pass (tsc, 95/95 tests, lint, format)
           after.
-  - [ ] **Piece 2 — Shared-atom changes.** No screenshot review needed
+  - [x] **Piece 2 — Shared-atom changes** — **Done** (2026-07-27). No screenshot review needed
         (behavior/prop changes to shared atoms, verified by re-checking
         Library/Templates render pixel-unchanged afterward, not by a new
         design comparison). **No `groupTemplateItems` promotion** — see
@@ -2185,45 +2185,95 @@ number` to match PACK-034's response shape — a stale `tsc`
         returns categories pre-grouped server-side, so Trips never calls
         a grouping helper at all. `groupTemplateItems` stays exactly
         where it is, untouched, in `features/templates/`.
-    - [ ] `CategoryGroupCard` gains `collapsible?`, `expanded?`,
+    - [x] `CategoryGroupCard` gains `collapsible?`, `expanded?`,
           `onToggle?`, and widens `count` to `number | string` (trips
           pass `"3/7"`). Collapsible header becomes an
-          `InteractiveButton` with `aria-expanded` + rotating chevron.
-          Collapsed state lives in `useTripsScreen`, keyed by category
-          id, not persisted. Library/Templates keep passing neither prop.
-    - [ ] `CollectionItemRow` gains `onClick?: () => void` and
-          `struck?: boolean` (line-through + `muted` name when packed).
-          Only attaches `role="button" tabIndex={0}` + Enter/Space
-          `onKeyDown` (same accepted `jsx-a11y` warnings as
-          `LibraryItemRow`) when `onClick` is passed — template/picker
-          rows unaffected.
-    - [ ] `RailRow` gains `leading?: ReactNode` (the progress ring),
+          `InteractiveButton` with `aria-expanded` + a `lucide` `ChevronDown`
+          rotating 180° via `transition-transform`. **No collapse
+          animation** — children are simply conditionally rendered
+          (`(!collapsible || expanded) && children`), not height-animated;
+          matches `Modal`'s existing precedent of no exit animation
+          (`open` is hardcoded `true`, per `LESSONS.md` 2026-07-24) and no
+          design artifact specifies a collapse transition. Collapsed state
+          lives in `useTripsScreen`, keyed by category id, not persisted.
+          Library/Templates keep passing neither prop, unaffected.
+    - [x] `CollectionItemRow` gains `onClick?: () => void`, `checked?:
+    boolean`, and `struck?: boolean` (line-through + `muted` name
+          when packed; applies to the name only, not `notes` — confirmed
+          against the mobile packing-in-progress screenshot, where
+          "Sun cream" is struck but its "Factor 50" note stays plain
+          `secondary`). **Two distinct interaction contracts, decided
+          2026-07-27 during Piece 2's grill-me** — the handoff's own §3.4
+          explicitly left this as a "pick one, don't ship both" question
+          that PACKFE-005's original grill-me never actually settled:
+          when `checked` is passed (the trip row), the row is
+          `role="checkbox" aria-checked={checked}`, keyboard responds to
+          **Space only** — matches the WAI-ARIA APG Checkbox Pattern and
+          native `<input type="checkbox">` exactly, since this is a
+          persistent boolean toggle, not an "activate an action" like
+          `LibraryItemRow`'s click-to-edit. When `checked` is omitted
+          (every other consumer — template rows, picker rows), the row
+          keeps today's `role="button" tabIndex={0}` + Enter/Space
+          `onKeyDown` (`LibraryItemRow`'s pattern, same accepted
+          `jsx-a11y` warnings) — those _are_ genuine activate-an-action
+          clicks, so `role="button"` is the correct mapping for them.
+          `PackedCheckbox` stays a purely decorative `aria-hidden` span
+          either way — the row itself owns the checkbox semantics. Ships
+          one accepted `jsx-a11y(no-static-element-interactions)`
+          warning — oxlint's shallow AST check can't confirm the
+          `role`/`aria-checked`/`tabIndex` ternaries always resolve
+          together when `onClick` is truthy (they do), same accepted
+          category as `ConfirmDialog`'s wrapper div.
+    - [x] `RailRow` gains `leading?: ReactNode` (the progress ring),
           `flex items-center gap-3` + `min-w-0 flex-1` text column.
-          Templates passes nothing, renders identically. **While in
-          here**: re-check the parked Templates-rail horizontal-scroll
-          bug (master spec's "Later / polish" list) at a narrow desktop
-          width on both rails — a fixed-width leading child in front of
-          truncating text is exactly the shape of thing that could make
-          it worse.
-    - [ ] `BackHeader` gains `trailing?: ReactNode`, `label` becomes
+          Templates passes nothing, renders identically. **Horizontal-
+          scroll re-check**: applied the same `min-w-0 flex-1` defensive
+          wrapping the parked bug's own notes describe: static analysis
+          only (`tsc`/tests/lint), since this project's dev-server
+          ownership convention means AI doesn't run/drive the browser —
+          developer to confirm at a narrow desktop width per that "Later
+          / polish" entry when next running the app.
+    - [x] `BackHeader` gains `trailing?: ReactNode`, `label` becomes
           optional (trip detail's mobile header: back circle · spacer ·
-          archive circle · Edit/Done pill, no eyebrow label). Template
-          detail passes neither, unaffected.
-    - [ ] `TextField` gains `type?: "text" | "date"` (default `"text"`)
-          for the New-trip modal's "When" field — plus an explicit label
-          prop or fallback, since `aria-label` currently derives from
-          `placeholder`, which a date input has none of.
-    - [ ] New `detail/ProgressBar { packed, total }` (7px/8px track,
-          accent fill, radius 99, ~0.35s width transition) and
-          `detail/ProgressRing { packed, total, size = 34 }` (two SVG
-          circles, r=13, 3.5px stroke, `stroke-linecap="round"`,
-          rotated −90°). Both take counts, not a percentage — rounding
+          archive circle · Edit/Done pill, no eyebrow label — `trailing`
+          content right-aligned via `ml-auto`). Template detail passes
+          neither, unaffected.
+    - [x] `TextField` gains `type?: "text" | "date"` (default `"text"`)
+          and an optional `id` (forwarded straight to the `<input>`) —
+          **not** a `label` string prop, decided 2026-07-27 during Piece
+          2's grill-me: the New-trip modal's "When" field is the first
+          `TextField` with a genuinely visible section label above it
+          (checked against `ItemFormModal.tsx`'s current source — its
+          `TextField` has no visible label at all today, `aria-label`
+          derives entirely from `placeholder`). Per WCAG 2.5.3 (Label in
+          Name), once a visible label exists it should be the accessible
+          name via real association, not duplicated into a second
+          hardcoded string that can drift out of sync. `NewTripModal`
+          (Piece 7) renders its own `<label htmlFor="trip-date">When</label>`
+          — same uppercase-section-label markup the design already calls
+          for — pointing at `id="trip-date"` on the `TextField`. Every
+          existing call site (no `id` passed) is unaffected, keeping
+          today's placeholder-as-`aria-label` behavior exactly as-is.
+    - [x] New `detail/ProgressBar { packed, total }` (7px track, accent
+          fill on `#F0E6D6`, radius `full`, `transition-[width]
+    duration-[350ms]`) and `detail/ProgressRing { packed, total,
+    size = 34 }` (two SVG circles, r=13, 3.5px stroke,
+          `stroke-linecap="round"`, rotated −90° via `-rotate-90`, fixed
+          `viewBox="0 0 34 34"` so `size` scales the whole rendering
+          proportionally). Both take counts, not a percentage — rounding
           lives in one place. Both `aria-hidden` — adjacent text always
-          states "n of m packed".
-    - [ ] New `detail/PackedCheckbox` (26px circle, filled + tick when
-          packed): a non-interactive `aria-hidden` span, with the row
-          itself carrying `role="checkbox" aria-checked` — chosen over a
-          nested interactive control since the row already owns click/
+          states "n of m packed". **`total === 0` clamps to 0%** (empty
+          trip), not a `NaN` from `0/0` — the only mobile-list `8px`
+          variant the handoff mentioned was the "bold card" style the
+          screenshots already ruled out (§5), so `ProgressBar` only has
+          one real consumer/height, no size prop needed.
+    - [x] New `detail/PackedCheckbox` (26px circle, `#D8CBB6` outline →
+          filled `accent-secondary` + `lucide` `Check` in `text-on-accent`
+          when packed — same cream-on-green pairing already established
+          for `Avatar`/`Toast`'s success variant): a non-interactive
+          `aria-hidden` span, with the row itself carrying `role="checkbox"
+    aria-checked` — chosen over a nested interactive control since
+          the row already owns click/
           keyboard semantics via `CollectionItemRow`'s new `onClick`.
   - [ ] **Piece 3 — Route + breakpoint split.** `/trips/:tripId` route.
         `useTripsScreen()` (flat return shape, mirroring

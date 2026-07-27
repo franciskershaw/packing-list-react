@@ -1,13 +1,15 @@
+import type { ReactNode } from "react";
 import { ChevronLeft } from "lucide-react";
 
 import { InteractiveButton } from "../ui/Button";
 
 interface BackHeaderProps {
-  label: string;
+  label?: string;
   onBack: () => void;
+  trailing?: ReactNode;
 }
 
-export function BackHeader({ label, onBack }: BackHeaderProps) {
+export function BackHeader({ label, onBack, trailing }: BackHeaderProps) {
   return (
     <div className="flex items-center gap-3">
       <InteractiveButton
@@ -17,9 +19,14 @@ export function BackHeader({ label, onBack }: BackHeaderProps) {
       >
         <ChevronLeft size={20} />
       </InteractiveButton>
-      <span className="text-sm font-bold tracking-wide text-secondary uppercase">
-        {label}
-      </span>
+      {label && (
+        <span className="text-sm font-bold tracking-wide text-secondary uppercase">
+          {label}
+        </span>
+      )}
+      {trailing && (
+        <div className="ml-auto flex items-center gap-2">{trailing}</div>
+      )}
     </div>
   );
 }
