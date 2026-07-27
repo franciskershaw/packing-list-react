@@ -492,6 +492,38 @@ DELETE SET NULL` (deleting a template safely nulls a trip's back-
   (view mode is read/tick only — no add-items entry point there at all,
   matching the Edit/Done toggle's now-broader "edit mode for this trip"
   meaning established above).
+- **`PackingListDetail` mirrors its wire shape 1:1 — no client-side
+  grouping, no `groupTemplateItems` promotion** (decided 2026-07-27,
+  Piece 1's grill-me, correcting an assumption in the design handoff's
+  §00 "extend" ledger): the handoff assumed Trips would need the same
+  flatten-then-group step Templates does, and recommended promoting
+  `groupTemplateItems` → `detail/groupEntriesByCategory.ts` with Trips as
+  its "real second consumer." Re-reading `GET /lists/:id`'s actual
+  response shape (`packing-list-go/internal/models/packing_list.go`)
+  during this piece's grill-me shows that assumption was wrong: unlike
+  `Template.items` (flat, joined client-side against separately-fetched
+  items/categories), `PackingListDetail.categories` already arrives
+  pre-grouped server-side — empty categories omitted, items pre-sorted.
+  `TripDetailBody` maps `trip.categories` directly into
+  `CategoryGroupCard`; no grouping helper exists or is called anywhere in
+  this ticket. `groupTemplateItems` stays exactly where it is,
+  untouched, in `features/templates/` — no second consumer, so per
+  `CLAUDE.md`'s own promotion rule it doesn't move.
+- **Trips' list hooks: one `useTrips(archived = false)`, one shared
+  `TRIPS_QUERY_KEY` prefix** (decided 2026-07-27, Piece 1's grill-me):
+  active and archived trips are two real `GET /lists` calls (with/without
+  `?archived=true`), but exposed as a single parameterized hook/fetch
+  function rather than two separately named ones — mirrors `useItems`'s
+  existing optional-server-side-filter precedent (PACKFE-003 Piece 1)
+  rather than introducing a new two-hooks-per-resource shape.
+  `useTripsScreen` (Piece 3) calls it twice (`useTrips(false)` +
+  `useTrips(true)`) since it needs both simultaneously. `TRIPS_QUERY_KEY
+= ["trips"] as const` is a shared prefix for every trips query — list
+  (`[...TRIPS_QUERY_KEY, "list", archived]`) and detail
+  (`[...TRIPS_QUERY_KEY, id]`) alike — so a trip-level mutation
+  (create/update) invalidates the bare prefix once and catches both list
+  variants plus every open detail query in a single call, rather than
+  needing a separate `invalidateQueries` call per resource.
 
 ## Non-functional requirements
 
@@ -2042,19 +2074,30 @@ number` to match PACK-034's response shape — a stale `tsc`
   same shape as Templates' already-fixed gap), and it blocks only piece 6
   below, nothing earlier.
   - [ ] **Piece 1 — Data layer.** `src/api/trips.ts`, matching
-        `templates.ts`'s shape at ~12 hooks: list (active + archived, two
-        separate `useQuery`s against `GET /lists` /
-        `GET /lists?archived=true`), detail (`enabled: !!id`), create
-        (optional `templateId` + `eventDate`), update (name/eventDate),
-        archive (`DELETE /lists/:id`), restore (`POST .../unarchive`),
-        add-item, update-item (quantity/notes/isPacked — one hook, all
-        three optional per the real `PATCH` shape), remove-item,
-        bulk-add-items, pack-all, unpack-all. Invalidation: trip-level
-        mutations invalidate the broad key; item-level and packed-state
+        `templates.ts`'s shape at ~12 hooks. `PackingListDetail` mirrors
+        the API's wire shape 1:1 (`categories: [{ id, name, items: [...] }]`,
+        already grouped and empty-category-filtered server-side — see
+        Architecture section's entry below; no client-side grouping
+        anywhere in this ticket). `TRIPS_QUERY_KEY = ["trips"] as const`,
+        shared prefix for list and detail alike. `useTrips(archived =
+    false)` — one hook/fetch-function, boolean param selects
+        `GET /lists` vs. `GET /lists?archived=true`, query key
+        `[...TRIPS_QUERY_KEY, "list", archived]`; `useTripsScreen` (Piece 3) calls it twice. Detail: `useTrip(id)` (`enabled: !!id`,
+        key `[...TRIPS_QUERY_KEY, id]`), create (optional `templateId` +
+        `eventDate`), update (name/eventDate), archive (`DELETE
+    /lists/:id`, variables `{ id }` — no name needed, archive's toast
+        copy doesn't interpolate one, unlike `useDeleteTemplate`), restore
+        (`POST .../unarchive`, `{ id }`), add-item, update-item
+        (quantity/notes/isPacked — one hook, all three optional per the
+        real `PATCH` shape), remove-item, bulk-add-items, pack-all,
+        unpack-all. Invalidation: trip-level mutations invalidate the bare
+        `TRIPS_QUERY_KEY` prefix (catches both list variants and every
+        open detail query in one call); item-level and packed-state
         mutations invalidate `[...TRIPS_QUERY_KEY, tripId]` **and** the
-        list key too, since the list will carry packed counts once piece
-        6's backend fix lands (Templates' note about widening
-        invalidation applies here from day one, not retrofitted later).
+        bare `TRIPS_QUERY_KEY` too, since the list will carry packed
+        counts once piece 6's backend fix lands (Templates' note about
+        widening invalidation applies here from day one, not retrofitted
+        later).
         Archive uses `exact: true` on the detail-query invalidation,
         same fix as the PACKFE-004 Piece 3 404-toast bug. Toasts: archive
         ("Tucked away in the archive"), restore ("Back on the board"),
@@ -2062,31 +2105,48 @@ number` to match PACK-034's response shape — a stale `tsc`
         fresh trip awaits"). No toast on packed toggle, pack-all,
         quantity, add/remove item, or rename — instantly visible,
         matching Templates' existing reasoning.
-    - [ ] `formatTripDate(date: string | null)` → `"2 Aug 2026"`
-          (`en-GB` day/short-month/year) or `"No date yet"` when null;
-          parses date-only strings at midday to dodge timezone-shift
-          bugs. Unit test.
-    - [ ] Optimistic packed-toggle: `onMutate` snapshot + patch the trip
-          detail cache entry, rollback in `onError`, invalidate in
-          `onSettled` — see the Architecture section entry above for why
-          this can't reuse `useDebouncedQuantity`'s local-draft-state
-          approach. Two tests: optimistic-then-confirmed, rollback.
-          "Pack it all"/"Reset all" reuse the same patch shape against
-          the real `pack-all`/`unpack-all` endpoints (confirmed to exist,
+    - [ ] `features/trips/formatTripDate.ts` (+ test) — feature-root, not
+          `api/trips.ts`: a pure formatter with no fetching role, same
+          placement pattern as `groupTemplateItems.ts`.
+          `formatTripDate(date: string | null)` → `"2 Aug 2026"` (`en-GB`
+          day/short-month/year) or `"No date yet"` when null; parses
+          date-only strings at midday to dodge timezone-shift bugs.
+    - [ ] Optimistic packed-toggle: `onMutate` snapshots the
+          `[...TRIPS_QUERY_KEY, tripId]` cache entry, patches the target
+          item's `isPacked` in place inside its category's `items` array
+          (immutable copy, not mutated in place), rolls back to the
+          snapshot in `onError`, invalidates in `onSettled` — see the
+          Architecture section entry above for why this can't reuse
+          `useDebouncedQuantity`'s local-draft-state approach. "Pack it
+          all"/"Reset all" reuse the same patch shape (every item's
+          `isPacked` set to `true`/`false`) against the real
+          `pack-all`/`unpack-all` endpoints (confirmed to exist,
           204/no-body) — no client-side N-PATCH loop.
     - [ ] "Reset all" ships with **no** `ConfirmDialog` — consistent with
           the existing non-destructive-actions-don't-confirm line already
           drawn for template item removal (cheap to redo by ticking
           again), matching the handoff's own recommendation.
-  - [ ] **Piece 2 — Shared-atom changes + the `groupTemplateItems`
-        promotion.** No screenshot review needed (behavior/prop changes
-        to shared atoms, verified by re-checking Library/Templates render
-        pixel-unchanged afterward, not by a new design comparison).
-    - [ ] Promote `groupTemplateItems` (`features/templates/`) →
-          `detail/groupEntriesByCategory.ts` (+ its test) — already
-          generic (`<T extends { itemId: string }>`), real second
-          consumer per `CLAUDE.md`'s promotion rule. Repoint Templates,
-          visual no-op.
+    - [ ] **Test files**: `formatTripDate.test.ts` (formatting + null
+          branch). `trips.test.ts` — first trips-api test file, same
+          `QueryClientProvider` + mocked-`fetch` harness precedent as
+          `ItemFormModal.test.tsx`/`CategoriesModal.test.tsx` (cited from
+          their current source, not rebuilt from memory): two cases for
+          the optimistic packed-toggle (`isPacked` flips instantly on
+          `mutate()` before the mocked fetch resolves, then stays flipped
+          once it does; a rejected mock fetch rolls the cache back to the
+          pre-`mutate` snapshot). No test coverage needed for the other
+          ~10 hooks themselves — thin wrappers over `apiFetch` +
+          `useApiQuery`/`useApiMutation`, already covered by those two
+          primitives' own tests, matching `templates.ts`'s existing
+          precedent of no per-hook tests.
+  - [ ] **Piece 2 — Shared-atom changes.** No screenshot review needed
+        (behavior/prop changes to shared atoms, verified by re-checking
+        Library/Templates render pixel-unchanged afterward, not by a new
+        design comparison). **No `groupTemplateItems` promotion** — see
+        the Architecture section's entry below: `GET /lists/:id` already
+        returns categories pre-grouped server-side, so Trips never calls
+        a grouping helper at all. `groupTemplateItems` stays exactly
+        where it is, untouched, in `features/templates/`.
     - [ ] `CategoryGroupCard` gains `collapsible?`, `expanded?`,
           `onToggle?`, and widens `count` to `number | string` (trips
           pass `"3/7"`). Collapsible header becomes an
@@ -2130,16 +2190,16 @@ number` to match PACK-034's response shape — a stale `tsc`
   - [ ] **Piece 3 — Route + breakpoint split.** `/trips/:tripId` route.
         `useTripsScreen()` (flat return shape, mirroring
         `useTemplatesScreen`: `trips, archivedTrips, isLoading,
-    selectedTripId, selectedTrip, isSelectedLoading, selectTrip,
-    goToList, archiveTrip, restoreTrip, isNewTripOpen/openNewTrip/
-    closeNewTrip, isAddItemsOpen/openAddItems/closeAddItems,
-    showArchived/toggleArchived, isEditMode/toggleEditMode`) + test
+selectedTripId, selectedTrip, isSelectedLoading, selectTrip,
+goToList, archiveTrip, restoreTrip, isNewTripOpen/openNewTrip/
+closeNewTrip, isAddItemsOpen/openAddItems/closeAddItems,
+showArchived/toggleArchived, isEditMode/toggleEditMode`) + test
         (`MemoryRouter` + `QueryClientProvider` harness, same precedent
         as `useTemplatesScreen.test.tsx`). `isEditMode` and the
         collapsed-group set both live here, both reset on trip switch
         (key the detail block by trip id, as Templates already does).
         `TripsMobile`/`TripsDesktop` (in the new `features/trips/
-    components/` folder — see Architecture section's folder-split
+components/` folder — see Architecture section's folder-split
         note) with placeholder detail bodies wired to real create/archive
         so both loops prove out end-to-end. `TripsScreen` stays a pure
         breakpoint switch (`useMediaQuery(DESKTOP_QUERY)`) + the two
@@ -2156,7 +2216,9 @@ number` to match PACK-034's response shape — a stale `tsc`
           row (see Piece 5's placement decision below) — view mode has no
           add-items entry point at all.
     - [ ] `TripDetailBody` (shared by both breakpoints, matching
-          Templates' precedent): progress card ("n of m packed" + `%` +
+          Templates' precedent in structure, **not** in data shape —
+          maps `trip.categories` directly, no grouping helper call, see
+          Piece 2's note above): progress card ("n of m packed" + `%` +
           `ProgressBar` + Pack-it-all/Reset-all), all-packed banner (only
           `total > 0 && packed === total`, view mode only — `#E9EFE3` bg,
           `accent-secondary` border, "All packed! Have a great trip."),
@@ -2172,7 +2234,7 @@ number` to match PACK-034's response shape — a stale `tsc`
           Architecture section's title-edit-mode decision above) and
           every item row into `TripEditItemRow` (near-copy of
           `TemplateItemRow`: leading `×` via `DeleteIconButton
-    confirm={false}`, name, `QuantityStepper` +
+confirm={false}`, name, `QuantityStepper` +
           `useDebouncedQuantity`). Checkboxes absent in edit mode;
           steppers absent in view mode.
     - [ ] Empty-trip dashed panel (`EmptyStatePanel`, reused as-is) when
@@ -2208,7 +2270,7 @@ number` to match PACK-034's response shape — a stale `tsc`
     - [ ] Archived section: bare-text toggle
           (`"Show archived (1)"`/`"Hide archived (1)"`, hidden when
           none), expanded rows non-tappable except a `Button
-    variant="success"` "Restore" pill.
+variant="success"` "Restore" pill.
     - [ ] Zero-trips state: `EmptyStatePanel`, mobile gets the same CTA as
           desktop (handoff's recommendation, for consistency with
           Templates' zero-state and because mobile's dashed panel is
