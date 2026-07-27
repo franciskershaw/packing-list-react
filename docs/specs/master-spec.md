@@ -2073,7 +2073,7 @@ number` to match PACK-034's response shape — a stale `tsc`
   for the full list; only one real gap surfaced (list-endpoint counts,
   same shape as Templates' already-fixed gap), and it blocks only piece 6
   below, nothing earlier.
-  - [ ] **Piece 1 — Data layer.** `src/api/trips.ts`, matching
+  - [x] **Piece 1 — Data layer** — **Done** (2026-07-27). `src/api/trips.ts`, matching
         `templates.ts`'s shape at ~12 hooks. `PackingListDetail` mirrors
         the API's wire shape 1:1 (`categories: [{ id, name, items: [...] }]`,
         already grouped and empty-category-filtered server-side — see
@@ -2082,63 +2082,101 @@ number` to match PACK-034's response shape — a stale `tsc`
         shared prefix for list and detail alike. `useTrips(archived =
     false)` — one hook/fetch-function, boolean param selects
         `GET /lists` vs. `GET /lists?archived=true`, query key
-        `[...TRIPS_QUERY_KEY, "list", archived]`; `useTripsScreen` (Piece 3) calls it twice. Detail: `useTrip(id)` (`enabled: !!id`,
-        key `[...TRIPS_QUERY_KEY, id]`), create (optional `templateId` +
+        `[...TRIPS_QUERY_KEY, "list", archived]`; `useTripsScreen` (Piece 3) calls it twice. Detail: `useTrip(id)` (`enabled: !!id`, key
+        `[...TRIPS_QUERY_KEY, id]`), create (optional `templateId` +
         `eventDate`), update (name/eventDate), archive (`DELETE
     /lists/:id`, variables `{ id }` — no name needed, archive's toast
         copy doesn't interpolate one, unlike `useDeleteTemplate`), restore
         (`POST .../unarchive`, `{ id }`), add-item, update-item
         (quantity/notes/isPacked — one hook, all three optional per the
         real `PATCH` shape), remove-item, bulk-add-items, pack-all,
-        unpack-all. Invalidation: trip-level mutations invalidate the bare
-        `TRIPS_QUERY_KEY` prefix (catches both list variants and every
-        open detail query in one call); item-level and packed-state
-        mutations invalidate `[...TRIPS_QUERY_KEY, tripId]` **and** the
-        bare `TRIPS_QUERY_KEY` too, since the list will carry packed
-        counts once piece 6's backend fix lands (Templates' note about
-        widening invalidation applies here from day one, not retrofitted
-        later).
-        Archive uses `exact: true` on the detail-query invalidation,
-        same fix as the PACKFE-004 Piece 3 404-toast bug. Toasts: archive
-        ("Tucked away in the archive"), restore ("Back on the board"),
-        create (seeded: `` `Seeded from ${template.name}` ``; blank: "A
-        fresh trip awaits"). No toast on packed toggle, pack-all,
+        unpack-all. **Invalidation, simplified from the original plan
+        during implementation**: every trips mutation — trip-level,
+        item-level, and packed-state alike — invalidates the bare
+        `TRIPS_QUERY_KEY` prefix and nothing narrower. A prefix-match
+        invalidate already catches both list variants and every open
+        detail query in one call, so there was never a real reason to
+        separately target `[...TRIPS_QUERY_KEY, tripId]` — that query's
+        key already starts with the prefix. **No `exact: true` anywhere,
+        correcting an assumption in the original plan**: `useDeleteTemplate`
+        needs `exact: true` because Templates' `DELETE` is a genuine hard
+        delete — refetching the deleted template's still-mounted detail
+        query would 404. Re-verified against actual Go source while
+        implementing this piece: `GetByID`'s own comment says archiving
+        "doesn't change whether a list's detail is reachable" — `DELETE
+    /lists/:id` is a soft delete, so `GetByID` keeps resolving
+        correctly for an archived trip. Refetching its detail query on
+        invalidate is harmless, not a 404 risk, so the protection
+        Templates needed doesn't apply here. Toasts: archive ("Tucked
+        away in the archive"), restore ("Back on the board"), create
+        (seeded: `` `Seeded from ${template.name}` ``; blank: "A fresh
+        trip awaits"). No toast on packed toggle, pack-all,
         quantity, add/remove item, or rename — instantly visible,
         matching Templates' existing reasoning.
-    - [ ] `features/trips/formatTripDate.ts` (+ test) — feature-root, not
+    - [x] `features/trips/formatTripDate.ts` (+ test) — feature-root, not
           `api/trips.ts`: a pure formatter with no fetching role, same
           placement pattern as `groupTemplateItems.ts`.
           `formatTripDate(date: string | null)` → `"2 Aug 2026"` (`en-GB`
           day/short-month/year) or `"No date yet"` when null; parses
           date-only strings at midday to dodge timezone-shift bugs.
-    - [ ] Optimistic packed-toggle: `onMutate` snapshots the
-          `[...TRIPS_QUERY_KEY, tripId]` cache entry, patches the target
-          item's `isPacked` in place inside its category's `items` array
-          (immutable copy, not mutated in place), rolls back to the
-          snapshot in `onError`, invalidates in `onSettled` — see the
-          Architecture section entry above for why this can't reuse
-          `useDebouncedQuantity`'s local-draft-state approach. "Pack it
-          all"/"Reset all" reuse the same patch shape (every item's
-          `isPacked` set to `true`/`false`) against the real
+    - [x] Optimistic packed-toggle (`useUpdateTripItem`): `onMutate`
+          snapshots the `[...TRIPS_QUERY_KEY, tripId]` cache entry,
+          patches the target item's `isPacked` (or whichever of
+          quantity/notes/sortOrder is present) in place inside its
+          category's `items` array (immutable copy, not mutated in
+          place), rolls back to the snapshot in `onError`, invalidates in
+          `onSettled` — see the Architecture section entry above for why
+          this can't reuse `useDebouncedQuantity`'s local-draft-state
+          approach. `usePackAllTripItems`/`useUnpackAllTripItems` share
+          the same optimistic-patch shape (every item's `isPacked` set to
+          `true`/`false` at once) via a shared internal
+          `useBulkSetPacked` helper, against the real
           `pack-all`/`unpack-all` endpoints (confirmed to exist,
-          204/no-body) — no client-side N-PATCH loop.
+          204/no-body) — no client-side N-PATCH loop. **Required
+          extending `useApiMutation`'s generic signature** with a 4th
+          `TOnMutateResult` type parameter (defaulted to `unknown`, so
+          every existing call site is unaffected) — the wrapper didn't
+          thread it through originally since no prior mutation in this
+          codebase used `onMutate`; without it, the rollback context
+          returned from `onMutate` would type as `unknown` in `onError`/
+          `onSettled` instead of `{ queryKey, previous }`.
     - [ ] "Reset all" ships with **no** `ConfirmDialog` — consistent with
           the existing non-destructive-actions-don't-confirm line already
           drawn for template item removal (cheap to redo by ticking
-          again), matching the handoff's own recommendation.
-    - [ ] **Test files**: `formatTripDate.test.ts` (formatting + null
-          branch). `trips.test.ts` — first trips-api test file, same
-          `QueryClientProvider` + mocked-`fetch` harness precedent as
-          `ItemFormModal.test.tsx`/`CategoriesModal.test.tsx` (cited from
-          their current source, not rebuilt from memory): two cases for
-          the optimistic packed-toggle (`isPacked` flips instantly on
-          `mutate()` before the mocked fetch resolves, then stays flipped
-          once it does; a rejected mock fetch rolls the cache back to the
-          pre-`mutate` snapshot). No test coverage needed for the other
-          ~10 hooks themselves — thin wrappers over `apiFetch` +
-          `useApiQuery`/`useApiMutation`, already covered by those two
+          again), matching the handoff's own recommendation. (Decision
+          recorded here; the actual button is Piece 4's build.)
+    - [x] **Test files**: `formatTripDate.test.ts` (formatting + null
+          branch, 2 tests). `trips.test.tsx` (not `.ts` — needs JSX for
+          the `QueryClientProvider`/`ToastProvider` wrapper) — first
+          trips-api test file, `renderHook` +
+          fetch-mocking harness (mirrors `ItemFormModal.test.tsx`'s
+          mock-`fetch` shape, cited from its current source). Two cases
+          for `useUpdateTripItem`'s optimistic packed-toggle: `isPacked`
+          flips in the cache before the mocked fetch resolves and stays
+          flipped once it does; a rejected mock fetch rolls the cache
+          back to the pre-`mutate` snapshot. The rollback test was
+          verified to actually guard the regression — temporarily
+          disabled the `onError` rollback, watched that specific test
+          fail with the exact reported symptom, then restored it (same
+          practice as PACKFE-004 Piece 3's bug-fix test). No coverage
+          needed for the other ~10 hooks — thin wrappers over `apiFetch` + `useApiQuery`/`useApiMutation`, already covered by those two
           primitives' own tests, matching `templates.ts`'s existing
-          precedent of no per-hook tests.
+          precedent of no per-hook tests. Full suite: 95/95 passing
+          (19 files), clean `tsc --noEmit`, clean `oxlint`.
+    - [x] **Post-build cleanup, same day**: developer review caught two
+          real duplication patterns the first pass missed — the same
+          `invalidateQueries({ queryKey: TRIPS_QUERY_KEY })` line repeated
+          verbatim across 9 mutations (collapsed into a one-line
+          `invalidateTrips(queryClient)` helper), and `useUpdateTripItem`/
+          `useBulkSetPacked` duplicating an entire ~25-line
+          `onMutate`/`onError`/`onSettled` skeleton, differing only in how
+          each patches an item — collapsed into a shared generic
+          `useOptimisticTripPatch<TVariables, TData>(mutationFn,
+    patchItem)`, with `useUpdateTripItem` and `useBulkSetPacked` as
+          its two thin call sites. Also trimmed several 2–3 line comments
+          to one line each. `src/api/trips.ts`: 410 → 368 lines; re-ran
+          the full verification pass (tsc, 95/95 tests, lint, format)
+          after.
   - [ ] **Piece 2 — Shared-atom changes.** No screenshot review needed
         (behavior/prop changes to shared atoms, verified by re-checking
         Library/Templates render pixel-unchanged afterward, not by a new
