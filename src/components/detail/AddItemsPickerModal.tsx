@@ -78,40 +78,7 @@ export function AddItemsPickerModal({
           autoFocus
         />
 
-        {showCreateInline && (
-          <div className="rounded-2xl border-2 border-dashed border-accent p-4">
-            {isPickingCategory ? (
-              <div className="flex flex-col gap-3">
-                <p className="text-sm font-bold text-heading">
-                  &ldquo;{trimmedSearch}&rdquo; — pick a category
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {categories.map((category) => (
-                    <Chip
-                      key={category.id}
-                      label={category.name}
-                      selected={category.id === resolvedCreateCategoryId}
-                      onClick={() => setCreateCategoryId(category.id)}
-                    />
-                  ))}
-                </div>
-                <Button variant="primary" onClick={handleCreateAndAdd}>
-                  Create it &amp; add
-                </Button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                className="cursor-pointer text-sm font-bold text-accent"
-                onClick={() => setIsPickingCategory(true)}
-              >
-                + Create &ldquo;{trimmedSearch}&rdquo; as a new item
-              </button>
-            )}
-          </div>
-        )}
-
-        {bulkChips.length > 0 && (
+        {!showCreateInline && bulkChips.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-1">
             {bulkChips.map(({ category, remaining }) => (
               <button
@@ -127,27 +94,64 @@ export function AddItemsPickerModal({
         )}
 
         <div className="flex-1 overflow-y-auto rounded-2xl border border-border">
-          {results.map(({ item, categoryName, quantity }) => (
-            <CollectionItemRow
-              key={item.id}
-              name={item.name}
-              notes={categoryName}
-              trailing={
-                quantity === null ? (
-                  <Button variant="subtle" onClick={() => onAdd(item.id)}>
-                    Add
-                  </Button>
-                ) : (
+          {showCreateInline ? (
+            <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+              {isPickingCategory ? (
+                <div className="flex w-full flex-col items-center gap-3">
+                  <p className="text-sm font-bold text-heading">
+                    &ldquo;{trimmedSearch}&rdquo; — pick a category
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-1.5">
+                    {categories.map((category) => (
+                      <Chip
+                        key={category.id}
+                        label={category.name}
+                        selected={category.id === resolvedCreateCategoryId}
+                        onClick={() => setCreateCategoryId(category.id)}
+                      />
+                    ))}
+                  </div>
                   <Button
-                    variant="success"
-                    onClick={() => onIncrement(item.id)}
+                    variant="primary"
+                    className="w-full"
+                    onClick={handleCreateAndAdd}
                   >
-                    ×{quantity}
+                    Create it &amp; add
                   </Button>
-                )
-              }
-            />
-          ))}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="cursor-pointer text-sm font-bold text-accent"
+                  onClick={() => setIsPickingCategory(true)}
+                >
+                  + Create &ldquo;{trimmedSearch}&rdquo; as a new item
+                </button>
+              )}
+            </div>
+          ) : (
+            results.map(({ item, categoryName, quantity }) => (
+              <CollectionItemRow
+                key={item.id}
+                name={item.name}
+                notes={categoryName}
+                trailing={
+                  quantity === null ? (
+                    <Button variant="subtle" onClick={() => onAdd(item.id)}>
+                      Add
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="success"
+                      onClick={() => onIncrement(item.id)}
+                    >
+                      ×{quantity}
+                    </Button>
+                  )
+                }
+              />
+            ))
+          )}
         </div>
       </div>
     </Modal>
