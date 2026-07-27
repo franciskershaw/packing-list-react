@@ -7,9 +7,9 @@ import {
 import { useToast } from "../../components/ui/Toast";
 import { ApiError } from "../api/client";
 
-export function useApiMutation<TData, TVariables>(
-  options: UseMutationOptions<TData, ApiError, TVariables>,
-): UseMutationResult<TData, ApiError, TVariables> {
+export function useApiMutation<TData, TVariables, TOnMutateResult = unknown>(
+  options: UseMutationOptions<TData, ApiError, TVariables, TOnMutateResult>,
+): UseMutationResult<TData, ApiError, TVariables, TOnMutateResult> {
   const { toast } = useToast();
 
   return useMutation({
