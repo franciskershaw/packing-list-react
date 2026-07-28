@@ -22,7 +22,7 @@ export function CategoryGroupCard({
 }: CategoryGroupCardProps) {
   const header = (
     <>
-      <span className="font-heading text-base font-bold text-heading">
+      <span className="font-heading text-base font-semibold text-heading">
         {name}
       </span>
       <span className="text-sm text-muted">{count}</span>

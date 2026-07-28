@@ -43,7 +43,7 @@ export function CollectionItemRow({
       {leading}
       <div className="min-w-0 flex-1">
         <p
-          className={`truncate text-base font-bold ${struck ? "text-muted line-through" : "text-heading"}`}
+          className={`truncate text-base font-semibold ${struck ? "text-muted line-through" : "text-heading"}`}
         >
           {name}
         </p>

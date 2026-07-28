@@ -28,9 +28,9 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     | "success"
     | "accent"
     | "secondary"
-    | "subtle";
-  /** Only affects default/danger — other variants are sized already. */
-  size?: "default" | "compact";
+    | "subtle"
+    | "outline";
+  size?: "default" | "compact" | "split";
 }
 
 const VARIANT_CLASSES: Record<NonNullable<ButtonProps["variant"]>, string> = {
@@ -50,6 +50,8 @@ const VARIANT_CLASSES: Record<NonNullable<ButtonProps["variant"]>, string> = {
     "w-full rounded-2xl border-0 bg-accent-secondary px-6 py-4 font-body text-base font-bold text-on-accent shadow-sm disabled:opacity-50",
   subtle:
     "rounded-full border-0 bg-bg-subtle px-5 py-2 text-sm font-bold text-heading disabled:opacity-50",
+  outline:
+    "rounded-full border border-accent bg-bg px-5 py-2 text-sm font-bold text-accent shadow-sm disabled:opacity-50",
 };
 
 const COMPACT_VARIANT_CLASSES: Partial<
@@ -59,6 +61,15 @@ const COMPACT_VARIANT_CLASSES: Partial<
     "rounded-card border border-border bg-bg px-5 py-2.5 font-body text-sm font-semibold text-heading shadow-sm",
   danger:
     "rounded-card border-0 bg-notice-bg px-5 py-2.5 font-body text-sm font-semibold text-notice-text shadow-sm",
+};
+
+const SPLIT_VARIANT_CLASSES: Partial<
+  Record<NonNullable<ButtonProps["variant"]>, string>
+> = {
+  success:
+    "flex-1 rounded-xl border-0 bg-accent-secondary px-5 py-2 text-sm font-bold text-on-accent shadow-sm disabled:opacity-50 lg:flex-none",
+  default:
+    "flex-1 rounded-xl border border-border bg-bg px-5 py-2.5 text-sm font-semibold text-heading shadow-sm lg:flex-none",
 };
 
 export function Button({
@@ -71,6 +82,7 @@ export function Button({
 }: ButtonProps) {
   const variantClasses =
     (size === "compact" && COMPACT_VARIANT_CLASSES[variant]) ||
+    (size === "split" && SPLIT_VARIANT_CLASSES[variant]) ||
     VARIANT_CLASSES[variant];
   return (
     <InteractiveButton
