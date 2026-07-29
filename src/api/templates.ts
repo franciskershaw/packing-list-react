@@ -88,14 +88,14 @@ export function removeTemplateItem(
   });
 }
 
-export function bulkAddItems(
+export function bulkUpdateTemplateItems(
   templateId: string,
-  categoryId: string,
-): Promise<TemplateItem[]> {
-  return apiFetch<TemplateItem[]>(`/templates/${templateId}/items/bulk`, {
-    method: "POST",
+  items: { itemId: string; quantity: number }[],
+): Promise<void> {
+  return apiFetch<void>(`/templates/${templateId}/items/bulk`, {
+    method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ categoryId }),
+    body: JSON.stringify({ items }),
   });
 }
 
@@ -217,16 +217,16 @@ export function useRemoveTemplateItem() {
   });
 }
 
-export function useBulkAddItems() {
+export function useBulkUpdateTemplateItems() {
   const queryClient = useQueryClient();
   return useApiMutation({
     mutationFn: ({
       templateId,
-      categoryId,
+      items,
     }: {
       templateId: string;
-      categoryId: string;
-    }) => bulkAddItems(templateId, categoryId),
+      items: { itemId: string; quantity: number }[];
+    }) => bulkUpdateTemplateItems(templateId, items),
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({
         queryKey: [...TEMPLATES_QUERY_KEY, variables.templateId],

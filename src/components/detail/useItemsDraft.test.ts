@@ -20,7 +20,9 @@ describe("useItemsDraft", () => {
 
     act(() => result.current.add("item-socks"));
 
-    expect(result.current.entries).toEqual([]);
+    expect(result.current.entries).toEqual([
+      { itemId: "item-socks", quantity: 1 },
+    ]);
     expect(result.current.delta).toEqual([
       { itemId: "item-socks", quantity: 1 },
     ]);

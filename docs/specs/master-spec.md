@@ -2156,36 +2156,39 @@ number` to match PACK-034's response shape — a stale `tsc`
       mirroring the backend's own `BulkAddItems` → `BulkUpdateItems`
       rename.
   - **Acceptance criteria**:
-    - [ ] `useItemsDraft` (new, `components/detail/`): given an initial
+    - [x] `useItemsDraft` (new, `components/detail/`): given an initial
           `{ itemId, quantity }[]`, exposes merged display `entries`,
           `add(itemId)`, `increment(itemId)` (clamped at 999, matching
           backend validation), `bulkAdd(itemIds: string[])` (adds only
           ids not already present, at quantity 1), and the resulting
           delta as `{ itemId, quantity }[]` ready to send
-    - [ ] `prepareAddItemsPickerData`'s `bulkChips` exposes remaining
+    - [x] `prepareAddItemsPickerData`'s `bulkChips` exposes remaining
           `itemIds` per category, not just a count;
           `AddItemsPickerModal.onBulkAdd` takes `itemIds: string[]`
-    - [ ] `AddItemsPickerModal` gains `onDone` (distinct from `onClose`);
+    - [x] `AddItemsPickerModal` gains `onDone` (distinct from `onClose`);
           footer Done button calls `onDone`, disables while pending
-    - [ ] `TemplateAddItemsModal` wires `useItemsDraft` in, calls
+    - [x] `TemplateAddItemsModal` wires `useItemsDraft` in, calls
           `onAdd`/`onIncrement`/`onBulkAdd`/`onCreateAndAdd`'s
           template-side effects against the draft instead of firing
           per-item requests; `onDone` sends the draft's delta via
           `useBulkUpdateTemplateItems`, closing only on success
-    - [ ] Empty draft + Done → closes with no request sent
-    - [ ] X / backdrop / Escape → closes immediately, no request, no
-          confirm prompt, regardless of unsaved draft state
-    - [ ] Failed `PATCH` on Done → modal stays open, error toast shown,
-          draft still intact, Done clickable again
-    - [ ] `api/templates.ts`: `bulkAddItems`/`useBulkAddItems` deleted;
+    - [x] Empty draft + Done → closes with no request sent
+    - [x] X / backdrop / Escape → closes immediately, no request, no
+          confirm prompt, regardless of unsaved draft state (falls out
+          of `TemplatesScreen`'s existing conditional-mount pattern —
+          `onClose` is unchanged, no dedicated test, verified structurally)
+    - [x] Failed `PATCH` on Done → modal stays open, error toast shown,
+          draft still intact, Done clickable again (via `useApiMutation`'s
+          existing error-toast behavior + `onSuccess`-only close)
+    - [x] `api/templates.ts`: `bulkAddItems`/`useBulkAddItems` deleted;
           `bulkUpdateTemplateItems`/`useBulkUpdateTemplateItems` added
           against `PATCH /templates/:id/items/bulk`
-    - [ ] `TemplateItemRow`'s per-tweak/removal behavior verified
-          unchanged (no test churn expected — flag if any is needed)
-    - [ ] Manual verification: add several items with varying quantities
-          via search, via "+ All Camping", and via "create & add," hit
-          Done, confirm exactly one network request fires and the
-          template detail reflects everything added
+    - [x] `TemplateItemRow`'s per-tweak/removal behavior verified
+          unchanged — untouched by this ticket, no test churn
+    - [ ] Manual verification (developer): add several items with varying
+          quantities via search, via "+ All Camping", and via "create &
+          add," hit Done, confirm exactly one network request fires and
+          the template detail reflects everything added
   - **Non-goals**:
     - No changes to the main template detail page's tweak/remove flow —
       stays one request per action

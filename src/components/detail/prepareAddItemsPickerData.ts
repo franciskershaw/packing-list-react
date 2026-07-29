@@ -45,14 +45,19 @@ export function prepareAddItemsPickerData(
   );
 
   const bulkChips = categories
-    .map((category) => ({
-      category,
-      remaining: items.filter(
-        (item) =>
-          item.categoryId === category.id && !quantityByItemId.has(item.id),
-      ).length,
-      itemIds: [] as string[],
-    }))
+    .map((category) => {
+      const remainingItemIds = items
+        .filter(
+          (item) =>
+            item.categoryId === category.id && !quantityByItemId.has(item.id),
+        )
+        .map((item) => item.id);
+      return {
+        category,
+        remaining: remainingItemIds.length,
+        itemIds: remainingItemIds,
+      };
+    })
     .filter((chip) => chip.remaining > 0);
 
   return {

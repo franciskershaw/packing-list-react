@@ -27,6 +27,8 @@ export function AddItemsPickerModal({
   onBulkAdd,
   onCreateAndAdd,
   onClose,
+  onDone,
+  isDonePending = false,
 }: AddItemsPickerModalProps) {
   const { data: items = [] } = useItems();
   const { data: categories = [] } = useCategories();
@@ -67,7 +69,7 @@ export function AddItemsPickerModal({
       size="fixed"
       desktopWidth="lg:w-[560px]"
       footer={
-        <Button variant="primary" onClick={onClose}>
+        <Button variant="primary" onClick={onDone} disabled={isDonePending}>
           Done
         </Button>
       }
