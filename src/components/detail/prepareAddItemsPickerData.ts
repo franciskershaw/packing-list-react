@@ -10,6 +10,7 @@ export interface PickerResultRow {
 export interface PickerBulkChip {
   category: Category;
   remaining: number;
+  itemIds: string[];
 }
 
 export interface PickerData {
@@ -50,6 +51,7 @@ export function prepareAddItemsPickerData(
         (item) =>
           item.categoryId === category.id && !quantityByItemId.has(item.id),
       ).length,
+      itemIds: [] as string[],
     }))
     .filter((chip) => chip.remaining > 0);
 

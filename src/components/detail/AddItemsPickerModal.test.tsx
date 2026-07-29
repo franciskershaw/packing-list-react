@@ -45,7 +45,10 @@ function mockFetch() {
   });
 }
 
-function renderModal(entries: { itemId: string; quantity: number }[] = []) {
+function renderModal(
+  entries: { itemId: string; quantity: number }[] = [],
+  extraProps: { isDonePending?: boolean } = {},
+) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
@@ -55,11 +58,12 @@ function renderModal(entries: { itemId: string; quantity: number }[] = []) {
     onBulkAdd: vi.fn(),
     onCreateAndAdd: vi.fn(),
     onClose: vi.fn(),
+    onDone: vi.fn(),
   };
   render(
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
-        <AddItemsPickerModal entries={entries} {...handlers} />
+        <AddItemsPickerModal entries={entries} {...handlers} {...extraProps} />
       </ToastProvider>
     </QueryClientProvider>,
   );
@@ -90,7 +94,7 @@ describe("AddItemsPickerModal", () => {
     expect(handlers.onAdd).not.toHaveBeenCalled();
   });
 
-  it("clicking a bulk chip calls onBulkAdd with that category's id", async () => {
+  it("clicking a bulk chip calls onBulkAdd with that category's remaining item ids", async () => {
     mockFetch();
     const handlers = renderModal();
 
@@ -98,16 +102,24 @@ describe("AddItemsPickerModal", () => {
       await screen.findByRole("button", { name: "+ All Clothing (1)" }),
     );
 
-    expect(handlers.onBulkAdd).toHaveBeenCalledWith("cat-clothing");
+    expect(handlers.onBulkAdd).toHaveBeenCalledWith(["item-socks"]);
   });
 
-  it("clicking Done calls onClose", () => {
+  it("clicking Done calls onDone, not onClose", () => {
     mockFetch();
     const handlers = renderModal();
 
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
 
-    expect(handlers.onClose).toHaveBeenCalledTimes(1);
+    expect(handlers.onDone).toHaveBeenCalledTimes(1);
+    expect(handlers.onClose).not.toHaveBeenCalled();
+  });
+
+  it("Done is disabled while isDonePending is true", () => {
+    mockFetch();
+    renderModal(undefined, { isDonePending: true });
+
+    expect(screen.getByRole("button", { name: "Done" })).toBeDisabled();
   });
 
   it("a non-matching search reveals create-inline; picking a category (defaulted to the first) and confirming calls onCreateAndAdd", async () => {

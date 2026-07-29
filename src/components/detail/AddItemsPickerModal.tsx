@@ -13,9 +13,11 @@ interface AddItemsPickerModalProps {
   entries: { itemId: string; quantity: number }[];
   onAdd: (itemId: string) => void;
   onIncrement: (itemId: string) => void;
-  onBulkAdd: (categoryId: string) => void;
+  onBulkAdd: (itemIds: string[]) => void;
   onCreateAndAdd: (input: { name: string; categoryId: string }) => void;
   onClose: () => void;
+  onDone: () => void;
+  isDonePending?: boolean;
 }
 
 export function AddItemsPickerModal({
@@ -80,12 +82,12 @@ export function AddItemsPickerModal({
 
         {!showCreateInline && bulkChips.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {bulkChips.map(({ category, remaining }) => (
+            {bulkChips.map(({ category, remaining, itemIds }) => (
               <button
                 key={category.id}
                 type="button"
                 className="cursor-pointer rounded-full border border-accent-secondary px-3 py-1.5 text-xs font-bold whitespace-nowrap text-accent-secondary"
-                onClick={() => onBulkAdd(category.id)}
+                onClick={() => onBulkAdd(itemIds)}
               >
                 + All {category.name} ({remaining})
               </button>

@@ -79,7 +79,13 @@ describe("prepareAddItemsPickerData", () => {
       "",
     );
 
-    expect(data.bulkChips).toEqual([{ category: categories[0], remaining: 2 }]);
+    expect(data.bulkChips).toEqual([
+      {
+        category: categories[0],
+        remaining: 2,
+        itemIds: ["item-shorts", "item-socks"],
+      },
+    ]);
   });
 
   it("shows the create-inline panel only when the search matches nothing existing", () => {

@@ -1,10 +1,6 @@
 import { useCreateItem } from "../../api/items";
 import type { Template } from "../../api/templates";
-import {
-  useAddTemplateItem,
-  useBulkAddItems,
-  useUpdateTemplateItem,
-} from "../../api/templates";
+import { useAddTemplateItem, useUpdateTemplateItem } from "../../api/templates";
 import { AddItemsPickerModal } from "../../components/detail/AddItemsPickerModal";
 
 interface TemplateAddItemsModalProps {
@@ -18,7 +14,6 @@ export function TemplateAddItemsModal({
 }: TemplateAddItemsModalProps) {
   const addTemplateItem = useAddTemplateItem();
   const updateTemplateItem = useUpdateTemplateItem();
-  const bulkAddItems = useBulkAddItems();
   const createItem = useCreateItem();
 
   return (
@@ -35,9 +30,11 @@ export function TemplateAddItemsModal({
           quantity: (entry?.quantity ?? 0) + 1,
         });
       }}
-      onBulkAdd={(categoryId) =>
-        bulkAddItems.mutate({ templateId: template.id, categoryId })
-      }
+      onBulkAdd={() => {
+        // TODO(PACKFE-009): resolve client-side via useItemsDraft.bulkAdd,
+        // no request until Done. bulkAddItems/useBulkAddItems is dead code
+        // pending deletion (PACK-035 deleted its server endpoint).
+      }}
       onCreateAndAdd={({ name, categoryId }) =>
         createItem.mutate(
           { name, categoryId },
@@ -51,6 +48,10 @@ export function TemplateAddItemsModal({
         )
       }
       onClose={onClose}
+      onDone={() => {
+        // TODO(PACKFE-009): flush useItemsDraft's delta via
+        // useBulkUpdateTemplateItems, close only on success.
+      }}
     />
   );
 }
