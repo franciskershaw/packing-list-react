@@ -509,6 +509,21 @@ DELETE SET NULL` (deleting a template safely nulls a trip's back-
   this ticket. `groupTemplateItems` stays exactly where it is,
   untouched, in `features/templates/` — no second consumer, so per
   `CLAUDE.md`'s own promotion rule it doesn't move.
+- **`useItemsDraft`: local delta-map draft, explicit flush, built shared
+  from day one** (decided 2026-07-29, PACKFE-009's grill-me): first
+  "hold several local edits, flush as one batch on an explicit save
+  action" UI in this codebase — `useDebouncedQuantity`
+  (PACKFE-004 Piece 4b) is the nearest precedent but commits on a timer,
+  not a user action, so it doesn't cover this shape. State is a delta-map
+  (`Map<itemId, quantity>` of only items changed this session) rather
+  than a full local copy diffed on save, matching
+  `packing-list-go`'s PACK-035 delta contract directly. Deliberate
+  exception to the "extract only once there's a real second consumer"
+  structure convention: built in `components/detail/` immediately rather
+  than starting in `features/templates/`, because PACKFE-005 Piece 5
+  already commits (on paper, not yet built) to a `TripAddItemsModal`
+  that reuses `AddItemsPickerModal` "exactly" — the second consumer is
+  already written down, not hypothetical.
 - **Trips' list hooks: one `useTrips(archived = false)`, one shared
   `TRIPS_QUERY_KEY` prefix** (decided 2026-07-27, Piece 1's grill-me):
   active and archived trips are two real `GET /lists` calls (with/without
@@ -2053,6 +2068,168 @@ number` to match PACK-034's response shape — a stale `tsc`
           real judgement call (by concern vs. by shape) that's its own
           decision, not a silent side effect of this piece's own work.
 
+- **PACKFE-009** — Templates: item-adding modal becomes a batched
+  "holding bay" (follow-up to `packing-list-go`'s PACK-035)
+  - **Context**: PACK-035 (`packing-list-go`, done 2026-07-28) replaced
+    the categoryId-only `POST /templates/:id/items/bulk` with a real delta
+    endpoint, `PATCH /templates/:id/items/bulk`
+    (`{ items: [{ itemId, quantity }] }`, `quantity: 0` = remove,
+    atomic, `204`), and deleted the old endpoint outright — confirmed
+    live in `main.go`/`template_item_handler.go` (`BulkUpdateItems`).
+    That deletion broke templates' only real caller of the old endpoint,
+    `useBulkAddItems`/`bulkAddItems` (`api/templates.ts`), which backs the
+    Add-items modal's "+ All Camping"-style bulk chip — PACK-035's own
+    handoff doc flagged this as a known, accepted break pending this
+    frontend follow-up. Separately, real usage exposed the underlying
+    problem PACK-035 was found because of: `TemplateAddItemsModal` fires
+    one request per tap (`onAdd`/`onIncrement` both call single-item
+    mutations immediately), so adding several items means several
+    round-trips — related to the existing `[UX polish]` parking-lot note
+    on `ItemFormModal` closing on every add (same underlying complaint,
+    different modal).
+  - **Design-gate finding**: new pattern — first "local draft state,
+    explicitly flushed as one batch on a save action" UI in this
+    codebase. The closest existing precedent, `useDebouncedQuantity`
+    (`components/detail/`), commits per-item on a timer, not on an
+    explicit user action, so it doesn't cover this shape. Per this
+    project's CLAUDE.md override, no ADR — recorded directly below and
+    in the Architecture section instead.
+  - **Key decisions from the interview**:
+    - The modal's local draft is a **delta-map** (`Map<itemId, quantity>`
+      of only items added/incremented this session), not a full copy of
+      `template.items` diffed on save — this shape matches the PATCH
+      payload directly, no diffing step needed before sending.
+    - **Close paths diverge**: the X button, backdrop click, and Escape
+      all **discard silently** — no request, no confirm dialog. Only the
+      footer **Done** button flushes. This falls out for free from how
+      the modal is already mounted (`TemplatesScreen.tsx` conditionally
+      renders `TemplateAddItemsModal` on `isAddItemsOpen`, so any close
+      unmounts it and the draft state is thrown away with it — no
+      explicit reset needed).
+    - `AddItemsPickerModal`'s footer currently hardcodes its Done button
+      to call the same `onClose` prop as every other close path. That
+      splits into two distinct props: `onClose` (discard, close
+      immediately) and a new `onDone` (flush, close only on success,
+      button disabled while the mutation is in flight).
+    - If the delta-map is empty when Done is clicked (no changes made),
+      close without sending anything — an empty `items` array would hit
+      the backend's own 400 validation for no real reason.
+    - On a failed `PATCH` (network/5xx), the modal **stays open** with an
+      error toast and an intact draft, so Done can just be retried — no
+      lost work.
+    - **"Create it & add" keeps firing item creation immediately**
+      (`POST /items` needs a real server-issued id before anything can
+      reference it), but the resulting "add this item to the template"
+      step now joins the draft like any other add, instead of also
+      firing `addTemplateItem` immediately.
+    - **"+ All Camping"-style bulk chip mirrors the old server behavior**
+      exactly, resolved client-side: confirmed via `git log` on the
+      now-deleted handler (`packing-list-go`,
+      `internal/handler/template_item_handler.go` pre-PACK-035) that it
+      added every item in the category at quantity 1, **skipping items
+      already present** — same rule, just computed in
+      `prepareAddItemsPickerData` instead of on the server.
+      `bulkChips` gains the actual remaining `itemIds` (not just a count),
+      and `AddItemsPickerModal`'s `onBulkAdd` prop changes from
+      `(categoryId: string)` to `(itemIds: string[])` accordingly.
+    - **The draft-tracking hook (`useItemsDraft`) is built shared from
+      the start**, in `components/detail/` alongside
+      `AddItemsPickerModal.tsx`, **not** scoped to
+      `features/templates/` first and extracted later. This is a
+      deliberate exception to `CLAUDE.md`'s "no premature abstraction /
+      extract only once there's a real second consumer" structure
+      convention — confirmed explicitly in chat rather than an
+      oversight, on the strength of Piece 5's existing plan (see
+      Epic 5 below) already committing to a `TripAddItemsModal` that
+      "mirrors `TemplateAddItemsModal` exactly" over the same
+      `AddItemsPickerModal` shell — the second consumer isn't
+      hypothetical, it's already written down as the very next piece of
+      work.
+    - The single-item page-level flow is **unchanged**: `TemplateItemRow`
+      keeps firing one `PATCH`/`DELETE` per tweak/removal via
+      `useUpdateTemplateItem`/`useRemoveTemplateItem`
+      (`useDebouncedQuantity`'s existing per-row debounce), no batching
+      added there. Only the modal's add flow changes.
+    - `api/templates.ts`'s dead `bulkAddItems`/`useBulkAddItems` are
+      replaced (not kept alongside) by `bulkUpdateTemplateItems`/
+      `useBulkUpdateTemplateItems` against the new `PATCH` endpoint,
+      mirroring the backend's own `BulkAddItems` → `BulkUpdateItems`
+      rename.
+  - **Acceptance criteria**:
+    - [ ] `useItemsDraft` (new, `components/detail/`): given an initial
+          `{ itemId, quantity }[]`, exposes merged display `entries`,
+          `add(itemId)`, `increment(itemId)` (clamped at 999, matching
+          backend validation), `bulkAdd(itemIds: string[])` (adds only
+          ids not already present, at quantity 1), and the resulting
+          delta as `{ itemId, quantity }[]` ready to send
+    - [ ] `prepareAddItemsPickerData`'s `bulkChips` exposes remaining
+          `itemIds` per category, not just a count;
+          `AddItemsPickerModal.onBulkAdd` takes `itemIds: string[]`
+    - [ ] `AddItemsPickerModal` gains `onDone` (distinct from `onClose`);
+          footer Done button calls `onDone`, disables while pending
+    - [ ] `TemplateAddItemsModal` wires `useItemsDraft` in, calls
+          `onAdd`/`onIncrement`/`onBulkAdd`/`onCreateAndAdd`'s
+          template-side effects against the draft instead of firing
+          per-item requests; `onDone` sends the draft's delta via
+          `useBulkUpdateTemplateItems`, closing only on success
+    - [ ] Empty draft + Done → closes with no request sent
+    - [ ] X / backdrop / Escape → closes immediately, no request, no
+          confirm prompt, regardless of unsaved draft state
+    - [ ] Failed `PATCH` on Done → modal stays open, error toast shown,
+          draft still intact, Done clickable again
+    - [ ] `api/templates.ts`: `bulkAddItems`/`useBulkAddItems` deleted;
+          `bulkUpdateTemplateItems`/`useBulkUpdateTemplateItems` added
+          against `PATCH /templates/:id/items/bulk`
+    - [ ] `TemplateItemRow`'s per-tweak/removal behavior verified
+          unchanged (no test churn expected — flag if any is needed)
+    - [ ] Manual verification: add several items with varying quantities
+          via search, via "+ All Camping", and via "create & add," hit
+          Done, confirm exactly one network request fires and the
+          template detail reflects everything added
+  - **Non-goals**:
+    - No changes to the main template detail page's tweak/remove flow —
+      stays one request per action
+    - No Trips-screen work of any kind. Trips has its own, larger set of
+      deviations from PACKFE-005's already-decided architecture (see
+      flag below) — explicitly out of scope here, to be grilled
+      separately once this ticket's patterns are settled and shipped
+    - No visual/design changes to the picker modal itself — same layout,
+      same components, only the request-timing behavior changes
+    - No change to `AddItemsPickerModal`'s `onAdd`/`onIncrement`/
+      `onCreateAndAdd` prop signatures — only `onBulkAdd`'s
+      (categoryId → itemIds) and the new `onDone`
+  - **Expected test files**:
+    - `components/detail/useItemsDraft.test.ts` (new) — covers add,
+      increment (including the 999 clamp), bulkAdd's skip-already-present
+      rule, and the delta-map's output shape, mirroring
+      `prepareAddItemsPickerData.test.ts`'s style
+    - `components/detail/prepareAddItemsPickerData.test.ts` — extended
+      for `bulkChips[].itemIds`
+    - `components/detail/AddItemsPickerModal.test.tsx` — extended for
+      the `onDone`/`onClose` split and the Done-button pending/disabled
+      state
+    - Manual: exercise in the running app per the acceptance criteria's
+      manual-verification item above (no `.http` file — this is UI-only,
+      the backend side already has its own `.http` coverage from
+      PACK-035)
+
+  **Flag for a later session, not resolved here**: PACKFE-005's own
+  grill-me (2026-07-27, Architecture section above) already decided Trips
+  gets an `isEditMode` toggle controlling title editability _and_
+  item-row remove/stepper mode _and_ the add-items button's visibility —
+  today's conversation proposes removing that toggle entirely for Trips
+  (always-editable title and always-visible add-items button, matching
+  Templates' curate-mode-always pattern) while keeping the progress
+  section and per-item "mark packed" affordance as Trips-only additions.
+  This is a real reversal of a decided architecture entry, not a small
+  deviation — worth calling out plainly rather than letting "slight
+  deviations" undersell it. The good news: Piece 5 (edit mode + add
+  items) hasn't been built yet, so nothing shipped needs unwinding — it's
+  still a paper decision. Grill this properly, as its own session, once
+  this ticket's `useItemsDraft`/`onDone` pattern has shipped and proven
+  itself, since Piece 5's plan already assumes `TripAddItemsModal` reuses
+  whatever this ticket lands on.
+
 ### Epic 5: Trips
 
 - **PACKFE-005** — Trip creation & packing (absorbs PACKFE-006, see
@@ -2198,7 +2375,7 @@ patchItem)`, with `useUpdateTripItem` and `useBulkSetPacked` as
           lives in `useTripsScreen`, keyed by category id, not persisted.
           Library/Templates keep passing neither prop, unaffected.
     - [x] `CollectionItemRow` gains `onClick?: () => void`, `checked?:
-    boolean`, and `struck?: boolean` (line-through + `muted` name
+boolean`, and `struck?: boolean` (line-through + `muted` name
           when packed; applies to the name only, not `notes` — confirmed
           against the mobile packing-in-progress screenshot, where
           "Sun cream" is struck but its "Factor 50" note stays plain
@@ -2256,8 +2433,8 @@ patchItem)`, with `useUpdateTripItem` and `useBulkSetPacked` as
           today's placeholder-as-`aria-label` behavior exactly as-is.
     - [x] New `detail/ProgressBar { packed, total }` (7px track, accent
           fill on `#F0E6D6`, radius `full`, `transition-[width]
-    duration-[350ms]`) and `detail/ProgressRing { packed, total,
-    size = 34 }` (two SVG circles, r=13, 3.5px stroke,
+duration-[350ms]`) and `detail/ProgressRing { packed, total,
+size = 34 }` (two SVG circles, r=13, 3.5px stroke,
           `stroke-linecap="round"`, rotated −90° via `-rotate-90`, fixed
           `viewBox="0 0 34 34"` so `size` scales the whole rendering
           proportionally). Both take counts, not a percentage — rounding
@@ -2272,7 +2449,7 @@ patchItem)`, with `useUpdateTripItem` and `useBulkSetPacked` as
           when packed — same cream-on-green pairing already established
           for `Avatar`/`Toast`'s success variant): a non-interactive
           `aria-hidden` span, with the row itself carrying `role="checkbox"
-    aria-checked` — chosen over a nested interactive control since
+aria-checked` — chosen over a nested interactive control since
           the row already owns click/
           keyboard semantics via `CollectionItemRow`'s new `onClick`.
   - [ ] **Piece 3 — Route + breakpoint split.** `/trips/:tripId` route.
