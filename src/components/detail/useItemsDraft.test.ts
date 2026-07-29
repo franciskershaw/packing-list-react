@@ -106,4 +106,106 @@ describe("useItemsDraft", () => {
       { itemId: "item-socks", quantity: 3 },
     ]);
   });
+
+  it("decrement() lowers an existing entry's quantity by one and records it in the delta", () => {
+    const { result } = renderHook(() =>
+      useItemsDraft([{ itemId: "item-socks", quantity: 3 }]),
+    );
+
+    act(() => result.current.decrement("item-socks"));
+
+    expect(result.current.entries).toEqual([
+      { itemId: "item-socks", quantity: 2 },
+    ]);
+    expect(result.current.delta).toEqual([
+      { itemId: "item-socks", quantity: 2 },
+    ]);
+  });
+
+  it("decrement() at quantity 1 on a session-added item removes it with no trace in the delta", () => {
+    const { result } = renderHook(() => useItemsDraft([]));
+
+    act(() => result.current.add("item-socks"));
+    act(() => result.current.decrement("item-socks"));
+
+    expect(result.current.entries).toEqual([]);
+    expect(result.current.delta).toEqual([]);
+  });
+
+  it("decrement() at quantity 1 on a pre-existing item drops it from entries and sends quantity 0", () => {
+    const { result } = renderHook(() =>
+      useItemsDraft([{ itemId: "item-socks", quantity: 1 }]),
+    );
+
+    act(() => result.current.decrement("item-socks"));
+
+    expect(result.current.entries).toEqual([]);
+    expect(result.current.delta).toEqual([
+      { itemId: "item-socks", quantity: 0 },
+    ]);
+  });
+
+  it("decrementing a pre-existing item all the way from 3 removes it on the third tap", () => {
+    const { result } = renderHook(() =>
+      useItemsDraft([{ itemId: "item-socks", quantity: 3 }]),
+    );
+
+    act(() => result.current.decrement("item-socks"));
+    act(() => result.current.decrement("item-socks"));
+    expect(result.current.entries).toEqual([
+      { itemId: "item-socks", quantity: 1 },
+    ]);
+
+    act(() => result.current.decrement("item-socks"));
+
+    expect(result.current.entries).toEqual([]);
+    expect(result.current.delta).toEqual([
+      { itemId: "item-socks", quantity: 0 },
+    ]);
+  });
+
+  it("add() after decrementing a pre-existing item to removal restarts it at quantity 1, not its original quantity", () => {
+    const { result } = renderHook(() =>
+      useItemsDraft([{ itemId: "item-socks", quantity: 3 }]),
+    );
+
+    act(() => result.current.decrement("item-socks"));
+    act(() => result.current.decrement("item-socks"));
+    act(() => result.current.decrement("item-socks"));
+    act(() => result.current.add("item-socks"));
+
+    expect(result.current.entries).toEqual([
+      { itemId: "item-socks", quantity: 1 },
+    ]);
+    expect(result.current.delta).toEqual([
+      { itemId: "item-socks", quantity: 1 },
+    ]);
+  });
+
+  it("removing and re-adding a pre-existing item back to its original quantity produces no delta at all", () => {
+    const { result } = renderHook(() =>
+      useItemsDraft([{ itemId: "item-socks", quantity: 1 }]),
+    );
+
+    act(() => result.current.decrement("item-socks"));
+    act(() => result.current.add("item-socks"));
+
+    expect(result.current.entries).toEqual([
+      { itemId: "item-socks", quantity: 1 },
+    ]);
+    expect(result.current.delta).toEqual([]);
+  });
+
+  it("bulkAdd() re-adds an item that was decremented to removal this session", () => {
+    const { result } = renderHook(() =>
+      useItemsDraft([{ itemId: "item-socks", quantity: 1 }]),
+    );
+
+    act(() => result.current.decrement("item-socks"));
+    act(() => result.current.bulkAdd(["item-socks"]));
+
+    expect(result.current.entries).toEqual([
+      { itemId: "item-socks", quantity: 1 },
+    ]);
+  });
 });

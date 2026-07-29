@@ -2189,18 +2189,91 @@ number` to match PACK-034's response shape — a stale `tsc`
           quantities via search, via "+ All Camping", and via "create &
           add," hit Done, confirm exactly one network request fires and
           the template detail reflects everything added
+  - **Amendment, same day (2026-07-29)**: shipping the above surfaced a
+    real gap — the modal could only add/increment, with no way to walk
+    back a mis-tap before Done short of discarding the entire batch.
+    Before this ticket, that wasn't a gap: every tap fired immediately,
+    so a mistake was already committed the instant it happened and "fix
+    it on the main page" was always the only path regardless. Batching
+    changed the calculus without anyone asking the question during the
+    original interview, so the picker's row UI just carried over
+    untouched. Confirmed in a follow-up conversation: the modal gains
+    **full edit power over any item on the template**, not just ones
+    touched this session — decrement and remove, not just add/increment.
+    - **First pass, corrected within the same amendment**: initially
+      built as a separate leading `DeleteIconButton` (remove) alongside
+      the trailing `QuantityStepper` (floored at 1, matching
+      `TemplateItemRow`'s main-page stepper exactly) — mirroring the
+      main page's existing leading/trailing shape literally. Rejected
+      immediately as bad UX once built: forces a right-to-left hand/eye
+      jump (adjust quantity on the trailing stepper, but remove from a
+      completely separate leading control) for what's conceptually one
+      continuous action — walking a quantity down to nothing. Corrected
+      to a single control: the stepper's own decrement removes the item
+      once it reaches the floor, no separate remove affordance at all.
+      One real UX tradeoff accepted knowingly: removing a
+      higher-quantity item now takes one tap per unit down to zero,
+      instead of one tap on a dedicated control — acceptable here since
+      this is a low-stakes local draft (nothing saves until Done, and
+      re-adding is instant), not the main page's real, saved state.
+    - `useItemsDraft` gains `decrement(itemId)`: above the floor it
+      behaves like `increment`'s mirror; **at the floor, it removes
+      instead of stopping** — a session-local, never-synced addition
+      just vanishes from `pending` (no delta trace); a pre-existing item
+      is set to pending quantity `0`, which the delta contract already
+      treats as remove. No separate `remove` function exists — decrement
+      is the only path down, by design. `add(itemId)` is corrected to
+      always start at quantity `1` regardless of what the item's
+      original saved quantity was — needed once "decrement a pre-existing
+      item to removal, then re-add it" became a real path (previously
+      `add` was only ever called for items with no prior state, so the
+      distinction was latent, not exercised).
+    - The delta filter generalizes from "was this item touched" to
+      "does this item's pending quantity actually differ from what the
+      server already has" — a decrement-then-re-add landing back on the
+      item's original quantity is a real, verified no-op (produces an
+      empty delta, not a wasted PATCH), not just the
+      add-then-immediately-forget case the original version covered.
+    - `bulkAdd`'s presence check moves from raw membership
+      (`initialQuantityById.has`) to _effective_ presence (merged
+      pending-or-initial quantity `> 0`), so "+ All Camping" can
+      correctly re-add an item that was decremented to removal this
+      session instead of silently skipping it as "already there."
+    - **Real visual change to the picker's rows**, reversing this
+      ticket's original "no visual changes" non-goal — no design
+      artifact exists for a decrement/remove state in this modal, so
+      the fallback is the same "reasonable default from existing
+      precedent, developer eyeballs and corrects" treatment as
+      PACKFE-003/004's own undesigned-state gaps: an already-added row's
+      trailing control changes from the old tap-to-increment
+      `×{quantity}` pill to a `QuantityStepper` (`min={0}` so the `−`
+      is never disabled, unlike the main page's floor-at-1 version) —
+      no leading control added at all, per the correction above.
+    - [x] `useItemsDraft.decrement` implemented + unit tested (mirror of
+          increment above the floor; removes at the floor for both
+          session-local and pre-existing items; delta no-op filtering
+          including the decrement-then-re-add-to-original-quantity case;
+          `bulkAdd` re-adding an item decremented to removal)
+    - [x] `AddItemsPickerModal` gains `onDecrement`; already-added rows
+          render a `QuantityStepper` (`min={0}`) in place of the old
+          pill, unchanged `Add` button otherwise, no leading control
+    - [x] `TemplateAddItemsModal` wires `onDecrement` to the draft
   - **Non-goals**:
     - No changes to the main template detail page's tweak/remove flow —
-      stays one request per action
+      stays one request per action, its own `QuantityStepper` stays
+      floored at 1 with a separate `DeleteIconButton` — unchanged
     - No Trips-screen work of any kind. Trips has its own, larger set of
       deviations from PACKFE-005's already-decided architecture (see
       flag below) — explicitly out of scope here, to be grilled
       separately once this ticket's patterns are settled and shipped
-    - No visual/design changes to the picker modal itself — same layout,
-      same components, only the request-timing behavior changes
-    - No change to `AddItemsPickerModal`'s `onAdd`/`onIncrement`/
-      `onCreateAndAdd` prop signatures — only `onBulkAdd`'s
-      (categoryId → itemIds) and the new `onDone`
+    - ~~No visual/design changes to the picker modal itself~~ — reversed
+      by the same-day amendment above; the row's trailing control for
+      already-added items changed (`QuantityStepper` replacing the
+      `×{quantity}` pill; no leading control)
+    - No change to `AddItemsPickerModal`'s `onAdd`/`onCreateAndAdd` prop
+      signatures — `onIncrement` is unchanged, `onBulkAdd`'s
+      (categoryId → itemIds), `onDone`, and the amendment's `onDecrement`
+      are the only additions/changes
   - **Expected test files**:
     - `components/detail/useItemsDraft.test.ts` (new) — covers add,
       increment (including the 999 clamp), bulkAdd's skip-already-present

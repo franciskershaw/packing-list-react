@@ -33,6 +33,7 @@ export function TemplateAddItemsModal({
       entries={draft.entries}
       onAdd={draft.add}
       onIncrement={draft.increment}
+      onDecrement={draft.decrement}
       onBulkAdd={draft.bulkAdd}
       onCreateAndAdd={({ name, categoryId }) =>
         createItem.mutate(

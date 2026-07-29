@@ -55,6 +55,7 @@ function renderModal(
   const handlers = {
     onAdd: vi.fn(),
     onIncrement: vi.fn(),
+    onDecrement: vi.fn(),
     onBulkAdd: vi.fn(),
     onCreateAndAdd: vi.fn(),
     onClose: vi.fn(),
@@ -84,14 +85,50 @@ describe("AddItemsPickerModal", () => {
     expect(handlers.onAdd).toHaveBeenCalledWith("item-socks");
   });
 
-  it("clicking an already-added item's quantity pill calls onIncrement, not onAdd", async () => {
+  it("an already-added item shows its quantity, a stepper, and a remove control instead of Add", async () => {
+    mockFetch();
+    renderModal([{ itemId: "item-socks", quantity: 4 }]);
+
+    expect(await screen.findByText("4")).toBeInTheDocument();
+    // Only the still-unadded Toothbrush keeps an Add button — Socks does not.
+    expect(screen.getAllByRole("button", { name: "Add" })).toHaveLength(1);
+  });
+
+  it("clicking the stepper's + calls onIncrement, not onAdd", async () => {
     mockFetch();
     const handlers = renderModal([{ itemId: "item-socks", quantity: 4 }]);
 
-    fireEvent.click(await screen.findByRole("button", { name: "×4" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Increase quantity" }),
+    );
 
     expect(handlers.onIncrement).toHaveBeenCalledWith("item-socks");
     expect(handlers.onAdd).not.toHaveBeenCalled();
+  });
+
+  it("clicking the stepper's − calls onDecrement", async () => {
+    mockFetch();
+    const handlers = renderModal([{ itemId: "item-socks", quantity: 4 }]);
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Decrease quantity" }),
+    );
+
+    expect(handlers.onDecrement).toHaveBeenCalledWith("item-socks");
+  });
+
+  it("the stepper's − is never disabled, even at quantity 1 — decrementing further is how you remove it", async () => {
+    mockFetch();
+    const handlers = renderModal([{ itemId: "item-socks", quantity: 1 }]);
+
+    const decreaseButton = await screen.findByRole("button", {
+      name: "Decrease quantity",
+    });
+    expect(decreaseButton).not.toBeDisabled();
+
+    fireEvent.click(decreaseButton);
+
+    expect(handlers.onDecrement).toHaveBeenCalledWith("item-socks");
   });
 
   it("clicking a bulk chip calls onBulkAdd with that category's remaining item ids", async () => {

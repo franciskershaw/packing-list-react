@@ -8,11 +8,13 @@ import { Modal } from "../ui/Modal";
 import { TextField } from "../ui/TextField";
 import { CollectionItemRow } from "./CollectionItemRow";
 import { prepareAddItemsPickerData } from "./prepareAddItemsPickerData";
+import { QuantityStepper } from "./QuantityStepper";
 
 interface AddItemsPickerModalProps {
   entries: { itemId: string; quantity: number }[];
   onAdd: (itemId: string) => void;
   onIncrement: (itemId: string) => void;
+  onDecrement: (itemId: string) => void;
   onBulkAdd: (itemIds: string[]) => void;
   onCreateAndAdd: (input: { name: string; categoryId: string }) => void;
   onClose: () => void;
@@ -24,6 +26,7 @@ export function AddItemsPickerModal({
   entries,
   onAdd,
   onIncrement,
+  onDecrement,
   onBulkAdd,
   onCreateAndAdd,
   onClose,
@@ -145,12 +148,15 @@ export function AddItemsPickerModal({
                       Add
                     </Button>
                   ) : (
-                    <Button
-                      variant="success"
-                      onClick={() => onIncrement(item.id)}
-                    >
-                      ×{quantity}
-                    </Button>
+                    <QuantityStepper
+                      value={quantity}
+                      min={0}
+                      onChange={(next) =>
+                        next > quantity
+                          ? onIncrement(item.id)
+                          : onDecrement(item.id)
+                      }
+                    />
                   )
                 }
               />
