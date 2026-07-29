@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { useCategories } from "../../api/categories";
 import { useItems } from "../../api/items";
@@ -7,7 +8,6 @@ import { CategoryGroupCard } from "../../components/detail/CategoryGroupCard";
 import { EmptyStatePanel } from "../../components/detail/EmptyStatePanel";
 import { Button, InteractiveButton } from "../../components/ui/Button";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
-import { useToast } from "../../components/ui/Toast";
 import { groupTemplateItems } from "./groupTemplateItems";
 import { TemplateItemRow } from "./TemplateItemRow";
 
@@ -24,7 +24,7 @@ export function TemplateDetailBody({
 }: TemplateDetailBodyProps) {
   const categories = useCategories();
   const items = useItems();
-  const { toast } = useToast();
+  const navigate = useNavigate();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const isLoading = categories.isLoading || items.isLoading;
@@ -73,7 +73,7 @@ export function TemplateDetailBody({
         <Button
           variant="secondary"
           className="lg:w-auto lg:rounded-full lg:px-5 lg:py-2 lg:text-sm"
-          onClick={() => toast("Trip creation is coming soon", "success")}
+          onClick={() => navigate(`/trips?new=${template.id}`)}
         >
           Use for a new trip
         </Button>

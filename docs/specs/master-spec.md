@@ -2622,38 +2622,59 @@ c.items)` flattens the pre-grouped wire shape into
           `name ×quantity`, no `CategoryGroupCard`/checkbox/stepper) so
           adds are actually visually confirmable. Both to be replaced
           wholesale by Piece 6's real `TripDetailHeader`/`TripDetailBody`.
-    - [ ] Manual verification (developer): add several items with varying
+    - [x] Manual verification (developer): add several items with varying
           quantities via search, via "+ All [Category]", and via "create
           & add," hit Done, confirm exactly one network request fires and
-          the bare item list reflects everything added.
-  - [ ] **Piece 5 — New-trip modal + wiring the Templates stub.**
-        Screenshot-grounded: mobile + desktop New-trip modal screenshots
-        (reviewed 2026-07-27, re-confirmed this session). Pulled forward
-        from its original last-piece position so real, nameable/dated
-        trips (optionally seeded from a template) exist for the rest of
-        this ticket's manual testing, instead of the Piece-3 placeholder's
-        hardcoded "Untitled trip."
-    - [ ] `NewTripModal` (`Modal desktopWidth="lg:w-[460px]"`, reused
-          as-is): Name (`TextField`, placeholder "e.g. Cornwall camping"),
-          When (`TextField type="date"`), Start-from — radio-semantics
-          stacked rows ("Start from scratch" + every template with
-          `` `${itemCount} items` `` right-aligned, always exactly one
-          selection, default "Start from scratch" or the incoming
-          preselected template). Submit disabled on blank name (no
-          suffixing needed — lists have no duplicate-name constraint,
-          confirmed server-side). Full-width accent "Create trip".
-          Replaces Piece 3's throwaway inline `Modal` + "Create untitled
-          trip" button in `TripsScreen.tsx` wholesale.
-    - [ ] On success: close, invalidate the list, navigate to
+          the bare item list reflects everything added. Confirmed
+          2026-07-29.
+  - [x] **Piece 5 — New-trip modal + wiring the Templates stub** —
+        implemented 2026-07-29, manual verification below still
+        outstanding. Screenshot-grounded: mobile + desktop New-trip modal
+        screenshots (reviewed 2026-07-27, re-confirmed this session).
+        Pulled forward from its original last-piece position so real,
+        nameable/dated trips (optionally seeded from a template) exist for
+        the rest of this ticket's manual testing, instead of the
+        Piece-3 placeholder's hardcoded "Untitled trip." No shared
+        "selectable stacked row" primitive extracted for the Start-from
+        list — plain `<button>`s with inline Tailwind, single call site,
+        matching the row-shape reuse already established (`border-accent
+bg-bg` selected / `border-border bg-bg` unselected, same convention
+        as the rail's selected-row treatment) rather than a pixel hunt
+        against the screenshot's subtle tint.
+    - [x] `NewTripModal` (`features/trips/components/`, `Modal
+    desktopWidth="lg:w-[460px]"`, reused as-is): Name (`TextField`,
+          placeholder "e.g. Cornwall camping"), When (`TextField
+    type="date"`), Start-from — radio-semantics stacked rows ("Start
+          from scratch" + every template with `` `${itemCount} items` ``
+          right-aligned, always exactly one selection, default "Start from
+          scratch" or the incoming preselected template). Submit disabled
+          on blank name (no suffixing needed — lists have no
+          duplicate-name constraint, confirmed server-side). Full-width
+          accent "Create trip". Replaced Piece 3's throwaway inline
+          `Modal` + "Create untitled trip" button in `TripsScreen.tsx`
+          wholesale.
+    - [x] On success: close, invalidate the list, navigate to
           `/trips/:newId` (mobile pushes detail; desktop lands with the
-          new row selected), toast per Piece 1.
-    - [ ] Wire `TemplateDetailBody`'s "Use for a new trip" (currently
+          new row selected — one route-driven behavior covers both, no
+          breakpoint-specific branching needed), toast per Piece 1.
+    - [x] Wired `TemplateDetailBody`'s "Use for a new trip" (was
           `toast("Trip creation is coming soon")`) to navigate to
-          `/trips?new=<templateId>`; `useTripsScreen` opens the modal with
-          that template preselected on seeing the param (see Architecture
-          section's cross-screen-modal decision above). Small addition
-          once the modal exists, pulled forward alongside it rather than
-          deferred to later polish.
+          `/trips?new=<templateId>`; `useTripsScreen` reads the param,
+          opens the modal with that template preselected via new
+          `preselectedTemplateId` state, then clears the param
+          (`setSearchParams(..., { replace: true })`) so it doesn't
+          reopen on refresh/back-nav — `closeNewTrip` also resets
+          `preselectedTemplateId` so a later plain "+ New trip" open
+          doesn't inherit a stale preselection. Two new
+          `useTripsScreen.test.tsx` cases cover this (open+preselect+
+          param-clear; close clears the preselection) — real new
+          conditional logic, not thin wiring, per this project's testing
+          policy.
+    - [ ] Manual verification (developer): create a trip from scratch
+          with a name/date and one seeded from a template, confirm both
+          land on `/trips/:newId` selected; confirm "Use for a new trip"
+          on a template's detail page opens the New-trip modal with that
+          template pre-selected.
   - [ ] **Piece 6 — Detail rows/header rebuild.** Screenshot-grounded:
         mobile detail-view-mode + packing-in-progress + detail-edit-mode
         screenshots, desktop full-shell view-mode + edit-mode screenshots

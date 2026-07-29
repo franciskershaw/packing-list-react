@@ -82,7 +82,12 @@ let latest: UseTripsScreenResult | undefined;
 function Probe() {
   latest = useTripsScreen();
   const location = useLocation();
-  return <div data-testid="pathname">{location.pathname}</div>;
+  return (
+    <>
+      <div data-testid="pathname">{location.pathname}</div>
+      <div data-testid="search">{location.search}</div>
+    </>
+  );
 }
 
 function renderAt(initialPath: string) {
@@ -244,5 +249,31 @@ describe("useTripsScreen", () => {
     );
     expect(latest?.isEditMode).toBe(false);
     expect(latest?.collapsedCategoryIds.size).toBe(0);
+  });
+
+  it("opens the new-trip modal preselecting the template from ?new=, then clears the param", async () => {
+    mockFetch(baseHandlers);
+
+    renderAt("/trips?new=template-1");
+
+    await waitFor(() => expect(latest?.isNewTripOpen).toBe(true));
+    expect(latest?.preselectedTemplateId).toBe("template-1");
+    await waitFor(() =>
+      expect(domScreen.getByTestId("search")).toHaveTextContent(""),
+    );
+  });
+
+  it("closeNewTrip clears the preselected template so a later plain open doesn't inherit it", async () => {
+    mockFetch(baseHandlers);
+
+    renderAt("/trips?new=template-1");
+    await waitFor(() =>
+      expect(latest?.preselectedTemplateId).toBe("template-1"),
+    );
+
+    act(() => latest?.closeNewTrip());
+
+    expect(latest?.isNewTripOpen).toBe(false);
+    expect(latest?.preselectedTemplateId).toBeNull();
   });
 });

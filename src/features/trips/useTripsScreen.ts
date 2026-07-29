@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import {
   useArchiveTrip,
@@ -21,6 +21,7 @@ export interface UseTripsScreenResult {
   archiveTrip: (id: string) => void;
   restoreTrip: (id: string) => void;
   isNewTripOpen: boolean;
+  preselectedTemplateId: string | null;
   openNewTrip: () => void;
   closeNewTrip: () => void;
   isAddItemsOpen: boolean;
@@ -37,6 +38,7 @@ export interface UseTripsScreenResult {
 export function useTripsScreen(): UseTripsScreenResult {
   const { tripId } = useParams<{ tripId?: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const trips = useTrips(false);
   const archivedTrips = useTrips(true);
@@ -45,6 +47,9 @@ export function useTripsScreen(): UseTripsScreenResult {
   const restoreTripMutation = useRestoreTrip();
 
   const [isNewTripOpen, setIsNewTripOpen] = useState(false);
+  const [preselectedTemplateId, setPreselectedTemplateId] = useState<
+    string | null
+  >(null);
   const [isAddItemsOpen, setIsAddItemsOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -59,6 +64,25 @@ export function useTripsScreen(): UseTripsScreenResult {
     setIsEditMode(false);
     setCollapsedCategoryIds(new Set());
   }, [tripId]);
+
+  // Cross-screen open, per Templates' "Use for a new trip":
+  // /trips?new=<templateId> opens the modal preselecting that template,
+  // then the param is dropped so it doesn't reopen on refresh/back-nav.
+  const newFromTemplateId = searchParams.get("new");
+  useEffect(() => {
+    if (newFromTemplateId) {
+      setPreselectedTemplateId(newFromTemplateId);
+      setIsNewTripOpen(true);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete("new");
+          return next;
+        },
+        { replace: true },
+      );
+    }
+  }, [newFromTemplateId, setSearchParams]);
 
   return {
     trips: trips.data ?? [],
@@ -76,8 +100,12 @@ export function useTripsScreen(): UseTripsScreenResult {
       ),
     restoreTrip: (id) => restoreTripMutation.mutate({ id }),
     isNewTripOpen,
+    preselectedTemplateId,
     openNewTrip: () => setIsNewTripOpen(true),
-    closeNewTrip: () => setIsNewTripOpen(false),
+    closeNewTrip: () => {
+      setIsNewTripOpen(false);
+      setPreselectedTemplateId(null);
+    },
     isAddItemsOpen,
     openAddItems: () => setIsAddItemsOpen(true),
     closeAddItems: () => setIsAddItemsOpen(false),
