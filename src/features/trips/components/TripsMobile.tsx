@@ -1,27 +1,35 @@
 import { BackHeader } from "../../../components/detail/BackHeader";
+import { EmptyStatePanel } from "../../../components/detail/EmptyStatePanel";
 import { TripDetailHeader } from "../../../components/detail/TripDetailHeader";
 import { Button } from "../../../components/ui/Button";
+import { useAuth } from "../../auth/AuthContext";
 import type { UseTripsScreenResult } from "../useTripsScreen";
 import { ArchiveButton } from "./ArchiveButton";
+import { ArchivedTripRow } from "./ArchivedTripRow";
 import { TripDetailBody } from "./TripDetailBody";
+import { TripListCard } from "./TripListCard";
 
-// Detail view rebuilt for Piece 6. The no-selection list body below is
-// still Piece 3's placeholder, unchanged — Piece 7's job.
 export function TripsMobile({
   trips,
+  archivedTrips,
   isLoading,
   selectedTripId,
   selectedTrip,
   selectTrip,
   goToList,
   archiveTrip,
+  restoreTrip,
   openNewTrip,
   openAddItems,
+  showArchived,
+  toggleArchived,
   isEditMode,
   toggleEditMode,
   collapsedCategoryIds,
   toggleCategoryCollapsed,
 }: UseTripsScreenResult) {
+  const { user } = useAuth();
+
   if (isLoading) {
     return null;
   }
@@ -59,15 +67,63 @@ export function TripsMobile({
   }
 
   return (
-    <div className="flex flex-col gap-4 p-6">
-      <button onClick={openNewTrip}>+ New trip</button>
-      <ul>
-        {trips.map((trip) => (
-          <li key={trip.id}>
-            <button onClick={() => selectTrip(trip.id)}>{trip.name}</button>
-          </li>
-        ))}
-      </ul>
+    <div className="flex flex-col gap-6 p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-3xl font-bold text-heading">
+            {user?.name ? `Where to next, ${user.name}?` : "Your trips"}
+          </h1>
+          <p className="mt-0.5 text-sm text-secondary">
+            {trips.length === 0
+              ? "A blank slate."
+              : `${trips.length} trip${trips.length === 1 ? "" : "s"} in the works.`}
+          </p>
+        </div>
+        <Button variant="accent" className="shrink-0" onClick={openNewTrip}>
+          + New trip
+        </Button>
+      </div>
+
+      {trips.length === 0 ? (
+        <EmptyStatePanel
+          title="Nowhere to be?"
+          message="Start a list anyway — future you says thanks."
+          actionLabel="+ New trip"
+          onAction={openNewTrip}
+        />
+      ) : (
+        <div className="flex flex-col gap-3">
+          {trips.map((trip) => (
+            <TripListCard
+              key={trip.id}
+              trip={trip}
+              onClick={() => selectTrip(trip.id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {archivedTrips.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={toggleArchived}
+            className="cursor-pointer self-start text-sm font-bold text-secondary"
+          >
+            {showArchived
+              ? `Hide archived (${archivedTrips.length})`
+              : `Show archived (${archivedTrips.length})`}
+          </button>
+          {showArchived &&
+            archivedTrips.map((trip) => (
+              <ArchivedTripRow
+                key={trip.id}
+                trip={trip}
+                onRestore={() => restoreTrip(trip.id)}
+              />
+            ))}
+        </div>
+      )}
     </div>
   );
 }

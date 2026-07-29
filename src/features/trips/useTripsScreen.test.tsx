@@ -41,6 +41,8 @@ const trips: PackingList[] = [
     eventDate: "2026-08-02",
     templateId: null,
     items: [],
+    itemCount: 13,
+    packedCount: 4,
   },
   {
     id: "trip-2",
@@ -48,6 +50,8 @@ const trips: PackingList[] = [
     eventDate: null,
     templateId: null,
     items: [],
+    itemCount: 0,
+    packedCount: 0,
   },
 ];
 

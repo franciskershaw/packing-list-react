@@ -2728,7 +2728,7 @@ confirm={false}`) + a live `QuantityStepper`
           Architecture section's own dated entry explicitly settled on
           plain `success` + `default size="compact"` instead (accepted as
           "close enough" over adding a new variant). Built `new
-    TripProgressCard` (`features/trips/components/`) against that
+TripProgressCard` (`features/trips/components/`) against that
           recorded decision, not the tempting-looking unused code.
     - [x] `TripDetailHeader` (`components/detail/`, mirrors
           `TemplateDetailHeader`'s file placement — entity-specific but
@@ -2761,45 +2761,66 @@ confirm={false}`) + a live `QuantityStepper`
           inline; confirm "+ Add items" and the empty-trip CTA both open
           the picker in both modes; check the desktop no-selection pane
           and mobile back/archive/Edit-pill row.
-  - [ ] **Piece 7 — List/rail assembly + lifecycle** (absorbs PACKFE-006).
-        Screenshot-grounded: mobile list + archived-section screenshots,
-        desktop rail screenshots. **Raise/land the `packing-list-go`
-        `ItemCount`/`PackedCount` ticket at the start of this piece** (see
-        Architecture section's Cross-repo gap note) — it blocks the count
-        display here, nothing earlier.
-    - [ ] Mobile list: compact ring-row per trip (confirmed by screenshot,
-          not the handoff's hedged "bold card" alternative), "+ New trip"
-          accent pill in the header. Desktop rail: `RailRow` + `leading`
-          ring, full-width accent block "+ New trip" under the header,
-          selected = `border-accent bg-bg` (unchanged from Templates'
-          rail).
-    - [ ] Client-side sort: date ascending, undated last (see Architecture
-          section's ordering decision above).
-    - [ ] Archived section: bare-text toggle (`"Show archived
-(1)"`/`"Hide archived (1)"`, hidden when none), expanded rows
-          non-tappable except a `Button variant="success"` "Restore" pill.
-    - [ ] Zero-trips state: `EmptyStatePanel`, mobile gets the same CTA as
-          desktop (handoff's recommendation, for consistency with
-          Templates' zero-state and because mobile's dashed panel is
-          otherwise the only way in if the header pill is missed).
-    - [ ] Archive action (detail header's archive circle): no confirm
-          (reversible) → success toast → navigate to `/trips` (mobile's
-          "back to list" / desktop's no-selection state at once, matching
-          template delete's precedent).
-    - [ ] Loading treatment: follow the existing established precedent
-          (render chrome immediately, withhold list/detail until queries
-          resolve, keep "loading" distinct from "nothing selected" on
-          desktop) — still no designed skeleton state (parked since
-          Library), this screen just has one more query in play than
-          Templates so the flash window is wider; if that looks bad in
-          practice, that's the trigger to finally design one.
-    - [ ] Greeting header: `` `Where to next, ${user.name}?` `` /
-          `"Your trips"` fallback if `user.name` is missing, subtitle
-          pluralizing trip count — confirmed as real, shipped copy (not
-          placeholder-only) by the screenshots.
-    - [ ] Removes every remaining placeholder from Piece 3 (the rail/list
-          markup — the detail body itself was already replaced in Piece
-          6).
+  - [x] **Piece 7 — List/rail assembly + lifecycle** (absorbs PACKFE-006)
+        — implemented 2026-07-29, manual verification below still
+        outstanding. Screenshot-grounded: mobile list + archived-section
+        screenshots, desktop rail screenshots. **Raised/landed the
+        `packing-list-go` `ItemCount`/`PackedCount` gap as its own ticket
+        first** (PACK-036, done — see that repo's
+        `docs/handoffs/PACK-036.md`), before writing any frontend code
+        here, per this piece's own stated blocker.
+    - [x] `api/trips.ts`'s `PackingList` gains `itemCount`/`packedCount`
+          (list-mode-only, matching PACK-036's response shape).
+    - [x] New `TripListCard` (`features/trips/components/`, mirrors
+          `TemplateListCard`'s mobile-card-button shape — Templates
+          already splits mobile-card vs. desktop-rail into two
+          components, not one shared shape, so this follows that same
+          division rather than reusing `RailRow` on mobile too):
+          `ProgressRing` leading + name/meta + trailing `ChevronRight`
+          (not in `TemplateListCard`, since mobile trip rows navigate
+          into a fresh screen rather than just re-selecting in place).
+          Desktop rail reuses `RailRow` + `leading` `ProgressRing`,
+          `selected = border-accent bg-bg` (unchanged from Templates').
+    - [x] New `ArchivedTripRow` (`features/trips/components/`): name/meta,
+          non-tappable, trailing `Button variant="success"` "Restore"
+          pill — the row itself carries no `onClick`, unlike
+          `TripListCard`.
+    - [x] New `sortTripsByDate` (`features/trips/`, + unit test — real
+          branching worth covering per this project's testing policy:
+          ascending by date, undated last, non-mutating) applied to the
+          **active** list only inside `useTripsScreen`; archived trips
+          keep the backend's own `archived_at DESC` order as-is (most
+          recently archived first makes more sense there than a
+          date-in-the-future re-sort).
+    - [x] Archived section: bare-text toggle (`"Show archived
+(1)"`/`"Hide archived (1)"`, hidden when none — both
+          `TripsMobile`/`TripsDesktop`), expanded rows render
+          `ArchivedTripRow`.
+    - [x] Zero-trips state: `EmptyStatePanel` ("Nowhere to be?" / "Start a
+          list anyway — future you says thanks."), same CTA on both
+          breakpoints, header subtitle also switches to "A blank slate."
+          alongside it (confirmed by the mobile zero-state screenshot —
+          both texts render together, not one or the other).
+    - [x] Archive action — already wired in Piece 6 (`useTripsScreen`'s
+          `archiveTrip` navigates to `/trips` on success via
+          `useArchiveTrip`'s existing toast + invalidate); nothing new
+          needed here.
+    - [x] Loading treatment: unchanged existing precedent, already
+          satisfied by Piece 6's `isLoading`/`isSelectedLoading` handling
+          — no new loading state introduced by the list/rail work.
+    - [x] Greeting header: `` `Where to next, ${user.name}?` `` (via
+          `useAuth()`) / `"Your trips"` fallback, subtitle pluralizing
+          trip count (`"1 trip in the works."` / `"N trips in the
+    works."`), both `TripsMobile`/`TripsDesktop`.
+    - [x] Removed every remaining Piece 3 placeholder — the `<ul>`/plain
+          `<button>` rail/list markup is gone from both breakpoints.
+    - [ ] Manual verification (developer): confirm mobile/desktop trip
+          rows show real rings and counts from PACK-036; confirm sort
+          order (create a dated + an undated trip, confirm undated sorts
+          last); toggle archived and confirm Restore moves a trip back to
+          the active list; confirm the zero-trips empty state and CTA on
+          both breakpoints; confirm the greeting header/subtitle render
+          correctly signed in.
   - **Explicit non-goals, decided during this grill-me**: no delete-trip
     affordance anywhere (archive is the only exit, matching the backend —
     `DELETE /lists/:id` **is** archive, there's no separate hard-delete
@@ -2815,8 +2836,8 @@ confirm={false}`) + a live `QuantityStepper`
   (renumbered 2026-07-29 — see that ticket's header note and the
   Architecture section's merge decision) rather than built as a
   separately sequenced ticket — closes the same day PACKFE-005 does.
-  - [ ] Archive a trip; restore it later — built in PACKFE-005 Piece 7
-  - [ ] Archived trips listed separately from active ones — built in
+  - [x] Archive a trip; restore it later — built in PACKFE-005 Piece 7
+  - [x] Archived trips listed separately from active ones — built in
         PACKFE-005 Piece 7
 
 ### Epic 7: Profile

@@ -8,6 +8,7 @@ import {
   useTrips,
 } from "../../api/trips";
 import type { PackingList, PackingListDetail } from "../../api/trips";
+import { sortTripsByDate } from "./sortTripsByDate";
 
 export interface UseTripsScreenResult {
   trips: PackingList[];
@@ -85,7 +86,7 @@ export function useTripsScreen(): UseTripsScreenResult {
   }, [newFromTemplateId, setSearchParams]);
 
   return {
-    trips: trips.data ?? [],
+    trips: sortTripsByDate(trips.data ?? []),
     archivedTrips: archivedTrips.data ?? [],
     isLoading: trips.isLoading,
     selectedTripId: tripId,

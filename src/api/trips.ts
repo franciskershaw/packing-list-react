@@ -22,6 +22,10 @@ export interface PackingList {
   eventDate: string | null;
   templateId: string | null;
   items: PackingListItem[];
+  // List-mode-only counts (PACK-036) — Items itself always stays empty in
+  // list mode, so these are the only way to know a trip's progress here.
+  itemCount: number;
+  packedCount: number;
 }
 
 export interface PackingListDetailItem {
