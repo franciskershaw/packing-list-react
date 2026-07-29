@@ -359,8 +359,11 @@ params]`) since the filtered variant's consumer is already confirmed
   existing `×` buttons too. Same "promote a one-off fix to a blanket
   convention" reasoning as `CollectionItemRow`'s `py-3.5` bump (PACKFE-003
   Piece 3).
-- **Trip detail's Edit/Done toggle controls title editability, not
-  `InlineEditableHeading`** (decided 2026-07-27 during PACKFE-005's
+- **Superseded 2026-07-29 (this session)** — see the entry below,
+  "Edit/Done toggle narrows to row shape only." Kept here, struck through
+  in spirit rather than deleted, as the record of what changed and why:
+  ~~Trip detail's Edit/Done toggle controls title editability, not
+  `InlineEditableHeading`~~ (decided 2026-07-27 during PACKFE-005's
   grill-me, reversed once mid-interview): the design handoff's own §4.1
   recommended reusing Template detail's always-editable inline-heading
   pattern for consistency, and the fresh screenshots show the literal
@@ -374,6 +377,29 @@ params]`) since the filtered variant's consumer is already confirmed
   trip"), covering both the title and the rows — `TripDetailHeader` owns
   `isEditMode` (sourced from `useTripsScreen`) directly; no
   `useInlineEditableField` reuse on this screen.
+- **Edit/Done toggle narrows to row shape only; title and "+ Add items"
+  both become always-on, like Templates** (decided 2026-07-29, follow-up
+  session to PACKFE-005's original grill-me — see the "Flag for a later
+  session" note this replaces, further down this section). Real back-
+  and-forth during this session's interview, worth recording plainly: the
+  developer first asked to drop `isEditMode` entirely (title always-
+  editable, add-items always visible, checkbox+stepper co-existing on
+  every row, no toggle at all); then reconsidered — a toggle is still
+  useful, but only to swap a row's leading control between a `PackedCheckbox`
+  (packing mode) and a delete cross (removal mode); then reconsidered once
+  more to land here: **the toggle keeps controlling the row's full
+  leading+trailing pair together** — `PackedCheckbox` + read-only `×N`
+  badge (packing mode) vs. delete cross + live `QuantityStepper` (removal/
+  edit mode) — which is actually the _same row-shape switch the original
+  2026-07-27 decision already had_. What actually changed, net of all the
+  back-and-forth: **title editability and "+ Add items" visibility both
+  come out from under the toggle** — both always-on regardless of mode,
+  matching Templates — where the original decision gated all three (title,
+  add-items, row shape) behind one flag. `useTripsScreen`'s already-built
+  `isEditMode`/`toggleEditMode` (Piece 3) turns out **not** to be dead
+  code after all — it survives, just with a narrower job and fewer
+  consumers (`TripItemRow` only; `TripDetailHeader`'s title and
+  add-items button stop reading it).
 - **Packed toggle uses an optimistic `onMutate`/`onError`/`onSettled`
   cache patch — the first real use of this pattern in the codebase**
   (decided 2026-07-27, PACKFE-005's grill-me): `useDebouncedQuantity`
@@ -445,8 +471,8 @@ params]`) since the filtered variant's consumer is already confirmed
   a total count and a packed count, so this needs the same treatment
   (`ItemCount` + `PackedCount`, both `COUNT` subqueries) plus a small
   `packing-list-go` ticket, raised when PACKFE-005's list/rail piece
-  (piece 6) actually needs it — every earlier piece can build against
-  detail-view data alone. Everything else needed for this ticket already
+  (piece 7, renumbered 2026-07-29) actually needs it — every earlier
+  piece can build against detail-view data alone. Everything else needed for this ticket already
   exists server-side and was verified by reading source during this
   grill-me, not assumed: `/lists` resource (not `/trips` — UI keeps
   "trip" vocabulary regardless), the per-item `PATCH
@@ -2289,22 +2315,19 @@ number` to match PACK-034's response shape — a stale `tsc`
       the backend side already has its own `.http` coverage from
       PACK-035)
 
-  **Flag for a later session, not resolved here**: PACKFE-005's own
-  grill-me (2026-07-27, Architecture section above) already decided Trips
-  gets an `isEditMode` toggle controlling title editability _and_
-  item-row remove/stepper mode _and_ the add-items button's visibility —
-  today's conversation proposes removing that toggle entirely for Trips
-  (always-editable title and always-visible add-items button, matching
-  Templates' curate-mode-always pattern) while keeping the progress
-  section and per-item "mark packed" affordance as Trips-only additions.
-  This is a real reversal of a decided architecture entry, not a small
-  deviation — worth calling out plainly rather than letting "slight
-  deviations" undersell it. The good news: Piece 5 (edit mode + add
-  items) hasn't been built yet, so nothing shipped needs unwinding — it's
-  still a paper decision. Grill this properly, as its own session, once
-  this ticket's `useItemsDraft`/`onDone` pattern has shipped and proven
-  itself, since Piece 5's plan already assumes `TripAddItemsModal` reuses
-  whatever this ticket lands on.
+  **Resolved 2026-07-29** (was flagged here as unresolved): see the
+  Architecture section's "Edit/Done toggle narrows to row shape only"
+  entry for the settled outcome — title and "+ Add items" are always-on;
+  the toggle survives but only swaps a row's leading+trailing pair
+  (checkbox+badge ↔ cross+stepper). See the full re-plan under Epic 5
+  below for the revised Piece 3–8 breakdown, which also reorders the
+  remaining work per a separate process request from the same session
+  (prioritize a real new-trip-creation flow and working add-items ahead
+  of detail/list polish, so there's real data to visually test against
+  sooner — the previous attempt at this ticket got tangled trying to
+  build add-items behavior before any real screen existed to test it
+  against, which is what led to discovering the PACK-035 gap in the
+  first place).
 
 ### Epic 5: Trips
 
@@ -2324,8 +2347,8 @@ number` to match PACK-034's response shape — a stale `tsc`
   was answered by reading current source during this grill-me rather than
   guessed — see the Cross-repo gap note in the Architecture section above
   for the full list; only one real gap surfaced (list-endpoint counts,
-  same shape as Templates' already-fixed gap), and it blocks only piece 6
-  below, nothing earlier.
+  same shape as Templates' already-fixed gap), and it blocks only piece 7
+  (renumbered 2026-07-29) below, nothing earlier.
   - [x] **Piece 1 — Data layer** — **Done** (2026-07-27). `src/api/trips.ts`, matching
         `templates.ts`'s shape at ~12 hooks. `PackingListDetail` mirrors
         the API's wire shape 1:1 (`categories: [{ id, name, items: [...] }]`,
@@ -2528,90 +2551,172 @@ size = 34 }` (two SVG circles, r=13, 3.5px stroke,
 aria-checked` — chosen over a nested interactive control since
           the row already owns click/
           keyboard semantics via `CollectionItemRow`'s new `onClick`.
-  - [ ] **Piece 3 — Route + breakpoint split.** `/trips/:tripId` route.
-        `useTripsScreen()` (flat return shape, mirroring
-        `useTemplatesScreen`: `trips, archivedTrips, isLoading,
-selectedTripId, selectedTrip, isSelectedLoading, selectTrip,
-goToList, archiveTrip, restoreTrip, isNewTripOpen/openNewTrip/
-closeNewTrip, isAddItemsOpen/openAddItems/closeAddItems,
-showArchived/toggleArchived, isEditMode/toggleEditMode`) + test
-        (`MemoryRouter` + `QueryClientProvider` harness, same precedent
-        as `useTemplatesScreen.test.tsx`). `isEditMode` and the
-        collapsed-group set both live here, both reset on trip switch
-        (key the detail block by trip id, as Templates already does).
-        `TripsMobile`/`TripsDesktop` (in the new `features/trips/
-components/` folder — see Architecture section's folder-split
-        note) with placeholder detail bodies wired to real create/archive
-        so both loops prove out end-to-end. `TripsScreen` stays a pure
-        breakpoint switch (`useMediaQuery(DESKTOP_QUERY)`) + the two
-        modals mounted once, gated on hook state — same shape as
-        `TemplatesScreen`.
-  - [ ] **Piece 4 — Detail, view mode.** Screenshot-grounded: mobile
-        detail-view-mode + packing-in-progress screenshots, desktop
-        full-shell view-mode screenshot (all reviewed 2026-07-27).
-    - [ ] `TripDetailHeader`: back circle · spacer · archive circle ·
-          Edit/Done pill (mobile); title block · archive circle + Edit
-          pill (desktop). View mode: static title + date line
-          (`formatTripDate`). No "TRIP" eyebrow anywhere. Edit mode also
-          renders a `variant="accent"` "+ Add items" button in this same
-          row (see Piece 5's placement decision below) — view mode has no
-          add-items entry point at all.
+  - [x] **Piece 3 — Route + breakpoint split** — **Done**, checkbox
+        corrected 2026-07-29 (was built 2026-07-28 but never ticked off —
+        the session moved straight into add-items territory afterward,
+        discovered the PACK-035 gap, and never came back to close this
+        piece out formally). `/trips/:tripId` route. `useTripsScreen()`
+        (flat return shape, mirroring `useTemplatesScreen`): `trips,
+archivedTrips, isLoading, selectedTripId, selectedTrip,
+isSelectedLoading, selectTrip, goToList, archiveTrip,
+restoreTrip, isNewTripOpen/openNewTrip/closeNewTrip,
+isAddItemsOpen/openAddItems/closeAddItems,
+showArchived/toggleArchived, isEditMode/toggleEditMode` + test
+        (`MemoryRouter` + `QueryClientProvider` harness, same precedent as
+        `useTemplatesScreen.test.tsx`). `isEditMode` and the
+        collapsed-group set both live here, both reset on trip switch (key
+        the detail block by trip id, as Templates already does).
+        `TripsMobile`/`TripsDesktop` (in `features/trips/components/` —
+        see Architecture section's folder-split note) with placeholder
+        detail bodies wired to real create/archive so both loops prove out
+        end-to-end. `TripsScreen` stays a pure breakpoint switch
+        (`useMediaQuery(DESKTOP_QUERY)`) + the two modals mounted once,
+        gated on hook state — same shape as `TemplatesScreen`.
+        **`isEditMode`/`toggleEditMode` are not dead code** despite the
+        2026-07-29 architecture change below — narrower job, but a real
+        one (see that entry).
+
+  **Resequenced 2026-07-29** (this session, replacing the original
+  Piece 4→7 order below): the previous attempt worked through pieces in
+  their original numeric order and got tangled trying to build
+  add-items behavior (a Piece 5 concern) before Piece 4's real detail
+  view even existed to test against — there was no real screen to look
+  at, which is part of how the PACK-035 gap went undiscovered until it
+  became a real problem. Explicit process request this session:
+  prioritize a working new-trip-creation flow and add-items ahead of
+  detail/list polish, so there's real, visually-checkable trip data to
+  build the rest against sooner. New order: add-items → new-trip modal
+  → detail rows/header rebuild → list/rail + lifecycle polish. Piece
+  numbers below reflect the new order, not the original one.
+
+  - [ ] **Piece 4 — Add items.** No new screenshot review needed (reuses
+        `detail/AddItemsPickerModal` exactly as built for Templates,
+        already screenshot-grounded there — see PACKFE-009). Testable
+        immediately against the existing Piece-3 placeholder detail body,
+        per this session's reordering.
+    - [ ] **Fix `api/trips.ts`'s dead `bulkAddTripItems`/
+          `useBulkAddTripItems`** (lines ~127-136, ~254-266) before
+          building anything else — confirmed zero call sites today (per
+          PACK-035's own audit), still targeting the deleted categoryId
+          `POST` endpoint. Replace with `bulkUpdateTripItems`/
+          `useBulkUpdateTripItems` against `PATCH /lists/:id/items/bulk`,
+          mirroring `bulkUpdateTemplateItems`/`useBulkUpdateTemplateItems`
+          (`api/templates.ts`) exactly — same delta contract, same
+          `{ items: [{ itemId, quantity }] }` shape. This is the one trap
+          explicitly being avoided this time: Trips never had a live
+          caller of the old endpoint (unlike Templates' "+ All
+          Camping" button), so there's no breaking-change risk — just
+          don't let a new caller get built against the wrong contract.
+    - [ ] `TripAddItemsModal` — thin adapter over
+          `detail/AddItemsPickerModal`, mirroring `TemplateAddItemsModal`
+          exactly (`useItemsDraft` + `onDone` flushing via
+          `useBulkUpdateTripItems`, closing only on success, no-op close
+          on an empty delta). One real difference: `Template.items` is
+          already flat, but a trip's items arrive pre-grouped
+          (`PackingListDetail.categories[].items[]`) — flatten via
+          `trip.categories.flatMap(c => c.items)` before handing entries
+          to `useItemsDraft`; the delta it produces back out is the same
+          flat `{ itemId, quantity }[]` shape either way.
+    - [ ] **Temporary, this piece only**: add a plain `+ Add items` button
+          to `TripsDesktop`/`TripsMobile`'s placeholder detail body
+          (opens `screen.isAddItemsOpen`, mirroring Piece 3's existing
+          throwaway-button style) and a bare, unstyled item list
+          (`trip.categories.map(c => <li>{c.name}: {c.items.map(...)
+
+</li>)`, no `CategoryGroupCard`/checkbox/stepper) so adds are actually
+          visually confirmable. Both replaced wholesale by Piece 6's real
+          `TripDetailHeader`/`TripDetailBody` — noted here so it isn't
+          mistaken for real UI work later.
+  - [ ] **Piece 5 — New-trip modal + wiring the Templates stub.**
+        Screenshot-grounded: mobile + desktop New-trip modal screenshots
+        (reviewed 2026-07-27, re-confirmed this session). Pulled forward
+        from its original last-piece position so real, nameable/dated
+        trips (optionally seeded from a template) exist for the rest of
+        this ticket's manual testing, instead of the Piece-3 placeholder's
+        hardcoded "Untitled trip."
+    - [ ] `NewTripModal` (`Modal desktopWidth="lg:w-[460px]"`, reused
+          as-is): Name (`TextField`, placeholder "e.g. Cornwall camping"),
+          When (`TextField type="date"`), Start-from — radio-semantics
+          stacked rows ("Start from scratch" + every template with
+          `` `${itemCount} items` `` right-aligned, always exactly one
+          selection, default "Start from scratch" or the incoming
+          preselected template). Submit disabled on blank name (no
+          suffixing needed — lists have no duplicate-name constraint,
+          confirmed server-side). Full-width accent "Create trip".
+          Replaces Piece 3's throwaway inline `Modal` + "Create untitled
+          trip" button in `TripsScreen.tsx` wholesale.
+    - [ ] On success: close, invalidate the list, navigate to
+          `/trips/:newId` (mobile pushes detail; desktop lands with the
+          new row selected), toast per Piece 1.
+    - [ ] Wire `TemplateDetailBody`'s "Use for a new trip" (currently
+          `toast("Trip creation is coming soon")`) to navigate to
+          `/trips?new=<templateId>`; `useTripsScreen` opens the modal with
+          that template preselected on seeing the param (see Architecture
+          section's cross-screen-modal decision above). Small addition
+          once the modal exists, pulled forward alongside it rather than
+          deferred to later polish.
+  - [ ] **Piece 6 — Detail rows/header rebuild.** Screenshot-grounded:
+        mobile detail-view-mode + packing-in-progress + detail-edit-mode
+        screenshots, desktop full-shell view-mode + edit-mode screenshots
+        (all reviewed 2026-07-27, re-grounded this session against the
+        edit-mode-scope change below). Built against real trips/items
+        from Pieces 4–5, replacing their bare placeholder body wholesale.
+    - [ ] **`isEditMode`'s scope, settled this session after real back-
+          and-forth** (see Architecture section's full entry): the toggle
+          controls a row's leading+trailing pair together — packing mode
+          is `PackedCheckbox` (click toggles packed, optimistic per
+          Piece 1) + read-only `×N` badge; edit/removal mode is a delete
+          cross (`DeleteIconButton confirm={false}`) + a live
+          `QuantityStepper` (`useDebouncedQuantity`, same per-row-debounce
+          precedent as `TemplateItemRow`). **Title and "+ Add items" are
+          both always-on regardless of mode** — title via
+          `InlineEditableHeading` (Templates' exact pattern, one `PATCH`
+          per change, no `isEditMode` gating), "+ Add items" a permanent
+          `variant="accent"` `Button` in `TripDetailHeader` next to the
+          Edit/Done pill (not conditionally rendered — this is the one
+          piece of the original design intentionally overridden, twice
+          now: first to move it into the header at all, decided
+          2026-07-27; now again to make it unconditional). The empty-trip
+          `EmptyStatePanel`'s own CTA still opens the picker directly,
+          unaffected.
+    - [ ] `TripDetailHeader`: back circle · spacer · archive circle · Edit/
+          Done pill · "+ Add items" (mobile); title block · archive circle
+          + Edit pill + "+ Add items" (desktop). No "TRIP" eyebrow
+          anywhere.
     - [ ] `TripDetailBody` (shared by both breakpoints, matching
-          Templates' precedent in structure, **not** in data shape —
-          maps `trip.categories` directly, no grouping helper call, see
-          Piece 2's note above): progress card ("n of m packed" + `%` +
-          `ProgressBar` + Pack-it-all/Reset-all), all-packed banner (only
-          `total > 0 && packed === total`, view mode only — `#E9EFE3` bg,
-          `accent-secondary` border, "All packed! Have a great trip."),
-          collapsible category groups (`"3/7"` counts), checklist rows
-          with optimistic ticking (`PackedCheckbox` + struck-through name + quantity badge shown only when `quantity > 1`).
+          Templates' precedent in structure, **not** in data shape — maps
+          `trip.categories` directly, no grouping helper call, see Piece
+          2's note above): progress card ("n of m packed" + `%` +
+          `ProgressBar` + Pack-it-all/Reset-all — visible regardless of
+          `isEditMode`, unaffected by the row-shape toggle), all-packed
+          banner (only `total > 0 && packed === total`, packing mode only
+          — `#E9EFE3` bg, `accent-secondary` border, "All packed! Have a
+          great trip."), collapsible category groups (`"3/7"` counts),
+          rows per the `isEditMode` shape above.
+    - [ ] Empty-trip dashed panel (`EmptyStatePanel`, reused as-is) when
+          the trip has no items, its CTA opening the add-items picker.
     - [ ] Desktop no-selection pane: centred "Pick a trip" + "Pick one on
           the left to start packing." — distinct from loading, matching
           Templates' existing handling.
-  - [ ] **Piece 5 — Detail, edit mode + add items.** Small piece — most
-        of it already exists. Screenshot-grounded: mobile detail
-        edit-mode + desktop edit-mode screenshots.
-    - [ ] Edit toggle swaps the title into a filled input (see
-          Architecture section's title-edit-mode decision above) and
-          every item row into `TripEditItemRow` (near-copy of
-          `TemplateItemRow`: leading `×` via `DeleteIconButton
-confirm={false}`, name, `QuantityStepper` +
-          `useDebouncedQuantity`). Checkboxes absent in edit mode;
-          steppers absent in view mode.
-    - [ ] Empty-trip dashed panel (`EmptyStatePanel`, reused as-is) when
-          the trip has no items, its CTA opening the add-items picker.
-    - [ ] `TripAddItemsModal` — thin adapter over the existing
-          target-agnostic `detail/AddItemsPickerModal`
-          (`entries/onAdd/onIncrement/onBulkAdd/onCreateAndAdd/onClose`),
-          mirroring `TemplateAddItemsModal` exactly, no changes inside
-          the picker itself.
-    - [ ] **"+ Add items" moves into `TripDetailHeader`, edit-mode only**
-          (decided 2026-07-27, follow-up to PACKFE-005's grill-me —
-          overrides the design's literal bottom-dashed-row default, see
-          Architecture section's entry below): same `variant="accent"`
-          `Button` placement as `TemplateDetailHeader`'s existing control,
-          but conditionally rendered on `isEditMode` rather than always
-          visible — view mode is read/tick only, adding or removing items
-          only makes sense once editing. The empty-trip
-          `EmptyStatePanel`'s own CTA still opens the picker directly
-          regardless of mode, same as before.
-  - [ ] **Piece 6 — List/rail assembly + lifecycle** (absorbs
-        PACKFE-006). Screenshot-grounded: mobile list + archived-section
-        screenshots, desktop rail screenshots. **Raise/land the
-        `packing-list-go` `ItemCount`/`PackedCount` ticket at the start of
-        this piece** (see Architecture section's Cross-repo gap note) —
-        it blocks the count display here, nothing earlier.
-    - [ ] Mobile list: compact ring-row per trip (confirmed by
-          screenshot, not the handoff's hedged "bold card" alternative),
-          "+ New trip" accent pill in the header. Desktop rail: `RailRow` + `leading` ring, full-width accent block "+ New trip" under
-          the header, selected = `border-accent bg-bg` (unchanged from
-          Templates' rail).
+    - [ ] Removes Piece 4's temporary bare item list and placeholder
+          "+ Add items" button.
+  - [ ] **Piece 7 — List/rail assembly + lifecycle** (absorbs PACKFE-006).
+        Screenshot-grounded: mobile list + archived-section screenshots,
+        desktop rail screenshots. **Raise/land the `packing-list-go`
+        `ItemCount`/`PackedCount` ticket at the start of this piece** (see
+        Architecture section's Cross-repo gap note) — it blocks the count
+        display here, nothing earlier.
+    - [ ] Mobile list: compact ring-row per trip (confirmed by screenshot,
+          not the handoff's hedged "bold card" alternative), "+ New trip"
+          accent pill in the header. Desktop rail: `RailRow` + `leading`
+          ring, full-width accent block "+ New trip" under the header,
+          selected = `border-accent bg-bg` (unchanged from Templates'
+          rail).
     - [ ] Client-side sort: date ascending, undated last (see Architecture
           section's ordering decision above).
-    - [ ] Archived section: bare-text toggle
-          (`"Show archived (1)"`/`"Hide archived (1)"`, hidden when
-          none), expanded rows non-tappable except a `Button
-variant="success"` "Restore" pill.
+    - [ ] Archived section: bare-text toggle (`"Show archived
+(1)"`/`"Hide archived (1)"`, hidden when none), expanded rows
+          non-tappable except a `Button variant="success"` "Restore" pill.
     - [ ] Zero-trips state: `EmptyStatePanel`, mobile gets the same CTA as
           desktop (handoff's recommendation, for consistency with
           Templates' zero-state and because mobile's dashed panel is
@@ -2631,28 +2736,9 @@ variant="success"` "Restore" pill.
           `"Your trips"` fallback if `user.name` is missing, subtitle
           pluralizing trip count — confirmed as real, shipped copy (not
           placeholder-only) by the screenshots.
-    - [ ] Removes every placeholder from piece 3.
-  - [ ] **Piece 7 — New-trip modal + wiring the Templates stub.** Last,
-        because it's the one piece that touches another screen — finishes
-        the last stub in the app. Screenshot-grounded: mobile + desktop
-        New-trip modal screenshots.
-    - [ ] `NewTripModal` (`Modal desktopWidth="lg:w-[460px]"`, reused
-          as-is): Name (`TextField`, placeholder "e.g. Cornwall
-          camping"), When (`TextField type="date"`), Start-from — radio-
-          semantics stacked rows ("Start from scratch" + every template
-          with `` `${itemCount} items` `` right-aligned, always exactly
-          one selection, default "Start from scratch" or the incoming
-          preselected template). Submit disabled on blank name (no
-          suffixing needed — lists have no duplicate-name constraint,
-          confirmed server-side). Full-width accent "Create trip".
-    - [ ] On success: close, invalidate the list, navigate to
-          `/trips/:newId` (mobile pushes detail; desktop lands with the
-          new row selected), toast per piece 1.
-    - [ ] Wire `TemplateDetailBody`'s "Use for a new trip" (currently
-          `toast("Trip creation is coming soon")`) to navigate to
-          `/trips?new=<templateId>`; `useTripsScreen` opens the modal
-          with that template preselected on seeing the param (see
-          Architecture section's cross-screen-modal decision above).
+    - [ ] Removes every remaining placeholder from Piece 3 (the rail/list
+          markup — the detail body itself was already replaced in Piece
+          6).
   - **Explicit non-goals, decided during this grill-me**: no delete-trip
     affordance anywhere (archive is the only exit, matching the backend —
     `DELETE /lists/:id` **is** archive, there's no separate hard-delete
@@ -2664,13 +2750,13 @@ variant="success"` "Restore" pill.
 
 ### Epic 6: Trip lifecycle
 
-- **PACKFE-006** — Archive & restore. Folded into PACKFE-005's Piece 6
-  (see that ticket's header note and the Architecture section's merge
-  decision) rather than built as a separately sequenced ticket — closes
-  the same day PACKFE-005 does.
-  - [ ] Archive a trip; restore it later — built in PACKFE-005 Piece 6
+- **PACKFE-006** — Archive & restore. Folded into PACKFE-005's Piece 7
+  (renumbered 2026-07-29 — see that ticket's header note and the
+  Architecture section's merge decision) rather than built as a
+  separately sequenced ticket — closes the same day PACKFE-005 does.
+  - [ ] Archive a trip; restore it later — built in PACKFE-005 Piece 7
   - [ ] Archived trips listed separately from active ones — built in
-        PACKFE-005 Piece 6
+        PACKFE-005 Piece 7
 
 ### Epic 7: Profile
 
