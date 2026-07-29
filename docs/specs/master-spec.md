@@ -2642,9 +2642,9 @@ bg-bg` selected / `border-border bg-bg` unselected, same convention
         as the rail's selected-row treatment) rather than a pixel hunt
         against the screenshot's subtle tint.
     - [x] `NewTripModal` (`features/trips/components/`, `Modal
-    desktopWidth="lg:w-[460px]"`, reused as-is): Name (`TextField`,
+desktopWidth="lg:w-[460px]"`, reused as-is): Name (`TextField`,
           placeholder "e.g. Cornwall camping"), When (`TextField
-    type="date"`), Start-from — radio-semantics stacked rows ("Start
+type="date"`), Start-from — radio-semantics stacked rows ("Start
           from scratch" + every template with `` `${itemCount} items` ``
           right-aligned, always exactly one selection, default "Start from
           scratch" or the incoming preselected template). Submit disabled
@@ -2675,50 +2675,92 @@ bg-bg` selected / `border-border bg-bg` unselected, same convention
           land on `/trips/:newId` selected; confirm "Use for a new trip"
           on a template's detail page opens the New-trip modal with that
           template pre-selected.
-  - [ ] **Piece 6 — Detail rows/header rebuild.** Screenshot-grounded:
+  - [x] **Piece 6 — Detail rows/header rebuild** — implemented 2026-07-29,
+        manual verification below still outstanding. Screenshot-grounded:
         mobile detail-view-mode + packing-in-progress + detail-edit-mode
         screenshots, desktop full-shell view-mode + edit-mode screenshots
         (all reviewed 2026-07-27, re-grounded this session against the
-        edit-mode-scope change below). Built against real trips/items
-        from Pieces 4–5, replacing their bare placeholder body wholesale.
-    - [ ] **`isEditMode`'s scope, settled this session after real back-
+        edit-mode-scope change below). Built against real trips/items from
+        Pieces 4–5, replacing their bare placeholder body wholesale.
+    - [x] **`isEditMode`'s scope, settled this session after real back-
           and-forth** (see Architecture section's full entry): the toggle
           controls a row's leading+trailing pair together — packing mode
-          is `PackedCheckbox` (click toggles packed, optimistic per
-          Piece 1) + read-only `×N` badge; edit/removal mode is a delete
-          cross (`DeleteIconButton confirm={false}`) + a live
-          `QuantityStepper` (`useDebouncedQuantity`, same per-row-debounce
-          precedent as `TemplateItemRow`). **Title and "+ Add items" are
-          both always-on regardless of mode** — title via
-          `InlineEditableHeading` (Templates' exact pattern, one `PATCH`
-          per change, no `isEditMode` gating), "+ Add items" a permanent
-          `variant="accent"` `Button` in `TripDetailHeader` next to the
-          Edit/Done pill (not conditionally rendered — this is the one
-          piece of the original design intentionally overridden, twice
-          now: first to move it into the header at all, decided
-          2026-07-27; now again to make it unconditional). The empty-trip
+          is `PackedCheckbox` (click toggles packed, optimistic per Piece 1) + read-only `×N` badge (only shown when `quantity > 1`);
+          edit/removal mode is a delete cross (`DeleteIconButton
+confirm={false}`) + a live `QuantityStepper`
+          (`useDebouncedQuantity`, same per-row-debounce precedent as
+          `TemplateItemRow`) — `TripItemRow`
+          (`features/trips/components/`) branches on `isEditMode` between
+          the two full row shapes rather than conditionally assembling one.
+          **Title and "+ Add items" are both always-on regardless of
+          mode** — title via `InlineEditableHeading` (Templates' exact
+          pattern, one `PATCH` per change, no `isEditMode` gating; date
+          line is static, matching the ticket's own non-goal that dates
+          aren't editable), "+ Add items" a permanent `variant="accent"`
+          `Button` owned by `TripDetailHeader` itself. The empty-trip
           `EmptyStatePanel`'s own CTA still opens the picker directly,
           unaffected.
-    - [ ] `TripDetailHeader`: back circle · spacer · archive circle · Edit/
-          Done pill · "+ Add items" (mobile); title block · archive circle + Edit pill + "+ Add items" (desktop). No "TRIP" eyebrow
-          anywhere.
-    - [ ] `TripDetailBody` (shared by both breakpoints, matching
+    - [x] **Mobile is two rows, not one — clarifying the original piece
+          text's literal "back circle · spacer · archive circle ·
+          Edit/Done pill · + Add items" description**: mirrors Templates'
+          actual established structure exactly (`BackHeader` as its own
+          row, a separate title+button row below), not five controls
+          crammed into a single row. `BackHeader`'s existing `trailing`
+          slot carries the archive circle + Edit/Done pill;
+          `TripDetailHeader` (title/date/"+ Add items") sits on the row
+          below it — same division `TemplatesMobile.tsx` already uses for
+          `BackHeader` + `TemplateDetailHeader`. Desktop has no
+          `BackHeader` (persistent rail instead, same as Templates), so
+          archive+Edit/Done pill pass into `TripDetailHeader`'s own new
+          `trailing?: ReactNode` slot instead, landing inline with the
+          title as the screenshots show.
+    - [x] New `ArchiveButton` (`features/trips/components/`, 36px neutral
+          circle + `lucide` `Archive`, matching `BackHeader`'s own
+          back-button circle styling) — genuine second consumer
+          (`TripsMobile`/`TripsDesktop` both need the identical control),
+          not a premature extraction. Edit/Done pill itself stays inline
+          (`Button variant="outline"`) in both call sites — trivial enough
+          not to warrant its own wrapper.
+    - [x] **Verified against the actual recorded decision, not just
+          present-but-unused code**: `Button.tsx` has an unused
+          `size="split"` variant pair (`success`/`default`) that looks
+          purpose-built for a `Pack it all`/`Reset all` pairing, but the
+          Architecture section's own dated entry explicitly settled on
+          plain `success` + `default size="compact"` instead (accepted as
+          "close enough" over adding a new variant). Built `new
+    TripProgressCard` (`features/trips/components/`) against that
+          recorded decision, not the tempting-looking unused code.
+    - [x] `TripDetailHeader` (`components/detail/`, mirrors
+          `TemplateDetailHeader`'s file placement — entity-specific but
+          part of the shared list+detail shape): title + static date line + always-on "+ Add items", `trailing?: ReactNode` slot for
+          archive/Edit-pill on desktop. No "TRIP" eyebrow anywhere.
+    - [x] `TripDetailBody` (`features/trips/components/`, matching
           Templates' precedent in structure, **not** in data shape — maps
           `trip.categories` directly, no grouping helper call, see Piece
-          2's note above): progress card ("n of m packed" + `%` +
+          2's note above): `TripProgressCard` ("n of m packed" + `%` +
           `ProgressBar` + Pack-it-all/Reset-all — visible regardless of
           `isEditMode`, unaffected by the row-shape toggle), all-packed
           banner (only `total > 0 && packed === total`, packing mode only
           — `#E9EFE3` bg, `accent-secondary` border, "All packed! Have a
-          great trip."), collapsible category groups (`"3/7"` counts),
-          rows per the `isEditMode` shape above.
-    - [ ] Empty-trip dashed panel (`EmptyStatePanel`, reused as-is) when
+          great trip."), collapsible category groups (`"3/7"` counts) of
+          `TripItemRow`.
+    - [x] Empty-trip dashed panel (`EmptyStatePanel`, reused as-is) when
           the trip has no items, its CTA opening the add-items picker.
-    - [ ] Desktop no-selection pane: centred "Pick a trip" + "Pick one on
-          the left to start packing." — distinct from loading, matching
-          Templates' existing handling.
-    - [ ] Removes Piece 4's temporary bare item list and placeholder
-          "+ Add items" button.
+    - [x] Desktop no-selection pane: centred "Pick a trip" / "Pick one on
+          the left to start packing." — distinct from loading (`isSelectedLoading` short-circuits to `null`, matching
+          `TemplatesDesktop`'s exact handling).
+    - [x] Removed Piece 4's temporary bare item list and placeholder
+          "+ Add items" button from both `TripsMobile`/`TripsDesktop`. The
+          no-selection **list** body (left rail/mobile list) is still
+          Piece 3's placeholder, untouched — that's Piece 7's job, not
+          this piece's.
+    - [ ] Manual verification (developer): toggle Edit/Done and confirm
+          every row swaps shape together (checkbox+badge ↔ cross+
+          stepper); tick items packed and confirm the progress
+          card/all-packed banner update optimistically; edit the title
+          inline; confirm "+ Add items" and the empty-trip CTA both open
+          the picker in both modes; check the desktop no-selection pane
+          and mobile back/archive/Edit-pill row.
   - [ ] **Piece 7 — List/rail assembly + lifecycle** (absorbs PACKFE-006).
         Screenshot-grounded: mobile list + archived-section screenshots,
         desktop rail screenshots. **Raise/land the `packing-list-go`

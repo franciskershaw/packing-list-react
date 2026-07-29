@@ -1,17 +1,24 @@
+import { TripDetailHeader } from "../../../components/detail/TripDetailHeader";
+import { Button } from "../../../components/ui/Button";
 import type { UseTripsScreenResult } from "../useTripsScreen";
+import { ArchiveButton } from "./ArchiveButton";
+import { TripDetailBody } from "./TripDetailBody";
 
-// Placeholder body for PACKFE-005 Piece 3 — proves the route-driven
-// select/create/archive loop works end-to-end. Piece 6 replaces this
-// wholesale with the real screenshot-grounded markup. The bare item list
-// and "+ Add items" button are Piece 4 additions, temporary until Piece 6.
+// Detail pane rebuilt for Piece 6. The rail/list body below is still
+// Piece 3's placeholder, unchanged — Piece 7's job.
 export function TripsDesktop({
   trips,
   isLoading,
   selectedTrip,
+  isSelectedLoading,
   selectTrip,
   archiveTrip,
   openNewTrip,
   openAddItems,
+  isEditMode,
+  toggleEditMode,
+  collapsedCategoryIds,
+  toggleCategoryCollapsed,
 }: UseTripsScreenResult) {
   if (isLoading) {
     return null;
@@ -29,29 +36,40 @@ export function TripsDesktop({
           ))}
         </ul>
       </aside>
-      <main>
+      <main className="min-h-0 min-w-0 flex-1">
         {selectedTrip ? (
-          <>
-            <p>{selectedTrip.name}</p>
-            <button onClick={() => archiveTrip(selectedTrip.id)}>
-              Archive
-            </button>
-            <button onClick={openAddItems}>+ Add items</button>
-            {selectedTrip.categories.map((category) => (
-              <div key={category.id}>
-                <p>{category.name}</p>
-                <ul>
-                  {category.items.map((item) => (
-                    <li key={item.itemId}>
-                      {item.name} ×{item.quantity}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </>
-        ) : (
-          <p>No trip selected</p>
+          <div key={selectedTrip.id} className="flex flex-col gap-4">
+            <TripDetailHeader
+              trip={selectedTrip}
+              onAddItems={openAddItems}
+              trailing={
+                <>
+                  <ArchiveButton onClick={() => archiveTrip(selectedTrip.id)} />
+                  <Button variant="outline" onClick={toggleEditMode}>
+                    {isEditMode ? "Done" : "Edit"}
+                  </Button>
+                </>
+              }
+            />
+            <TripDetailBody
+              trip={selectedTrip}
+              isEditMode={isEditMode}
+              collapsedCategoryIds={collapsedCategoryIds}
+              toggleCategoryCollapsed={toggleCategoryCollapsed}
+              onAddItems={openAddItems}
+            />
+          </div>
+        ) : isSelectedLoading ? null : (
+          <div className="flex h-full items-center justify-center">
+            <div className="max-w-75 text-center">
+              <p className="font-heading text-lg font-bold text-heading">
+                Pick a trip
+              </p>
+              <p className="mt-1 text-sm text-secondary">
+                Pick one on the left to start packing.
+              </p>
+            </div>
+          </div>
         )}
       </main>
     </div>

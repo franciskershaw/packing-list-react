@@ -1,9 +1,12 @@
+import { BackHeader } from "../../../components/detail/BackHeader";
+import { TripDetailHeader } from "../../../components/detail/TripDetailHeader";
+import { Button } from "../../../components/ui/Button";
 import type { UseTripsScreenResult } from "../useTripsScreen";
+import { ArchiveButton } from "./ArchiveButton";
+import { TripDetailBody } from "./TripDetailBody";
 
-// Placeholder body for PACKFE-005 Piece 3 — proves the route-driven
-// select/create/archive loop works end-to-end. Piece 6 replaces this
-// wholesale with the real screenshot-grounded markup. The bare item list
-// and "+ Add items" button are Piece 4 additions, temporary until Piece 6.
+// Detail view rebuilt for Piece 6. The no-selection list body below is
+// still Piece 3's placeholder, unchanged — Piece 7's job.
 export function TripsMobile({
   trips,
   isLoading,
@@ -14,6 +17,10 @@ export function TripsMobile({
   archiveTrip,
   openNewTrip,
   openAddItems,
+  isEditMode,
+  toggleEditMode,
+  collapsedCategoryIds,
+  toggleCategoryCollapsed,
 }: UseTripsScreenResult) {
   if (isLoading) {
     return null;
@@ -22,27 +29,30 @@ export function TripsMobile({
   if (selectedTripId) {
     return (
       <div className="flex flex-col gap-4 p-6">
-        <button onClick={goToList}>Back</button>
+        <BackHeader
+          onBack={goToList}
+          trailing={
+            selectedTrip && (
+              <>
+                <ArchiveButton onClick={() => archiveTrip(selectedTrip.id)} />
+                <Button variant="outline" onClick={toggleEditMode}>
+                  {isEditMode ? "Done" : "Edit"}
+                </Button>
+              </>
+            )
+          }
+        />
         {selectedTrip && (
-          <>
-            <p>{selectedTrip.name}</p>
-            <button onClick={() => archiveTrip(selectedTrip.id)}>
-              Archive
-            </button>
-            <button onClick={openAddItems}>+ Add items</button>
-            {selectedTrip.categories.map((category) => (
-              <div key={category.id}>
-                <p>{category.name}</p>
-                <ul>
-                  {category.items.map((item) => (
-                    <li key={item.itemId}>
-                      {item.name} ×{item.quantity}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </>
+          <div key={selectedTrip.id} className="flex flex-col gap-4">
+            <TripDetailHeader trip={selectedTrip} onAddItems={openAddItems} />
+            <TripDetailBody
+              trip={selectedTrip}
+              isEditMode={isEditMode}
+              collapsedCategoryIds={collapsedCategoryIds}
+              toggleCategoryCollapsed={toggleCategoryCollapsed}
+              onAddItems={openAddItems}
+            />
+          </div>
         )}
       </div>
     );
