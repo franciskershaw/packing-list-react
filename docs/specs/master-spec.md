@@ -2589,44 +2589,43 @@ showArchived/toggleArchived, isEditMode/toggleEditMode` + test
   → detail rows/header rebuild → list/rail + lifecycle polish. Piece
   numbers below reflect the new order, not the original one.
 
-  - [ ] **Piece 4 — Add items.** No new screenshot review needed (reuses
-        `detail/AddItemsPickerModal` exactly as built for Templates,
-        already screenshot-grounded there — see PACKFE-009). Testable
-        immediately against the existing Piece-3 placeholder detail body,
-        per this session's reordering.
-    - [ ] **Fix `api/trips.ts`'s dead `bulkAddTripItems`/
-          `useBulkAddTripItems`** (lines ~127-136, ~254-266) before
-          building anything else — confirmed zero call sites today (per
-          PACK-035's own audit), still targeting the deleted categoryId
-          `POST` endpoint. Replace with `bulkUpdateTripItems`/
-          `useBulkUpdateTripItems` against `PATCH /lists/:id/items/bulk`,
-          mirroring `bulkUpdateTemplateItems`/`useBulkUpdateTemplateItems`
+  - [x] **Piece 4 — Add items** — implemented 2026-07-29, manual
+        verification below still outstanding. No new screenshot review
+        needed (reuses `detail/AddItemsPickerModal` exactly as built for
+        Templates, already screenshot-grounded there — see PACKFE-009).
+        Testable immediately against the existing Piece-3 placeholder
+        detail body, per this session's reordering.
+    - [x] **Fixed `api/trips.ts`'s dead `bulkAddTripItems`/
+          `useBulkAddTripItems`** before building anything else —
+          confirmed zero call sites (per PACK-035's own audit), still
+          targeting the deleted categoryId `POST` endpoint. Replaced with
+          `bulkUpdateTripItems`/`useBulkUpdateTripItems` against
+          `PATCH /lists/:id/items/bulk`, mirroring
+          `bulkUpdateTemplateItems`/`useBulkUpdateTemplateItems`
           (`api/templates.ts`) exactly — same delta contract, same
-          `{ items: [{ itemId, quantity }] }` shape. This is the one trap
-          explicitly being avoided this time: Trips never had a live
-          caller of the old endpoint (unlike Templates' "+ All
-          Camping" button), so there's no breaking-change risk — just
-          don't let a new caller get built against the wrong contract.
-    - [ ] `TripAddItemsModal` — thin adapter over
-          `detail/AddItemsPickerModal`, mirroring `TemplateAddItemsModal`
-          exactly (`useItemsDraft` + `onDone` flushing via
-          `useBulkUpdateTripItems`, closing only on success, no-op close
-          on an empty delta). One real difference: `Template.items` is
-          already flat, but a trip's items arrive pre-grouped
-          (`PackingListDetail.categories[].items[]`) — flatten via
-          `trip.categories.flatMap(c => c.items)` before handing entries
-          to `useItemsDraft`; the delta it produces back out is the same
-          flat `{ itemId, quantity }[]` shape either way.
-    - [ ] **Temporary, this piece only**: add a plain `+ Add items` button
-          to `TripsDesktop`/`TripsMobile`'s placeholder detail body
-          (opens `screen.isAddItemsOpen`, mirroring Piece 3's existing
-          throwaway-button style) and a bare, unstyled item list
-          (`trip.categories.map(c => <li>{c.name}: {c.items.map(...)
-
-</li>)`, no `CategoryGroupCard`/checkbox/stepper) so adds are actually
-          visually confirmable. Both replaced wholesale by Piece 6's real
-          `TripDetailHeader`/`TripDetailBody` — noted here so it isn't
-          mistaken for real UI work later.
+          `{ items: [{ itemId, quantity }] }` shape. No breaking-change
+          risk (confirmed no live caller existed), unlike Templates' own
+          fix.
+    - [x] `TripAddItemsModal` (`features/trips/components/`) — thin
+          adapter over `detail/AddItemsPickerModal`, mirroring
+          `TemplateAddItemsModal` exactly (`useItemsDraft` + `onDone`
+          flushing via `useBulkUpdateTripItems`, closing only on success,
+          no-op close on an empty delta). `trip.categories.flatMap(c =>
+c.items)` flattens the pre-grouped wire shape into
+          `useItemsDraft`'s flat `{ itemId, quantity }[]` input; the delta
+          it produces back out is the same flat shape either way.
+    - [x] **Temporary, this piece only**: plain `+ Add items` button added
+          to `TripsDesktop`/`TripsMobile`'s placeholder detail body (opens
+          `screen.isAddItemsOpen`, mirroring Piece 3's existing
+          throwaway-button style) plus a bare, unstyled item list
+          (`selectedTrip.categories.map(...)` → per-category `<ul>` of
+          `name ×quantity`, no `CategoryGroupCard`/checkbox/stepper) so
+          adds are actually visually confirmable. Both to be replaced
+          wholesale by Piece 6's real `TripDetailHeader`/`TripDetailBody`.
+    - [ ] Manual verification (developer): add several items with varying
+          quantities via search, via "+ All [Category]", and via "create
+          & add," hit Done, confirm exactly one network request fires and
+          the bare item list reflects everything added.
   - [ ] **Piece 5 — New-trip modal + wiring the Templates stub.**
         Screenshot-grounded: mobile + desktop New-trip modal screenshots
         (reviewed 2026-07-27, re-confirmed this session). Pulled forward
@@ -2680,8 +2679,7 @@ showArchived/toggleArchived, isEditMode/toggleEditMode` + test
           `EmptyStatePanel`'s own CTA still opens the picker directly,
           unaffected.
     - [ ] `TripDetailHeader`: back circle · spacer · archive circle · Edit/
-          Done pill · "+ Add items" (mobile); title block · archive circle
-          + Edit pill + "+ Add items" (desktop). No "TRIP" eyebrow
+          Done pill · "+ Add items" (mobile); title block · archive circle + Edit pill + "+ Add items" (desktop). No "TRIP" eyebrow
           anywhere.
     - [ ] `TripDetailBody` (shared by both breakpoints, matching
           Templates' precedent in structure, **not** in data shape — maps

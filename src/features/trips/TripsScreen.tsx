@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useCreateTrip } from "../../api/trips";
 import { Modal } from "../../components/ui/Modal";
 import { DESKTOP_QUERY, useMediaQuery } from "../../lib/useMediaQuery";
+import { TripAddItemsModal } from "./components/TripAddItemsModal";
 import { TripsDesktop } from "./components/TripsDesktop";
 import { TripsMobile } from "./components/TripsMobile";
 import { useTripsScreen } from "./useTripsScreen";
@@ -44,16 +45,11 @@ export function TripsScreen() {
         </Modal>
       )}
 
-      {/* Placeholder content for PACKFE-005 Piece 3 — Piece 5 replaces
-          this wholesale with the real TripAddItemsModal. */}
       {screen.isAddItemsOpen && screen.selectedTrip && (
-        <Modal
-          title="Add items"
-          desktopWidth="lg:w-[420px]"
+        <TripAddItemsModal
+          trip={screen.selectedTrip}
           onClose={screen.closeAddItems}
-        >
-          <p>Coming in Piece 5.</p>
-        </Modal>
+        />
       )}
     </>
   );

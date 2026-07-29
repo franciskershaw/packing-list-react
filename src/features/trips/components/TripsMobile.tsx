@@ -1,8 +1,9 @@
 import type { UseTripsScreenResult } from "../useTripsScreen";
 
 // Placeholder body for PACKFE-005 Piece 3 — proves the route-driven
-// select/create/archive loop works end-to-end. Piece 4/5/6 replace this
-// wholesale with the real screenshot-grounded markup.
+// select/create/archive loop works end-to-end. Piece 6 replaces this
+// wholesale with the real screenshot-grounded markup. The bare item list
+// and "+ Add items" button are Piece 4 additions, temporary until Piece 6.
 export function TripsMobile({
   trips,
   isLoading,
@@ -12,6 +13,7 @@ export function TripsMobile({
   goToList,
   archiveTrip,
   openNewTrip,
+  openAddItems,
 }: UseTripsScreenResult) {
   if (isLoading) {
     return null;
@@ -27,6 +29,19 @@ export function TripsMobile({
             <button onClick={() => archiveTrip(selectedTrip.id)}>
               Archive
             </button>
+            <button onClick={openAddItems}>+ Add items</button>
+            {selectedTrip.categories.map((category) => (
+              <div key={category.id}>
+                <p>{category.name}</p>
+                <ul>
+                  {category.items.map((item) => (
+                    <li key={item.itemId}>
+                      {item.name} ×{item.quantity}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </>
         )}
       </div>

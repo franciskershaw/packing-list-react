@@ -124,14 +124,14 @@ export function removeTripItem(tripId: string, itemId: string): Promise<void> {
   });
 }
 
-export function bulkAddTripItems(
+export function bulkUpdateTripItems(
   tripId: string,
-  categoryId: string,
-): Promise<PackingListItem[]> {
-  return apiFetch<PackingListItem[]>(`/lists/${tripId}/items/bulk`, {
-    method: "POST",
+  items: { itemId: string; quantity: number }[],
+): Promise<void> {
+  return apiFetch<void>(`/lists/${tripId}/items/bulk`, {
+    method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ categoryId }),
+    body: JSON.stringify({ items }),
   });
 }
 
@@ -251,16 +251,16 @@ export function useRemoveTripItem() {
   });
 }
 
-export function useBulkAddTripItems() {
+export function useBulkUpdateTripItems() {
   const queryClient = useQueryClient();
   return useApiMutation({
     mutationFn: ({
       tripId,
-      categoryId,
+      items,
     }: {
       tripId: string;
-      categoryId: string;
-    }) => bulkAddTripItems(tripId, categoryId),
+      items: { itemId: string; quantity: number }[];
+    }) => bulkUpdateTripItems(tripId, items),
     onSuccess: () => invalidateTrips(queryClient),
   });
 }
