@@ -2332,7 +2332,8 @@ number` to match PACK-034's response shape — a stale `tsc`
 ### Epic 5: Trips
 
 - **PACKFE-005** — Trip creation & packing (absorbs PACKFE-006, see
-  Architecture section's merge note). Grilled 2026-07-27 against
+  Architecture section's merge note) — **Done** (2026-07-29). Grilled
+  2026-07-27 against
   `../../trips-screen-handoff.html` (an unusually thorough handoff — it
   already proposed a 7-piece build order, a component reuse ledger, and
   its own list of open questions) plus 12 fresh screenshots covering
@@ -2811,7 +2812,7 @@ TripProgressCard` (`features/trips/components/`) against that
     - [x] Greeting header: `` `Where to next, ${user.name}?` `` (via
           `useAuth()`) / `"Your trips"` fallback, subtitle pluralizing
           trip count (`"1 trip in the works."` / `"N trips in the
-    works."`), both `TripsMobile`/`TripsDesktop`.
+works."`), both `TripsMobile`/`TripsDesktop`.
     - [x] Removed every remaining Piece 3 placeholder — the `<ul>`/plain
           `<button>` rail/list markup is gone from both breakpoints.
     - [ ] Manual verification (developer): confirm mobile/desktop trip
@@ -2832,10 +2833,10 @@ TripProgressCard` (`features/trips/components/`) against that
 
 ### Epic 6: Trip lifecycle
 
-- **PACKFE-006** — Archive & restore. Folded into PACKFE-005's Piece 7
-  (renumbered 2026-07-29 — see that ticket's header note and the
-  Architecture section's merge decision) rather than built as a
-  separately sequenced ticket — closes the same day PACKFE-005 does.
+- **PACKFE-006** — Archive & restore — **Done** (2026-07-29). Folded into
+  PACKFE-005's Piece 7 (renumbered 2026-07-29 — see that ticket's header
+  note and the Architecture section's merge decision) rather than built
+  as a separately sequenced ticket — closes the same day PACKFE-005 does.
   - [x] Archive a trip; restore it later — built in PACKFE-005 Piece 7
   - [x] Archived trips listed separately from active ones — built in
         PACKFE-005 Piece 7

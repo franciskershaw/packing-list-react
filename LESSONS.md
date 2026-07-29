@@ -222,3 +222,27 @@ before the four real use cases build on top of `Modal.tsx`.
   `CLAUDE.md` in an earlier session — caught by the user, not
   self-corrected; logged as a second recurrence in the existing memory
   file rather than re-promoted (already covered).
+
+## 2026-07-29 — PACKFE-005/PACKFE-006 — Trips screen shipped after a full re-plan; stale backend process looked like a bug
+
+- Re-planned from scratch this session after an earlier attempt stalled
+  (add-items work started before the detail view existed to test
+  against — that's what surfaced PACK-035 in the first place).
+  Resequenced pieces on request to get real trip data flowing early
+  (add-items + New Trip modal pulled forward) instead of building
+  presentational components with nothing to render yet. The `isEditMode`
+  scope question genuinely oscillated three times in one sitting (drop
+  it entirely → narrow to just checkbox↔cross → land back on the
+  original checkbox+badge↔cross+stepper pairing, just with title/add-items
+  finally unhooked from it) before settling.
+- **Pattern**: when a symptom looks like broken data (undefined fields,
+  stale-looking values) in this dual-server local setup (Go backend +
+  Vite frontend, no backend hot-reload), check `ps aux` for the backend
+  process's start time against the fix's implementation time before
+  assuming a code bug — `go run` doesn't pick up changes without a
+  restart.
+- Cross-repo dependency (PACK-036, `ItemCount`/`PackedCount`) raised and
+  closed as its own ticket mid-piece rather than deferred; a known
+  dead-code path (`bulkAddTripItems`) was fixed proactively before
+  anything built against it, avoiding the reactive fix Templates needed
+  for its own equivalent.
