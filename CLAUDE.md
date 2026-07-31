@@ -204,6 +204,16 @@ feature done.
 
 ## Docs
 
-- `docs/specs/master-spec.md` — the only living doc: goals, use cases,
-  architecture, NFRs, and the roadmap checklist. No `docs/handoffs/`,
-  `docs/adr/`, or `LESSONS.md` on this branch.
+- `docs/specs/master-spec.md` — the lean, high-level living doc: goals,
+  use cases, condensed architecture facts, NFRs, and the roadmap (one-line
+  status + pointer per closed epic; the current open epic's checklist
+  stays inline). No `docs/handoffs/`, `docs/adr/`, or `LESSONS.md` on this
+  branch.
+- `docs/specs/<epic>.md` (`foundations.md`, `auth.md`, `library.md`,
+  `templates.md`, `trips.md`, `profile.md`, `shared-ui.md`) — one per
+  epic, added 2026-07-31 when `master-spec.md` was trimmed down from
+  ~3000 lines. Each holds that epic's full AC-level detail: screenshot
+  grounding, grill-me decision trail, exact class names/shapes, dated
+  corrections. Write new history here, not in `master-spec.md` — only
+  update `master-spec.md` when the high-level picture itself changes (a
+  new epic, a status flip, a genuinely cross-cutting architecture fact).
