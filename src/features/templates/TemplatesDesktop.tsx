@@ -25,7 +25,7 @@ export function TemplatesDesktop({
               Templates
             </h1>
             <p className="mt-0.5 text-sm text-secondary">
-              Build once, pack forever.
+              Your reusable packing lists.
             </p>
           </div>
           <Button variant="primary" size="compact" onClick={createTemplate}>

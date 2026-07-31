@@ -53,7 +53,7 @@ export function TemplatesMobile({
             Templates
           </h1>
           <p className="mt-0.5 text-sm text-secondary">
-            Build once, pack forever.
+            Your reusable packing lists.
           </p>
         </div>
         <Button variant="accent" className="shrink-0" onClick={createTemplate}>

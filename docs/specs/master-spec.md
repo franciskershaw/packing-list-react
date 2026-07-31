@@ -380,15 +380,22 @@ bg-bg` unchanged.
         padding, replicating `max-w-160` on both halves so they stay
         column-aligned — `TripsDesktop.tsx` had no such nesting, simpler
         split.
-  - [ ] **[Copy]** Trips greeting ("Where to next, {name}?",
+  - [x] **[Copy]** Trips greeting ("Where to next, {name}?",
         `TripsDesktop.tsx`/`TripsMobile.tsx`) uses the full `user.name`
         from Google sign-in — reads oddly formal/impersonal. Default to
-        first name where one can be derived from the full name.
-  - [ ] **[Copy]** Templates screen's subtitle "Build once, pack forever."
+        first name where one can be derived from the full name. **Fixed
+        2026-07-31, developer-confirmed**: `user.name.split("
+    ")[0]`, inlined at both call sites (Google's `name` field has no
+        separate given/family-name split to read from instead) rather
+        than extracting a shared helper for a one-liner used in exactly
+        two places.
+  - [x] **[Copy]** Templates screen's subtitle "Build once, pack forever."
         (`TemplatesDesktop.tsx`/`TemplatesMobile.tsx`) reads as odd/cringe
-        copy — needs replacing. Not decided yet; candidates to consider
-        at pickup: "Pack it once. Reuse it forever.", "Your go-to lists,
-        ready when you are.", "Set it up once, grab it every trip."
+        copy — needs replacing. **Fixed 2026-07-31, developer-confirmed**:
+        developer picked "Your reusable packing lists." from four options
+        (a rhythm-preserving rework of the original, a plain functional
+        statement, a warmer benefit-focused line, and this one) offered
+        before any change was made.
   - [ ] A real loading-state visual treatment (noticed during PACKFE-003
         Piece 6, 2026-07-25 — first screen to hit this gap). No screen in
         this project has a designed loading pattern yet; screens render
