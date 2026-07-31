@@ -61,18 +61,26 @@ describe("CategoriesModal", () => {
     vi.restoreAllMocks();
   });
 
-  it("shows each category's item count derived from useItems(), and BUILT-IN badge for system categories", async () => {
+  it("hides built-in categories by default; 'Show built-in' reveals their item count and Built-in badge, 'Hide built-in' re-hides them", async () => {
     mockFetch({
       "GET /api/categories": () => jsonResponse(200, categories),
       "GET /api/items": () => jsonResponse(200, items),
     });
 
     renderModal();
-
-    await screen.findByText("Clothing");
-    expect(screen.getByText("2 items")).toBeInTheDocument();
+    await screen.findByText("Festival kit");
     expect(screen.getByText("1 items")).toBeInTheDocument();
+    expect(screen.queryByText("Clothing")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Show built-in (1)" }));
+
+    expect(screen.getByText("Clothing")).toBeInTheDocument();
+    expect(screen.getByText("2 items")).toBeInTheDocument();
     expect(screen.getByText("Built-in")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Hide built-in (1)" }));
+
+    expect(screen.queryByText("Clothing")).toBeNull();
   });
 
   it("clicking a user-owned row enters rename mode, hiding its delete icon; clicking another row switches which one is renaming", async () => {

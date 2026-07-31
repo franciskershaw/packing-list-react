@@ -385,7 +385,7 @@ bg-bg` unchanged.
         from Google sign-in — reads oddly formal/impersonal. Default to
         first name where one can be derived from the full name. **Fixed
         2026-07-31, developer-confirmed**: `user.name.split("
-    ")[0]`, inlined at both call sites (Google's `name` field has no
+")[0]`, inlined at both call sites (Google's `name` field has no
         separate given/family-name split to read from instead) rather
         than extracting a shared helper for a one-liner used in exactly
         two places.
@@ -403,9 +403,26 @@ bg-bg` unchanged.
         placeholder. Worth designing something real (skeleton rows, etc.)
         now that it recurs across every screen rather than being a
         one-off.
-  - [ ] Manage-categories modal (`CategoriesModal.tsx`) scrolling UX needs
+  - [x] Manage-categories modal (`CategoriesModal.tsx`) scrolling UX needs
         improvement (noticed at PACKFE-003 close-out, 2026-07-25) — not
-        diagnosed further yet, just flagged.
+        diagnosed further yet, just flagged. **Fixed 2026-07-31,
+        developer-confirmed**: brought in line with the Add-items modal's
+        sticky-header pattern — switched to `Modal`'s `size="fixed"`, moved
+        the new-category input + Add button out of the footer (removed;
+        nothing left to pin there) into a non-scrolling block above the
+        list, so only the category rows scroll. Also added a "Show
+        built-in (N)" toggle in that same block, off by default, so
+        built-in categories (which a user can't rename or delete) don't
+        clutter the list — grill-me confirmed: toggle lives in the sticky
+        block rather than inline above the scrolling list (mirrors the
+        Add-items modal's control grouping over the Trips screen's
+        scrolling "Show archived" precedent), and shown categories keep
+        the API's existing order rather than being grouped/partitioned.
+        `CategoriesModal.test.tsx`'s coverage updated: the old "shows
+        Clothing's item count and Built-in badge" test assumed built-ins
+        were visible by default, which is no longer true — replaced with
+        a test asserting default-hidden state plus both toggle
+        directions.
   - [ ] `ItemFormModal` closes on successful add — poor for adding several
         items in a row (noticed 2026-07-25: adding many items one at a
         time meant repeatedly reopening the modal). Instead: on
