@@ -284,7 +284,7 @@ bg-bg` unchanged.
         condition `TripDetailBody` already uses to decide whether to show
         `EmptyStatePanel` vs. the real category groups (`total === 0`) —
         reuse that, don't reinvent it.
-  - [ ] **[Desktop, Templates]** Templates' detail pane (including its
+  - [x] **[Desktop, Templates]** Templates' detail pane (including its
         empty state) has diverged from Trips' — it doesn't take the full
         available width like Trips' does (noticed 2026-07-31). **Root
         cause, confirmed by reading current source**:
@@ -295,7 +295,15 @@ bg-bg` unchanged.
         from Piece 6 that was never revisited. Aim to replicate Trips'
         already-correct full-width behavior on Templates, i.e. remove or
         widen that constraint, rather than treating this as two designs to
-        reconcile.
+        reconcile. **Widened same day**: developer flagged it's squashing
+        more than just the empty state — the whole pane, always, not a
+        one-off. **Fixed 2026-07-31, developer-confirmed**:
+        dropped `max-w-160` and its accompanying narrow-column padding
+        (`px-10 pt-7.5 pb-17.5`) from both split blocks the sticky-header
+        item above just created, replacing them with the exact same
+        padding Trips uses (`pt-12 pr-12 pb-4` header / `pr-12 pb-12`
+        body, no left padding, no max-width) — full 1:1 match with Trips
+        rather than a differently-tuned equivalent.
   - [ ] The whole app has no maximum width — stretching the browser to
         fill a very wide monitor (e.g. 38") lets the layout stretch
         infinitely rather than capping out (noticed 2026-07-31). An edge

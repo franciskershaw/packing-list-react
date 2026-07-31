@@ -65,7 +65,7 @@ export function TemplatesDesktop({
         {!isLoading &&
           (selectedTemplate ? (
             <>
-              <div className="sticky top-0 z-10 max-w-160 bg-bg pt-19.5 pr-22 pb-2 pl-10">
+              <div className="sticky top-0 z-10 bg-bg pt-12 pr-12 pb-4">
                 <TemplateDetailHeader
                   key={selectedTemplate.id}
                   template={selectedTemplate}
@@ -73,10 +73,7 @@ export function TemplatesDesktop({
                   autoFocusTitle={selectedTemplate.id === justCreatedTemplateId}
                 />
               </div>
-              <div
-                key={selectedTemplate.id}
-                className="max-w-160 pr-22 pb-29.5 pl-10"
-              >
+              <div key={selectedTemplate.id} className="pr-12 pb-12">
                 <TemplateDetailBody
                   template={selectedTemplate}
                   deleteTemplate={deleteTemplate}
