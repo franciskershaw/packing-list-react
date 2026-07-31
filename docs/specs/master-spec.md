@@ -177,7 +177,7 @@ active punch list, so it stays visible without a click-through.
   hands-on use). Desktop/mobile called out explicitly per item below so
   the wrong breakpoint doesn't get touched by mistake.
   - [x] **[Desktop, Trips]** The rail/detail divider (`border-r
-    border-border` on the `<aside>`, `TripsDesktop.tsx`) doesn't run
+border-border` on the `<aside>`, `TripsDesktop.tsx`) doesn't run
         the full height of the page — on a packing list long enough to
         scroll, scrolling past the border's own height loses the
         left/right separation entirely. **Fixed 2026-07-31**: the
@@ -223,10 +223,19 @@ active punch list, so it stays visible without a click-through.
         pane's own `pr-12` alone — this item was specifically about the
         rail column's own left/right symmetry, not the two-pane group's
         overall page margins, which the developer didn't flag as an issue.
-  - [ ] **[Desktop, Trips + Templates]** "+ New trip" / "+ New template"
+  - [x] **[Desktop, Trips + Templates]** "+ New trip" / "+ New template"
         button reads too large — too tall, or too much padding between
         the label and the button's own top/bottom edge. Needs a look to
         find the actual cause (height vs. padding) rather than guessing.
+        **Fixed 2026-07-31, developer-confirmed**: cause was `Button`'s
+        `primary` variant's `py-4` (16px top/bottom) — same variant used
+        elsewhere for full-page modal-submit CTAs, too tall for a sidebar
+        action button. Added a `primary` entry to `Button.tsx`'s
+        `COMPACT_VARIANT_CLASSES` (same `w-full`/color/shape/weight,
+        `py-4` → `py-2` after two rounds of feedback) and applied
+        `size="compact"` on `TripsDesktop.tsx`/`TemplatesDesktop.tsx`
+        only — mobile already uses a different variant (`accent`) for
+        this button and was intentionally left untouched.
   - [ ] **[Desktop, Trips]** Unselected rows in the trip rail have no
         border at all (`RailRow`'s `border-transparent` treatment,
         `TripsDesktop.tsx`) while the selected row gets `border-accent`

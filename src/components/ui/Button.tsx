@@ -61,6 +61,8 @@ const COMPACT_VARIANT_CLASSES: Partial<
     "rounded-card border border-border bg-bg px-5 py-2.5 font-body text-sm font-semibold text-heading shadow-sm",
   danger:
     "rounded-card border-0 bg-notice-bg px-5 py-2.5 font-body text-sm font-semibold text-notice-text shadow-sm",
+  primary:
+    "w-full rounded-xl border-0 bg-accent px-6 py-2 font-body text-base font-bold text-on-accent shadow-sm hover:bg-accent-hover disabled:opacity-50",
 };
 
 const SPLIT_VARIANT_CLASSES: Partial<

@@ -48,7 +48,7 @@ export function TripsDesktop({
                 : `${trips.length} trip${trips.length === 1 ? "" : "s"} in the works.`}
             </p>
           </div>
-          <Button variant="primary" onClick={openNewTrip}>
+          <Button variant="primary" size="compact" onClick={openNewTrip}>
             + New trip
           </Button>
         </div>

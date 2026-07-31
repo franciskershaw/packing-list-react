@@ -28,7 +28,7 @@ export function TemplatesDesktop({
               Build once, pack forever.
             </p>
           </div>
-          <Button variant="primary" onClick={createTemplate}>
+          <Button variant="primary" size="compact" onClick={createTemplate}>
             + New template
           </Button>
         </div>
