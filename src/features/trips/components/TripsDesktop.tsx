@@ -35,9 +35,9 @@ export function TripsDesktop({
   }
 
   return (
-    <div className="flex h-full gap-6 p-12">
-      <aside className="flex w-82.5 shrink-0 flex-col gap-4 border-r border-border pr-6">
-        <div className="flex flex-col gap-1">
+    <div className="flex min-h-full gap-6">
+      <aside className="flex w-82.5 shrink-0 flex-col gap-4 border-r border-border py-12 pr-6 pl-6">
+        <div className="flex flex-col gap-4">
           <div>
             <h1 className="font-heading text-3xl font-bold text-heading">
               {user?.name ? `Where to next, ${user.name}?` : "Your trips"}
@@ -105,7 +105,7 @@ export function TripsDesktop({
         </div>
       </aside>
 
-      <main className="min-h-0 min-w-0 flex-1">
+      <main className="min-h-0 min-w-0 flex-1 py-12 pr-12">
         {selectedTrip ? (
           <div key={selectedTrip.id} className="flex flex-col gap-4">
             <TripDetailHeader

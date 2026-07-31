@@ -176,16 +176,53 @@ active punch list, so it stays visible without a click-through.
   "Later / polish" parking lot below with a fresh punch list from
   hands-on use). Desktop/mobile called out explicitly per item below so
   the wrong breakpoint doesn't get touched by mistake.
-  - [ ] **[Desktop, Trips]** The rail/detail divider (`border-r
+  - [x] **[Desktop, Trips]** The rail/detail divider (`border-r
     border-border` on the `<aside>`, `TripsDesktop.tsx`) doesn't run
         the full height of the page — on a packing list long enough to
         scroll, scrolling past the border's own height loses the
-        left/right separation entirely.
-  - [ ] **[Desktop, Trips + Templates]** Same divider (`TripsDesktop.tsx`
+        left/right separation entirely. **Fixed 2026-07-31**: the
+        `<aside>`/`<main>` row's outer wrapper was `h-full`, which caps
+        its height at the initial viewport size — `AppShell`'s `<main>`
+        (`overflow-y-auto`) is the real scroll container, so once the
+        selected trip's detail content grew taller than that cap, it
+        overflowed silently below the row box with no aside/border next
+        to it. Changed `h-full` → `min-h-full` so the row (and the
+        aside's border, via default `align-items: stretch`) grows to
+        match whichever pane is taller instead of being capped.
+        Same latent bug exists in `TemplatesDesktop.tsx` (identical
+        `h-full` wrapper) — not touched here, out of this item's scope.
+  - [x] **[Desktop, Trips + Templates]** Same divider (`TripsDesktop.tsx`
         and `TemplatesDesktop.tsx`, both `border-r border-border` on the
         `<aside>`) doesn't reach the very top or bottom of the page —
         looks like an invisible margin/padding somewhere is holding it
-        back short of the viewport edge.
+        back short of the viewport edge. **Fixed 2026-07-31, one commit
+        across both files**: the culprit was `p-12` on the shared outer
+        row wrapper (`<div className="flex ... p-12">`) — since the
+        border is drawn on `<aside>`'s own box, an ancestor's padding
+        insets that whole box (border included) away from the row's true
+        edges. Moved the padding down a level so it insets _content_
+        without insetting the border-bearing box itself: outer row lost
+        `p-12` entirely; `<aside>` gained `py-12 pl-12` (later corrected to
+        `pl-6`, see the item directly below — kept its existing `pr-6`);
+        the main pane gained `py-12 pr-12`. Net visual position of all
+        existing content is unchanged (same total inset from the page
+        edge as before, just contributed by the child instead of the
+        parent) — only the border's own extent changed, now running the
+        full row height edge-to-edge on both screens.
+  - [x] **[Desktop, Trips + Templates]** Rail column's left inset
+        (button + rows, both `TripsDesktop.tsx`/`TemplatesDesktop.tsx`)
+        was noticeably wider than its right inset before the divider —
+        noticed 2026-07-31, right after the divider fix above landed.
+        Pre-existing asymmetry, not introduced by that fix: `<aside>`'s
+        content had always had 48px on the left (`pl-12`, formerly
+        contributed by the outer row's `p-12` before the divider fix
+        moved it onto `<aside>` itself) against only 24px on the right
+        (`pr-6`, the gap to the divider). **Fixed**: `<aside>`'s `pl-12` →
+        `pl-6`, matching `pr-6` — the whole rail column now sits an equal
+        24px from both the divider and the page edge. Left the main
+        pane's own `pr-12` alone — this item was specifically about the
+        rail column's own left/right symmetry, not the two-pane group's
+        overall page margins, which the developer didn't flag as an issue.
   - [ ] **[Desktop, Trips + Templates]** "+ New trip" / "+ New template"
         button reads too large — too tall, or too much padding between
         the label and the button's own top/bottom edge. Needs a look to
@@ -205,6 +242,26 @@ active punch list, so it stays visible without a click-through.
         `TripProgressCard`) should **not** be part of the sticky region —
         pinning it too would eat too much vertical space for actually
         seeing items while scrolling.
+  - [ ] **[Desktop, Trips + Templates]** Desktop equivalent of the mobile
+        sticky-header item above: the rail column (trip/template list,
+        `<aside>` in `TripsDesktop.tsx`/`TemplatesDesktop.tsx`) shouldn't
+        be scrollable-past just by scrolling a long packing list/template
+        in the main pane — it should stay in view (noticed 2026-07-31).
+        **Context for whoever picks this up**: `TemplatesDesktop.tsx`'s
+        main pane already has its own `overflow-y-auto` (self-scrolling,
+        capped at the row's height) — on that screen the rail likely
+        already stays put, worth confirming first. `TripsDesktop.tsx`'s
+        main pane has no independent scroll — the whole page scrolls as
+        one unit via `AppShell`'s `<main>`, which is exactly why the
+        divider-height fix earlier in this ticket changed the row wrapper
+        to `min-h-full` (let the row grow with content so the border keeps
+        pace). Giving Trips' main pane its own `overflow-y-auto` (matching
+        Templates) would likely solve **both** problems at once — the row
+        could go back to a fixed `h-full` (no more need to grow), and the
+        aside would naturally stay in view since it'd no longer share a
+        scroll container with the overflowing detail content. Worth
+        reconciling with that earlier fix when this is picked up rather
+        than layering a second, separate scroll mechanism on top.
   - [ ] **[Copy]** Trips greeting ("Where to next, {name}?",
         `TripsDesktop.tsx`/`TripsMobile.tsx`) uses the full `user.name`
         from Google sign-in — reads oddly formal/impersonal. Default to
@@ -248,6 +305,17 @@ active punch list, so it stays visible without a click-through.
         PACKFE-005's grill-me) — set once in the New-trip modal, shown
         everywhere, no affordance anywhere edits it afterward. Trip
         detail's Edit mode is the obvious home once this gets designed.
+  - [ ] **[Desktop, Trips + Templates] Clean-up**: extract a shared rail
+        shell for `TripsDesktop.tsx`/`TemplatesDesktop.tsx` into
+        `components/detail/` — the outer flex row, `<aside>`'s classes
+        (width, border, padding, header-slot + scrollable-list-slot
+        structure) are now identical between the two after this ticket's
+        fixes, and three of those fixes had to be pasted into both files
+        verbatim in one session (noticed 2026-07-31 — real, demonstrated
+        duplication, not speculative). Keep the main/detail pane itself
+        un-merged — Templates' pane already self-scrolls with its own
+        max-width while Trips' relies on the page-level scroll, a real
+        behavioral difference, not just a styling one.
   - **Open question carried over, not yet part of this ticket's scope**:
     whether deleting a template that a trip was seeded from is blocked
     server-side (flagged during PACKFE-004, never confirmed either way —
