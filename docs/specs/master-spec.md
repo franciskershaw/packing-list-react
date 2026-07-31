@@ -236,21 +236,66 @@ border-border` on the `<aside>`, `TripsDesktop.tsx`) doesn't run
         `size="compact"` on `TripsDesktop.tsx`/`TemplatesDesktop.tsx`
         only — mobile already uses a different variant (`accent`) for
         this button and was intentionally left untouched.
-  - [ ] **[Desktop, Trips]** Unselected rows in the trip rail have no
+  - [x] **[Desktop, Trips]** Unselected rows in the trip rail have no
         border at all (`RailRow`'s `border-transparent` treatment,
         `TripsDesktop.tsx`) while the selected row gets `border-accent`
         — unselected rows need a visible, contrasting border of their
         own so the row shape reads even when nothing's selected. Match
         against the mobile design's treatment of the same state as the
-        reference.
-  - [ ] **[Mobile, Trips + Templates]** Detail-view header should be
+        reference. **Fixed 2026-07-31, developer-confirmed**: `RailRow`
+        (`components/detail/RailRow.tsx`) is the shared component behind
+        both `TripsDesktop.tsx`'s and `TemplatesDesktop.tsx`'s rails, so
+        the fix necessarily applies to both, not Trips alone — matches
+        mobile's own `TripListCard`/`TemplateListCard`, which always use
+        `border-border` (no selected state exists on mobile, every row
+        gets the same neutral border). Changed unselected's
+        `border-transparent` → `border-border`; selected's `border-accent
+    bg-bg` unchanged.
+  - [x] **[Mobile, Trips + Templates]** Detail-view header should be
         sticky on scroll — back button, archive, Edit/Done, title, "+
         Add items" (`BackHeader` + `TripDetailHeader`/
         `TemplateDetailHeader` in `TripsMobile.tsx`/`TemplatesMobile.tsx`).
         The progress-info block (packed count/percentage/progress bar,
         `TripProgressCard`) should **not** be part of the sticky region —
         pinning it too would eat too much vertical space for actually
-        seeing items while scrolling.
+        seeing items while scrolling. **Fixed 2026-07-31,
+        developer-confirmed**: split each screen's single flex-column
+        detail view into two blocks — a `sticky top-0 z-10 bg-bg` block
+        holding `BackHeader` + the detail header, and a normal-flow block
+        below it holding the body (progress card + items). Preserved the
+        existing `key={id}`-driven remount-on-trip/template-switch
+        behavior by keeping the same `key` on the split elements, and kept
+        the original vertical rhythm (Trips' 16px header/body gap,
+        Templates' tighter 8px one) by moving those gaps into the sticky
+        block's own bottom padding.
+  - [ ] **[Desktop, Trips]** "Edit"/"Done" toggle button
+        (`ArchiveButton`'s sibling in `TripsDesktop.tsx`'s/
+        `TripsMobile.tsx`'s `BackHeader`/`TripDetailHeader` trailing slot)
+        renders unconditionally whenever a trip is selected, even one with
+        zero items — nothing to edit yet, so the button shouldn't appear
+        until the trip has at least one item (noticed 2026-07-31). Same
+        condition `TripDetailBody` already uses to decide whether to show
+        `EmptyStatePanel` vs. the real category groups (`total === 0`) —
+        reuse that, don't reinvent it.
+  - [ ] **[Desktop, Templates]** Templates' detail pane (including its
+        empty state) has diverged from Trips' — it doesn't take the full
+        available width like Trips' does (noticed 2026-07-31). **Root
+        cause, confirmed by reading current source**:
+        `TemplatesDesktop.tsx` wraps its whole detail pane in a
+        `max-w-160` (640px) constraint that `TripsDesktop.tsx` has no
+        equivalent of anywhere — not a documented/deliberate decision
+        (nothing in `templates.md` explains it), just an incidental choice
+        from Piece 6 that was never revisited. Aim to replicate Trips'
+        already-correct full-width behavior on Templates, i.e. remove or
+        widen that constraint, rather than treating this as two designs to
+        reconcile.
+  - [ ] The whole app has no maximum width — stretching the browser to
+        fill a very wide monitor (e.g. 38") lets the layout stretch
+        infinitely rather than capping out (noticed 2026-07-31). An edge
+        case, not urgent. Needs a sensible max-width applied somewhere in
+        the `AppShell`/route-content chain (`src/components/nav/AppShell.tsx`
+        is the obvious candidate — nothing there today) so the app stops
+        growing past some reasonable ceiling on very large screens.
   - [ ] **[Desktop, Trips + Templates]** Desktop equivalent of the mobile
         sticky-header item above: the rail column (trip/template list,
         `<aside>` in `TripsDesktop.tsx`/`TemplatesDesktop.tsx`) shouldn't

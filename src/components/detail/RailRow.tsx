@@ -20,8 +20,8 @@ export function RailRow({
   return (
     <InteractiveButton
       onClick={onClick}
-      className={`flex w-full min-w-0 items-center gap-3 rounded-2xl border px-4 py-3 text-left ${
-        selected ? "border-accent bg-bg" : "border-transparent"
+      className={`flex w-full min-w-0 items-center gap-3 rounded-2xl border bg-white px-4 py-3 text-left ${
+        selected ? "border-accent" : "border-border"
       }`}
     >
       {leading}

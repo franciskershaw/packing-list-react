@@ -36,23 +36,31 @@ export function TripsMobile({
 
   if (selectedTripId) {
     return (
-      <div className="flex flex-col gap-4 p-6">
-        <BackHeader
-          onBack={goToList}
-          trailing={
-            selectedTrip && (
-              <>
-                <ArchiveButton onClick={() => archiveTrip(selectedTrip.id)} />
-                <Button variant="outline" onClick={toggleEditMode}>
-                  {isEditMode ? "Done" : "Edit"}
-                </Button>
-              </>
-            )
-          }
-        />
+      <div className="flex flex-col">
+        <div className="sticky top-0 z-10 flex flex-col gap-4 bg-bg p-6 pb-4">
+          <BackHeader
+            onBack={goToList}
+            trailing={
+              selectedTrip && (
+                <>
+                  <ArchiveButton onClick={() => archiveTrip(selectedTrip.id)} />
+                  <Button variant="outline" onClick={toggleEditMode}>
+                    {isEditMode ? "Done" : "Edit"}
+                  </Button>
+                </>
+              )
+            }
+          />
+          {selectedTrip && (
+            <TripDetailHeader
+              key={selectedTrip.id}
+              trip={selectedTrip}
+              onAddItems={openAddItems}
+            />
+          )}
+        </div>
         {selectedTrip && (
-          <div key={selectedTrip.id} className="flex flex-col gap-4">
-            <TripDetailHeader trip={selectedTrip} onAddItems={openAddItems} />
+          <div key={selectedTrip.id} className="px-6 pb-6">
             <TripDetailBody
               trip={selectedTrip}
               isEditMode={isEditMode}

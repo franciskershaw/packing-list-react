@@ -20,15 +20,20 @@ export function TemplatesMobile({
 }: UseTemplatesScreenResult) {
   if (selectedTemplateId) {
     return (
-      <div className="flex flex-col gap-4 p-6">
-        <BackHeader label="TEMPLATE" onBack={goToList} />
-        {selectedTemplate && (
-          <div key={selectedTemplate.id} className="flex flex-col gap-2">
+      <div className="flex flex-col">
+        <div className="sticky top-0 z-10 flex flex-col gap-4 bg-bg p-6 pb-2">
+          <BackHeader label="TEMPLATE" onBack={goToList} />
+          {selectedTemplate && (
             <TemplateDetailHeader
+              key={selectedTemplate.id}
               template={selectedTemplate}
               onAddItems={openAddItems}
               autoFocusTitle={selectedTemplate.id === justCreatedTemplateId}
             />
+          )}
+        </div>
+        {selectedTemplate && (
+          <div key={selectedTemplate.id} className="px-6 pb-6">
             <TemplateDetailBody
               template={selectedTemplate}
               deleteTemplate={deleteTemplate}
