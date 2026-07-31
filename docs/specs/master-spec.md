@@ -505,17 +505,29 @@ bg-bg` unchanged.
         wanted no change there. `TripListCard.tsx`/`TemplateListCard.tsx`
         deleted; no test files existed for either so no test updates
         needed.
-  - [ ] **[Mobile, Trips + Templates]** The sticky detail-header work
+  - [x] **[Mobile, Trips + Templates]** The sticky detail-header work
         earlier in this ticket introduced a regression: content now runs
         under the mobile bottom nav bar instead of stopping above it —
-        noticed 2026-07-31, not yet diagnosed. Likely candidate: the
-        sticky-header split changed how the scrolling body's bottom
-        padding/height is computed relative to `AppShell`'s
-        `pb-[calc(6rem_+_env(safe-area-inset-bottom))]` (see
-        `foundations.md` for that value's origin) — needs investigating
-        against both `TripsMobile.tsx` and `TemplatesMobile.tsx`, not just
-        one, since both got the same sticky-header treatment. Developer
-        wants to tackle this next.
+        noticed 2026-07-31. **Fixed 2026-07-31, developer-confirmed**:
+        root cause was a known cross-browser quirk (most
+        visible on iOS Safari) where a `position: sticky` descendant
+        inside a scrolling container can cause that container's own
+        `padding-bottom` to be excluded from the scrollable area — real
+        content height isn't affected the same way, only padding is. Every
+        other mobile screen relies on `AppShell`'s `<main>` padding-bottom
+        for tab-bar clearance and was unaffected; only the two detail
+        views with sticky headers broke. Fix: `AppShell.tsx` now exports
+        two named class constants instead of one inline literal —
+        `MOBILE_NAV_CLEARANCE_PB_CLASS` (the existing padding-bottom
+        approach, still used by `<main>` itself and every screen without a
+        sticky descendant) and `MOBILE_NAV_CLEARANCE_SPACER_CLASS` (same
+        value, `h-` instead of `pb-`) — and `TripsMobile.tsx`/
+        `TemplatesMobile.tsx`'s detail branches each render an explicit
+        spacer `<div>` using the latter at the end of their scrolling
+        body, rather than relying on ancestor padding. Extracted to a
+        shared constant rather than duplicating the literal a third time,
+        since a future tab-bar resize would otherwise need to stay
+        manually in sync across three call sites.
 
 ### Later / polish
 

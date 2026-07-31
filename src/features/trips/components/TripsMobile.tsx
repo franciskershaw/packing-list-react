@@ -3,6 +3,7 @@ import { EmptyStatePanel } from "../../../components/detail/EmptyStatePanel";
 import { ProgressRing } from "../../../components/detail/ProgressRing";
 import { RailRow } from "../../../components/detail/RailRow";
 import { TripDetailHeader } from "../../../components/detail/TripDetailHeader";
+import { MOBILE_NAV_CLEARANCE_SPACER_CLASS } from "../../../components/nav/AppShell";
 import { Button } from "../../../components/ui/Button";
 import { useAuth } from "../../auth/AuthContext";
 import { formatTripDate } from "../formatTripDate";
@@ -72,6 +73,7 @@ export function TripsMobile({
             />
           </div>
         )}
+        <div className={MOBILE_NAV_CLEARANCE_SPACER_CLASS} aria-hidden="true" />
       </div>
     );
   }

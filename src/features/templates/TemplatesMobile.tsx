@@ -2,6 +2,7 @@ import { BackHeader } from "../../components/detail/BackHeader";
 import { EmptyStatePanel } from "../../components/detail/EmptyStatePanel";
 import { RailRow } from "../../components/detail/RailRow";
 import { TemplateDetailHeader } from "../../components/detail/TemplateDetailHeader";
+import { MOBILE_NAV_CLEARANCE_SPACER_CLASS } from "../../components/nav/AppShell";
 import { Button } from "../../components/ui/Button";
 import { TemplateDetailBody } from "./TemplateDetailBody";
 import type { UseTemplatesScreenResult } from "./useTemplatesScreen";
@@ -41,6 +42,7 @@ export function TemplatesMobile({
             />
           </div>
         )}
+        <div className={MOBILE_NAV_CLEARANCE_SPACER_CLASS} aria-hidden="true" />
       </div>
     );
   }
