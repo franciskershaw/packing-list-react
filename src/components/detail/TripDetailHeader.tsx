@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { PackingListDetail } from "../../api/trips";
 import { useUpdateTrip } from "../../api/trips";
 import { formatTripDate } from "../../features/trips/formatTripDate";
+import { tripItemCount } from "../../features/trips/tripItemCount";
 import { Button } from "../ui/Button";
 import { InlineEditableHeading } from "./InlineEditableHeading";
 import { useInlineEditableField } from "./useInlineEditableField";
@@ -36,9 +37,11 @@ export function TripDetailHeader({
       </div>
       <div className="flex shrink-0 items-center gap-2">
         {trailing}
-        <Button variant="accent" onClick={onAddItems}>
-          + Add items
-        </Button>
+        {tripItemCount(trip) > 0 && (
+          <Button variant="accent" onClick={onAddItems}>
+            + Add items
+          </Button>
+        )}
       </div>
     </div>
   );

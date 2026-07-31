@@ -275,7 +275,7 @@ bg-bg` unchanged.
         the original vertical rhythm (Trips' 16px header/body gap,
         Templates' tighter 8px one) by moving those gaps into the sticky
         block's own bottom padding.
-  - [ ] **[Desktop, Trips]** "Edit"/"Done" toggle button
+  - [x] **[Desktop, Trips]** "Edit"/"Done" toggle button
         (`ArchiveButton`'s sibling in `TripsDesktop.tsx`'s/
         `TripsMobile.tsx`'s `BackHeader`/`TripDetailHeader` trailing slot)
         renders unconditionally whenever a trip is selected, even one with
@@ -283,7 +283,36 @@ bg-bg` unchanged.
         until the trip has at least one item (noticed 2026-07-31). Same
         condition `TripDetailBody` already uses to decide whether to show
         `EmptyStatePanel` vs. the real category groups (`total === 0`) —
-        reuse that, don't reinvent it.
+        reuse that, don't reinvent it. **Fixed 2026-07-31,
+        developer-confirmed, desktop only per this item's own tag**: extracted
+        `tripItemCount(trip)` (`features/trips/tripItemCount.ts`, new file
+        — matches `formatTripDate.ts`'s existing pure-helper/feature-root
+        precedent) so `TripDetailBody`'s `total` computation and
+        `TripsDesktop.tsx`'s new conditional share one definition instead
+        of two independently-written ones; `TripDetailBody` refactored to
+        call it (same math, `tsc`/125-test suite confirm no behavior
+        change). Edit/Done `Button` now wrapped in
+        `tripItemCount(selectedTrip) > 0 &&`. **Not done**:
+        `TripsMobile.tsx` has the identical unconditional button in its
+        own `BackHeader` trailing slot — same one-line fix would apply,
+        left untouched since this item's tag is Desktop-only.
+        **Widened same day, two follow-ons from the same conversation**:
+        (1) `TripDetailHeader`'s own "+ Add items" button also rendered
+        unconditionally, duplicating the CTA `EmptyStatePanel` already
+        shows in the zero-items case — same `tripItemCount(trip) > 0 &&`
+        guard added there. `TripDetailHeader` is the shared component
+        behind both `TripsDesktop.tsx`/`TripsMobile.tsx` (same situation
+        as `RailRow` earlier in this ticket), so unlike the Edit/Done
+        button above, **this half of the fix applies to mobile too**,
+        not just desktop. (2) `isEditMode` could get stuck true across a
+        delete-all-then-re-add-items cycle on the same trip (the existing
+        reset-on-trip-switch `useEffect` in `useTripsScreen.ts` only fires
+        on `tripId` changing, not on item count) — added a second
+        `useEffect` there, keyed on `tripItemCount(selected.data)`,
+        forcing `isEditMode` false whenever it hits `0`. **Flagged, not
+        yet written**: this is real state-transition logic per
+        `CLAUDE.md`'s testing section, and `useTripsScreen.test.tsx`
+        already exists — a case for this isn't in it yet.
   - [x] **[Desktop, Templates]** Templates' detail pane (including its
         empty state) has diverged from Trips' — it doesn't take the full
         available width like Trips' does (noticed 2026-07-31). **Root
@@ -401,6 +430,21 @@ bg-bg` unchanged.
     threshold in `CLAUDE.md`'s Structure conventions — a real folder
     split (by concern vs. by shape) is its own decision, not bundled in
     here.
+  - [ ] **[UX improvement]** Add-items picker's "Done" button
+        (`AddItemsPickerModal.tsx`, currently static "Done" text) gives no
+        running feedback on how many items are queued in the draft —
+        noticed 2026-07-31: tapping a bulk chip like "+ All Toiletries"
+        while scrolled somewhere else in the list gives no visual
+        confirmation anything happened (the chip itself disappears, but
+        nothing else changes on screen). Proposed: "Done" stays "Done"
+        with an empty draft, but becomes something like "Add N item(s)"
+        once the draft has pending changes — `useItemsDraft`
+        (`components/detail/useItemsDraft.ts`) already tracks a `pending`
+        delta map this could derive a count from, no new state needed.
+        Shared modal (Templates' `TemplateAddItemsModal` and Trips'
+        `TripAddItemsModal` both use it), so this would land on both
+        screens/breakpoints at once by construction, same as `RailRow`/
+        `TripDetailHeader` earlier in this ticket.
 
 ### Later / polish
 

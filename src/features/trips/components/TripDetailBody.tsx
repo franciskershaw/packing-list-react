@@ -1,6 +1,7 @@
 import type { PackingListDetail } from "../../../api/trips";
 import { CategoryGroupCard } from "../../../components/detail/CategoryGroupCard";
 import { EmptyStatePanel } from "../../../components/detail/EmptyStatePanel";
+import { tripItemCount } from "../tripItemCount";
 import { TripItemRow } from "./TripItemRow";
 import { TripProgressCard } from "./TripProgressCard";
 
@@ -20,7 +21,7 @@ export function TripDetailBody({
   onAddItems,
 }: TripDetailBodyProps) {
   const allItems = trip.categories.flatMap((category) => category.items);
-  const total = allItems.length;
+  const total = tripItemCount(trip);
   const packed = allItems.filter((item) => item.isPacked).length;
   const allPacked = total > 0 && packed === total;
 

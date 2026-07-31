@@ -9,6 +9,7 @@ import {
 } from "../../api/trips";
 import type { PackingList, PackingListDetail } from "../../api/trips";
 import { sortTripsByDate } from "./sortTripsByDate";
+import { tripItemCount } from "./tripItemCount";
 
 export interface UseTripsScreenResult {
   trips: PackingList[];
@@ -65,6 +66,18 @@ export function useTripsScreen(): UseTripsScreenResult {
     setIsEditMode(false);
     setCollapsedCategoryIds(new Set());
   }, [tripId]);
+
+  // Deleting every item while in edit mode, then re-adding some, shouldn't
+  // leave the trip stuck in edit mode — same trip/tripId, so the effect
+  // above doesn't cover it.
+  const selectedItemCount = selected.data
+    ? tripItemCount(selected.data)
+    : undefined;
+  useEffect(() => {
+    if (selectedItemCount === 0) {
+      setIsEditMode(false);
+    }
+  }, [selectedItemCount]);
 
   // Cross-screen open, per Templates' "Use for a new trip":
   // /trips?new=<templateId> opens the modal preselecting that template,

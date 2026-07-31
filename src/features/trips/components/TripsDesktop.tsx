@@ -5,6 +5,7 @@ import { TripDetailHeader } from "../../../components/detail/TripDetailHeader";
 import { Button } from "../../../components/ui/Button";
 import { useAuth } from "../../auth/AuthContext";
 import { formatTripDate } from "../formatTripDate";
+import { tripItemCount } from "../tripItemCount";
 import type { UseTripsScreenResult } from "../useTripsScreen";
 import { ArchiveButton } from "./ArchiveButton";
 import { ArchivedTripRow } from "./ArchivedTripRow";
@@ -118,9 +119,11 @@ export function TripsDesktop({
                     <ArchiveButton
                       onClick={() => archiveTrip(selectedTrip.id)}
                     />
-                    <Button variant="outline" onClick={toggleEditMode}>
-                      {isEditMode ? "Done" : "Edit"}
-                    </Button>
+                    {tripItemCount(selectedTrip) > 0 && (
+                      <Button variant="outline" onClick={toggleEditMode}>
+                        {isEditMode ? "Done" : "Edit"}
+                      </Button>
+                    )}
                   </>
                 }
               />
