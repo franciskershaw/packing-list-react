@@ -1,13 +1,15 @@
 import { BackHeader } from "../../../components/detail/BackHeader";
 import { EmptyStatePanel } from "../../../components/detail/EmptyStatePanel";
+import { ProgressRing } from "../../../components/detail/ProgressRing";
+import { RailRow } from "../../../components/detail/RailRow";
 import { TripDetailHeader } from "../../../components/detail/TripDetailHeader";
 import { Button } from "../../../components/ui/Button";
 import { useAuth } from "../../auth/AuthContext";
+import { formatTripDate } from "../formatTripDate";
 import type { UseTripsScreenResult } from "../useTripsScreen";
 import { ArchiveButton } from "./ArchiveButton";
 import { ArchivedTripRow } from "./ArchivedTripRow";
 import { TripDetailBody } from "./TripDetailBody";
-import { TripListCard } from "./TripListCard";
 
 export function TripsMobile({
   trips,
@@ -104,11 +106,26 @@ export function TripsMobile({
       ) : (
         <div className="flex flex-col gap-3">
           {trips.map((trip) => (
-            <TripListCard
+            <RailRow
               key={trip.id}
-              trip={trip}
+              leading={
+                <ProgressRing
+                  packed={trip.packedCount}
+                  total={trip.itemCount}
+                />
+              }
+              surface="flush"
+              showChevron
               onClick={() => selectTrip(trip.id)}
-            />
+            >
+              <p className="truncate font-heading text-base font-bold text-heading">
+                {trip.name}
+              </p>
+              <p className="mt-0.5 truncate text-sm text-secondary">
+                {formatTripDate(trip.eventDate)} · {trip.packedCount} of{" "}
+                {trip.itemCount} packed
+              </p>
+            </RailRow>
           ))}
         </div>
       )}

@@ -47,13 +47,21 @@ export function TemplatesDesktop({
                 {templates.map((template) => (
                   <RailRow
                     key={template.id}
-                    title={template.name}
-                    meta={`${template.itemCount} items · ${
-                      template.description || "No description yet"
-                    }`}
                     selected={template.id === selectedTemplate?.id}
                     onClick={() => selectTemplate(template.id)}
-                  />
+                  >
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="truncate font-heading text-base font-bold text-heading">
+                        {template.name}
+                      </span>
+                      <span className="shrink-0 text-sm text-secondary">
+                        {template.itemCount} items
+                      </span>
+                    </div>
+                    <p className="truncate text-sm text-secondary">
+                      {template.description || "No description yet"}
+                    </p>
+                  </RailRow>
                 ))}
               </div>
             )}

@@ -75,11 +75,17 @@ export function TripsDesktop({
                       total={trip.itemCount}
                     />
                   }
-                  title={trip.name}
-                  meta={`${formatTripDate(trip.eventDate)} · ${trip.packedCount} of ${trip.itemCount} packed`}
                   selected={trip.id === selectedTrip?.id}
                   onClick={() => selectTrip(trip.id)}
-                />
+                >
+                  <p className="truncate font-heading text-base font-bold text-heading">
+                    {trip.name}
+                  </p>
+                  <p className="mt-0.5 truncate text-sm text-secondary">
+                    {formatTripDate(trip.eventDate)} · {trip.packedCount} of{" "}
+                    {trip.itemCount} packed
+                  </p>
+                </RailRow>
               ))}
             </div>
           )}

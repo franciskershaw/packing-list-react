@@ -1,9 +1,9 @@
 import { BackHeader } from "../../components/detail/BackHeader";
 import { EmptyStatePanel } from "../../components/detail/EmptyStatePanel";
+import { RailRow } from "../../components/detail/RailRow";
 import { TemplateDetailHeader } from "../../components/detail/TemplateDetailHeader";
 import { Button } from "../../components/ui/Button";
 import { TemplateDetailBody } from "./TemplateDetailBody";
-import { TemplateListCard } from "./TemplateListCard";
 import type { UseTemplatesScreenResult } from "./useTemplatesScreen";
 
 export function TemplatesMobile({
@@ -72,13 +72,24 @@ export function TemplatesMobile({
         ) : (
           <div className="flex flex-col gap-3">
             {templates.map((template) => (
-              <TemplateListCard
+              <RailRow
                 key={template.id}
-                name={template.name}
-                itemCount={template.itemCount}
-                description={template.description}
+                surface="flush"
+                showChevron
                 onClick={() => selectTemplate(template.id)}
-              />
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="truncate font-heading text-base font-bold text-heading">
+                    {template.name}
+                  </span>
+                  <span className="shrink-0 text-sm text-secondary">
+                    {template.itemCount} items
+                  </span>
+                </div>
+                <p className="truncate text-sm text-secondary">
+                  {template.description || "No description yet"}
+                </p>
+              </RailRow>
             ))}
           </div>
         ))}

@@ -482,6 +482,40 @@ bg-bg` unchanged.
         `TripAddItemsModal` both use it), so this would land on both
         screens/breakpoints at once by construction, same as `RailRow`/
         `TripDetailHeader` earlier in this ticket.
+  - [x] **[Desktop + Mobile, Trips + Templates] Clean-up**: `RailRow`
+        (desktop-only rail row), `TripListCard` (mobile-only), and
+        `TemplateListCard` (mobile-only) were three near-duplicate row
+        components — noticed 2026-07-31 while explaining `RailRow` to the
+        developer. **Fixed 2026-07-31, developer-confirmed**: merged into
+        one `RailRow` (`components/detail/RailRow.tsx`), now used by all
+        four call sites. Shell (`leading`, `selected` — desktop only,
+        `showChevron` — mobile only, `surface: "raised" | "flush"` for the
+        white-card-on-desktop vs. flush-bordered-on-mobile elevation
+        difference) is prop-driven; row content is passed as `children` so
+        Templates keeps its own baseline-row-plus-description layout
+        instead of being forced through a generic `title`/`meta` string
+        API — deliberate per-conversation decision over a fully
+        data-driven API. Two real fixes landed as a side effect of
+        unifying rather than being separately diagnosed: mobile Templates
+        rows were missing the chevron mobile Trips rows already had (now
+        consistent on both), and mobile Templates' item count moved from
+        a bespoke top-right slot next to the title into the meta line,
+        matching how desktop already presents it. Trips' content
+        (desktop and mobile) was left exactly as-is — developer explicitly
+        wanted no change there. `TripListCard.tsx`/`TemplateListCard.tsx`
+        deleted; no test files existed for either so no test updates
+        needed.
+  - [ ] **[Mobile, Trips + Templates]** The sticky detail-header work
+        earlier in this ticket introduced a regression: content now runs
+        under the mobile bottom nav bar instead of stopping above it —
+        noticed 2026-07-31, not yet diagnosed. Likely candidate: the
+        sticky-header split changed how the scrolling body's bottom
+        padding/height is computed relative to `AppShell`'s
+        `pb-[calc(6rem_+_env(safe-area-inset-bottom))]` (see
+        `foundations.md` for that value's origin) — needs investigating
+        against both `TripsMobile.tsx` and `TemplatesMobile.tsx`, not just
+        one, since both got the same sticky-header treatment. Developer
+        wants to tackle this next.
 
 ### Later / polish
 

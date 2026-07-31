@@ -8,7 +8,7 @@ interface ArchivedTripRowProps {
 }
 
 // Non-tappable — this row's only interaction is the Restore pill,
-// unlike TripListCard's whole-row click into the active list.
+// unlike RailRow's whole-row click into the active list.
 export function ArchivedTripRow({ trip, onRestore }: ArchivedTripRowProps) {
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-border bg-bg-subtle px-4 py-3">
