@@ -423,26 +423,38 @@ bg-bg` unchanged.
         were visible by default, which is no longer true — replaced with
         a test asserting default-hidden state plus both toggle
         directions.
-  - [ ] `ItemFormModal` closes on successful add — poor for adding several
-        items in a row (noticed 2026-07-25: adding many items one at a
-        time meant repeatedly reopening the modal). Instead: on
-        successful create, keep the modal open and just clear the name
-        field (leave the selected category as-is, since consecutive adds
-        are often to the same category). Only applies to the create
-        flow — edit-mode save should still close as it does now.
-  - [ ] Template/trip item notes are read-only (noticed 2026-07-26,
-        PACKFE-004's grill-me) — the data model carries them and rows
-        display them, but neither design export has an affordance for
-        _writing_ one. Needs a design before it can be built.
-  - [ ] Horizontal scroll on the Templates desktop rail (reported
-        2026-07-26, developer testing PACKFE-004 Piece 6) — not resolved.
-        Tried `min-w-0` down the flex chain + `truncate` on `RailRow`'s
-        title/meta text, developer still saw it after a hard refresh;
-        not reproducible via automated browser testing at
-        1600px/1280px/430px with the seed data at the time
-        (`scrollWidth === clientWidth` every width tried). Next step: get
-        a screenshot or recording of it actually happening rather than
-        guessing at more defensive CSS.
+  - [x] Horizontal scroll on the Templates desktop rail (reported
+        2026-07-26, developer testing PACKFE-004 Piece 6) — not resolved
+        at the time. **Fixed 2026-07-31, developer-confirmed**: root cause
+        was never the title/meta text — it was `InteractiveButton`
+        (`components/ui/Button.tsx`)'s invisible tap-target-expansion
+        `<span className="absolute -inset-2.5">` (added for the 44px
+        touch-target guideline), which extends ~10px past every button's
+        own box on all sides, including past the rail's scroll container.
+        Combined with a real CSS quirk — a container with `overflow-y:
+    auto` and no explicit `overflow-x` gets that axis silently
+        promoted from `visible` to `auto` too — that invisible sliver
+        became genuinely scrollable. Confirmed live in Chrome (developer
+        first noticed the trackpad "springy"/rubber-band behavior was
+        confined to just the row cards, not the whole panel or the
+        title/button above them — the key clue that narrowed it to the
+        scroll container specifically) via `getComputedStyle` and
+        `scrollWidth`/`clientWidth` measurements before touching any code,
+        using temporary debug borders/outlines on every layer of
+        `TripsDesktop.tsx`'s rail (aside, scroll wrapper, list wrapper,
+        row content) plus a visible border/bg on the normally-invisible
+        span — all removed again once the cause was confirmed. Fix: added
+        `overflow-x-hidden` alongside the existing `overflow-y-auto` on
+        the rail's scroll container — correct regardless of the
+        invisible-span mechanism, since that container was never meant to
+        scroll horizontally. Verified on `TripsDesktop.tsx` first per
+        developer's request (simpler case, no `min-w-0`/flex-row
+        complications), then applied identically to
+        `TemplatesDesktop.tsx` once confirmed. An earlier detour this
+        session — suspecting `TemplatesDesktop.tsx`'s baseline-row
+        `<span>` (from today's `RailRow`-unification piece) needed
+        `min-w-0` to fix `truncate` — was tried, found not to fix it, and
+        reverted before this investigation started.
   - [ ] A trip's date can't be edited after creation (noticed 2026-07-27,
         PACKFE-005's grill-me) — set once in the New-trip modal, shown
         everywhere, no affordance anywhere edits it afterward. Trip
