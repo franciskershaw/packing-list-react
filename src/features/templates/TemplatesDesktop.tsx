@@ -61,25 +61,31 @@ export function TemplatesDesktop({
         )}
       </aside>
 
-      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto py-12 pr-12">
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">
         {!isLoading &&
           (selectedTemplate ? (
-            <div className="max-w-160 px-10 pt-7.5 pb-17.5">
-              <div key={selectedTemplate.id} className="flex flex-col gap-2">
+            <>
+              <div className="sticky top-0 z-10 max-w-160 bg-bg pt-19.5 pr-22 pb-2 pl-10">
                 <TemplateDetailHeader
+                  key={selectedTemplate.id}
                   template={selectedTemplate}
                   onAddItems={openAddItems}
                   autoFocusTitle={selectedTemplate.id === justCreatedTemplateId}
                 />
+              </div>
+              <div
+                key={selectedTemplate.id}
+                className="max-w-160 pr-22 pb-29.5 pl-10"
+              >
                 <TemplateDetailBody
                   template={selectedTemplate}
                   deleteTemplate={deleteTemplate}
                   onAddItems={openAddItems}
                 />
               </div>
-            </div>
+            </>
           ) : isSelectedLoading ? null : (
-            <div className="flex h-full items-center justify-center">
+            <div className="flex h-full items-center justify-center py-12 pr-12">
               <div className="max-w-75 text-center">
                 <p className="font-heading text-lg font-bold text-heading">
                   No template selected

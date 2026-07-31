@@ -35,7 +35,7 @@ export function TripsDesktop({
   }
 
   return (
-    <div className="flex min-h-full gap-6">
+    <div className="flex h-full gap-6">
       <aside className="flex w-82.5 shrink-0 flex-col gap-4 border-r border-border py-12 pr-6 pl-6">
         <div className="flex flex-col gap-4">
           <div>
@@ -105,31 +105,38 @@ export function TripsDesktop({
         </div>
       </aside>
 
-      <main className="min-h-0 min-w-0 flex-1 py-12 pr-12">
+      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">
         {selectedTrip ? (
-          <div key={selectedTrip.id} className="flex flex-col gap-4">
-            <TripDetailHeader
-              trip={selectedTrip}
-              onAddItems={openAddItems}
-              trailing={
-                <>
-                  <ArchiveButton onClick={() => archiveTrip(selectedTrip.id)} />
-                  <Button variant="outline" onClick={toggleEditMode}>
-                    {isEditMode ? "Done" : "Edit"}
-                  </Button>
-                </>
-              }
-            />
-            <TripDetailBody
-              trip={selectedTrip}
-              isEditMode={isEditMode}
-              collapsedCategoryIds={collapsedCategoryIds}
-              toggleCategoryCollapsed={toggleCategoryCollapsed}
-              onAddItems={openAddItems}
-            />
-          </div>
+          <>
+            <div className="sticky top-0 z-10 bg-bg pt-12 pr-12 pb-4">
+              <TripDetailHeader
+                key={selectedTrip.id}
+                trip={selectedTrip}
+                onAddItems={openAddItems}
+                trailing={
+                  <>
+                    <ArchiveButton
+                      onClick={() => archiveTrip(selectedTrip.id)}
+                    />
+                    <Button variant="outline" onClick={toggleEditMode}>
+                      {isEditMode ? "Done" : "Edit"}
+                    </Button>
+                  </>
+                }
+              />
+            </div>
+            <div key={selectedTrip.id} className="pr-12 pb-12">
+              <TripDetailBody
+                trip={selectedTrip}
+                isEditMode={isEditMode}
+                collapsedCategoryIds={collapsedCategoryIds}
+                toggleCategoryCollapsed={toggleCategoryCollapsed}
+                onAddItems={openAddItems}
+              />
+            </div>
+          </>
         ) : isSelectedLoading ? null : (
-          <div className="flex h-full items-center justify-center">
+          <div className="flex h-full items-center justify-center py-12 pr-12">
             <div className="max-w-75 text-center">
               <p className="font-heading text-lg font-bold text-heading">
                 Pick a trip

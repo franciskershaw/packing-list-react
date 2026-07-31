@@ -191,6 +191,13 @@ border-border` on the `<aside>`, `TripsDesktop.tsx`) doesn't run
         match whichever pane is taller instead of being capped.
         Same latent bug exists in `TemplatesDesktop.tsx` (identical
         `h-full` wrapper) — not touched here, out of this item's scope.
+        **Superseded 2026-07-31** by the desktop sticky-rail item further
+        down this list — that fix gave Trips' `<main>` its own
+        `overflow-y-auto` (matching Templates) and reverted this row back
+        to a fixed `h-full`, which handles the divider-height problem more
+        robustly than growing the row ever did (the border now always
+        matches the row's fixed box exactly, regardless of content
+        length, instead of needing to keep pace with growth).
   - [x] **[Desktop, Trips + Templates]** Same divider (`TripsDesktop.tsx`
         and `TemplatesDesktop.tsx`, both `border-r border-border` on the
         `<aside>`) doesn't reach the very top or bottom of the page —
@@ -250,7 +257,7 @@ border-border` on the `<aside>`, `TripsDesktop.tsx`) doesn't run
         `border-border` (no selected state exists on mobile, every row
         gets the same neutral border). Changed unselected's
         `border-transparent` → `border-border`; selected's `border-accent
-    bg-bg` unchanged.
+bg-bg` unchanged.
   - [x] **[Mobile, Trips + Templates]** Detail-view header should be
         sticky on scroll — back button, archive, Edit/Done, title, "+
         Add items" (`BackHeader` + `TripDetailHeader`/
@@ -301,21 +308,28 @@ border-border` on the `<aside>`, `TripsDesktop.tsx`) doesn't run
         `<aside>` in `TripsDesktop.tsx`/`TemplatesDesktop.tsx`) shouldn't
         be scrollable-past just by scrolling a long packing list/template
         in the main pane — it should stay in view (noticed 2026-07-31).
-        **Context for whoever picks this up**: `TemplatesDesktop.tsx`'s
-        main pane already has its own `overflow-y-auto` (self-scrolling,
-        capped at the row's height) — on that screen the rail likely
-        already stays put, worth confirming first. `TripsDesktop.tsx`'s
-        main pane has no independent scroll — the whole page scrolls as
-        one unit via `AppShell`'s `<main>`, which is exactly why the
-        divider-height fix earlier in this ticket changed the row wrapper
-        to `min-h-full` (let the row grow with content so the border keeps
-        pace). Giving Trips' main pane its own `overflow-y-auto` (matching
-        Templates) would likely solve **both** problems at once — the row
-        could go back to a fixed `h-full` (no more need to grow), and the
-        aside would naturally stay in view since it'd no longer share a
-        scroll container with the overflowing detail content. Worth
-        reconciling with that earlier fix when this is picked up rather
-        than layering a second, separate scroll mechanism on top.
+        **Widened same day**: developer clarified this should also cover
+        the detail pane's own header (title, "+ Add items", archive,
+        Edit/Done), same as mobile — not just the rail.
+        **Fixed 2026-07-31, awaiting visual confirmation, two parts**:
+        (1) rail — confirmed `TemplatesDesktop.tsx` already behaved
+        correctly (its main pane already had its own `overflow-y-auto`,
+        capped at the row's fixed `h-full` — the aside never shared a
+        scroll container with the overflowing detail content, so it was
+        already pinned by construction). Gave `TripsDesktop.tsx`'s
+        `<main>` the same `overflow-y-auto` and reverted its outer row
+        from `min-h-full` back to `h-full` to match — also supersedes the
+        earlier divider-height fix (see that item's own updated note
+        above) rather than stacking a second scroll mechanism on top.
+        (2) detail header — same split-block technique as the mobile fix:
+        `TripDetailHeader`/`TemplateDetailHeader` now sit in their own
+        `sticky top-0 z-10 bg-bg` block ahead of the scrolling body.
+        `TemplatesDesktop.tsx` needed its accumulated two-layer padding
+        (the pane's own `py-12 pr-12` plus the nested `max-w-160` column's
+        `px-10 pt-7.5 pb-17.5`) combined into each split block's own
+        padding, replicating `max-w-160` on both halves so they stay
+        column-aligned — `TripsDesktop.tsx` had no such nesting, simpler
+        split.
   - [ ] **[Copy]** Trips greeting ("Where to next, {name}?",
         `TripsDesktop.tsx`/`TripsMobile.tsx`) uses the full `user.name`
         from Google sign-in — reads oddly formal/impersonal. Default to
