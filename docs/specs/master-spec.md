@@ -333,14 +333,27 @@ bg-bg` unchanged.
         padding Trips uses (`pt-12 pr-12 pb-4` header / `pr-12 pb-12`
         body, no left padding, no max-width) — full 1:1 match with Trips
         rather than a differently-tuned equivalent.
-  - [ ] The whole app has no maximum width — stretching the browser to
+  - [x] The whole app has no maximum width — stretching the browser to
         fill a very wide monitor (e.g. 38") lets the layout stretch
         infinitely rather than capping out (noticed 2026-07-31). An edge
         case, not urgent. Needs a sensible max-width applied somewhere in
         the `AppShell`/route-content chain (`src/components/nav/AppShell.tsx`
         is the obvious candidate — nothing there today) so the app stops
         growing past some reasonable ceiling on very large screens.
-  - [ ] **[Desktop, Trips + Templates]** Desktop equivalent of the mobile
+        **Fixed 2026-07-31, developer-confirmed**: wrapped
+        `<Outlet />` in `AppShell.tsx`'s `<main>` with a
+        `mx-auto h-full max-w-[1600px]` div — content centers and stops
+        growing past 1600px on very wide viewports, `<main>` itself stays
+        `flex-1`/`overflow-y-auto` unchanged so its scrollbar still spans
+        the true edge. Kept `h-full` on the new wrapper deliberately: a
+        plain `height: auto` block wouldn't give
+        `TripsDesktop.tsx`/`TemplatesDesktop.tsx`'s own `h-full` root divs
+        a definite height to resolve against (the classic
+        percentage-height-needs-a-definite-ancestor gotcha), which would
+        have silently broken their layout. 1600px is a first estimate,
+        not measured against anything — developer eyeballs/adjusts on an
+        actual wide monitor.
+  - [x] **[Desktop, Trips + Templates]** Desktop equivalent of the mobile
         sticky-header item above: the rail column (trip/template list,
         `<aside>` in `TripsDesktop.tsx`/`TemplatesDesktop.tsx`) shouldn't
         be scrollable-past just by scrolling a long packing list/template
@@ -348,7 +361,7 @@ bg-bg` unchanged.
         **Widened same day**: developer clarified this should also cover
         the detail pane's own header (title, "+ Add items", archive,
         Edit/Done), same as mobile — not just the rail.
-        **Fixed 2026-07-31, awaiting visual confirmation, two parts**:
+        **Fixed 2026-07-31, developer-confirmed, two parts**:
         (1) rail — confirmed `TemplatesDesktop.tsx` already behaved
         correctly (its main pane already had its own `overflow-y-auto`,
         capped at the row's fixed `h-full` — the aside never shared a

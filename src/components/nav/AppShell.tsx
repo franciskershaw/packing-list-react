@@ -11,7 +11,9 @@ export function AppShell() {
       </div>
 
       <main className="flex-1 overflow-y-auto pb-[calc(6rem_+_env(safe-area-inset-bottom))] lg:pb-0">
-        <Outlet />
+        <div className="mx-auto h-full max-w-[1600px]">
+          <Outlet />
+        </div>
       </main>
 
       <div className="lg:hidden">
