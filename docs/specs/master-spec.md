@@ -431,7 +431,7 @@ bg-bg` unchanged.
           `DesktopSidebar.tsx` (PACKFE-007). A genuine blank-render gap
           exists on true first load (nothing cached yet), confirmed on
           three screens: Trips blanks the whole screen (`if (isLoading)
-    return null`), Templates blanks only the list area (header/
+return null`), Templates blanks only the list area (header/
           `+ New template` button stay visible), Library blanks only the
           chips+item-groups (header/search stay visible). Profile has no
           query — out of scope. Detail panes' own first-ever load (before
@@ -449,7 +449,7 @@ bg-bg` unchanged.
           (`TripsDesktop`/`TripsMobile`'s `if (isLoading) return null` →
           centered `Spinner`; `TemplatesDesktop`/`TemplatesMobile`'s and
           `LibraryScreen`'s `{!isLoading && (...)}` → `{isLoading ? centered
-    Spinner : (...)}`) — deliberately not restructuring which
+Spinner : (...)}`) — deliberately not restructuring which
           regions each screen blanks, just filling the existing blank
           with a spinner. No minimum-visible-duration/anti-flicker timer —
           spinner syncs directly with `isLoading`; the local API is
@@ -510,45 +510,6 @@ auto` and no explicit `overflow-x` gets that axis silently
         `<span>` (from today's `RailRow`-unification piece) needed
         `min-w-0` to fix `truncate` — was tried, found not to fix it, and
         reverted before this investigation started.
-  - [ ] A trip's date can't be edited after creation (noticed 2026-07-27,
-        PACKFE-005's grill-me) — set once in the New-trip modal, shown
-        everywhere, no affordance anywhere edits it afterward. Trip
-        detail's Edit mode is the obvious home once this gets designed.
-  - [ ] **[Desktop, Trips + Templates] Clean-up**: extract a shared rail
-        shell for `TripsDesktop.tsx`/`TemplatesDesktop.tsx` into
-        `components/detail/` — the outer flex row, `<aside>`'s classes
-        (width, border, padding, header-slot + scrollable-list-slot
-        structure) are now identical between the two after this ticket's
-        fixes, and three of those fixes had to be pasted into both files
-        verbatim in one session (noticed 2026-07-31 — real, demonstrated
-        duplication, not speculative). Keep the main/detail pane itself
-        un-merged — Templates' pane already self-scrolls with its own
-        max-width while Trips' relies on the page-level scroll, a real
-        behavioral difference, not just a styling one.
-  - **Open question carried over, not yet part of this ticket's scope**:
-    whether deleting a template that a trip was seeded from is blocked
-    server-side (flagged during PACKFE-004, never confirmed either way —
-    see `templates.md`'s Piece 4c entry).
-  - **Tech debt carried over, not yet part of this ticket's scope**:
-    `src/features/templates/` is at 11 files, past the 8-file flat-folder
-    threshold in `CLAUDE.md`'s Structure conventions — a real folder
-    split (by concern vs. by shape) is its own decision, not bundled in
-    here.
-  - [ ] **[UX improvement]** Add-items picker's "Done" button
-        (`AddItemsPickerModal.tsx`, currently static "Done" text) gives no
-        running feedback on how many items are queued in the draft —
-        noticed 2026-07-31: tapping a bulk chip like "+ All Toiletries"
-        while scrolled somewhere else in the list gives no visual
-        confirmation anything happened (the chip itself disappears, but
-        nothing else changes on screen). Proposed: "Done" stays "Done"
-        with an empty draft, but becomes something like "Add N item(s)"
-        once the draft has pending changes — `useItemsDraft`
-        (`components/detail/useItemsDraft.ts`) already tracks a `pending`
-        delta map this could derive a count from, no new state needed.
-        Shared modal (Templates' `TemplateAddItemsModal` and Trips'
-        `TripAddItemsModal` both use it), so this would land on both
-        screens/breakpoints at once by construction, same as `RailRow`/
-        `TripDetailHeader` earlier in this ticket.
   - [x] **[Desktop + Mobile, Trips + Templates] Clean-up**: `RailRow`
         (desktop-only rail row), `TripListCard` (mobile-only), and
         `TemplateListCard` (mobile-only) were three near-duplicate row
@@ -596,20 +557,24 @@ auto` and no explicit `overflow-x` gets that axis silently
         since a future tab-bar resize would otherwise need to stay
         manually in sync across three call sites.
 
-### Later / polish
+## Parked backlog
 
-Not tickets yet — a parking lot for things noticed mid-build that aren't
-worth stopping for. Promote to a numbered ticket above when you actually
-want to do it.
+Active development is paused as of 2026-08-01 — the core feature set
+above is functionally complete. What's left is minor polish/UX
+follow-ups and process retrospection, deferred indefinitely rather than
+tracked ticket by ticket. Full context for each, if ever revisited, is
+in `templates.md`/`trips.md` or this file's git history.
 
-- Project-wide close-out once several more screens are built: review the
-  development process itself (grill-me/close-out cadence,
-  screenshot-grounded AI-authorship rule, ticket-order flexibility) and
-  streamline it based on what's actually worked across multiple tickets,
-  not just PACKFE-007's single retro. Include a discussion of how to
-  practically bring back a test-driven approach — this branch dropped
-  tests-first entirely during the process reset, and it's worth
-  revisiting whether some lighter-weight version fits now that a few
-  screens' worth of real experience exists, rather than assuming the
-  original all-or-nothing tradeoff still holds. Not tied to a specific
-  epic — revisit when it feels due.
+- Trip date can't be edited after creation — no affordance anywhere
+  edits it once set in the New-trip modal.
+- Clean-up: extract a shared rail shell for `TripsDesktop.tsx`/
+  `TemplatesDesktop.tsx` (identical `<aside>` structure after PACKFE-010).
+- Open question: whether deleting a template a trip was seeded from is
+  blocked server-side — never confirmed either way.
+- Tech debt: `src/features/templates/` is past the 8-file flat-folder
+  threshold (`CLAUDE.md`'s Structure conventions).
+- UX: Add-items picker's "Done" button gives no running count of queued
+  items.
+- Process retro: revisit the grill-me/close-out cadence and whether a
+  lighter-weight tests-first approach fits, now that several screens'
+  worth of real experience exists.
