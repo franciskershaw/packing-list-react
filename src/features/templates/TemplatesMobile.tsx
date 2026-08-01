@@ -4,6 +4,7 @@ import { RailRow } from "../../components/detail/RailRow";
 import { TemplateDetailHeader } from "../../components/detail/TemplateDetailHeader";
 import { MOBILE_NAV_CLEARANCE_SPACER_CLASS } from "../../components/nav/AppShell";
 import { Button } from "../../components/ui/Button";
+import { Spinner } from "../../components/ui/Spinner";
 import { TemplateDetailBody } from "./TemplateDetailBody";
 import type { UseTemplatesScreenResult } from "./useTemplatesScreen";
 
@@ -63,38 +64,41 @@ export function TemplatesMobile({
         </Button>
       </div>
 
-      {!isLoading &&
-        (templates.length === 0 ? (
-          <EmptyStatePanel
-            title="No templates yet"
-            message="Click below to build your first one."
-            actionLabel="+ New template"
-            onAction={createTemplate}
-          />
-        ) : (
-          <div className="flex flex-col gap-3">
-            {templates.map((template) => (
-              <RailRow
-                key={template.id}
-                surface="flush"
-                showChevron
-                onClick={() => selectTemplate(template.id)}
-              >
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="truncate font-heading text-base font-bold text-heading">
-                    {template.name}
-                  </span>
-                  <span className="shrink-0 text-sm text-secondary">
-                    {template.itemCount} items
-                  </span>
-                </div>
-                <p className="truncate text-sm text-secondary">
-                  {template.description || "No description yet"}
-                </p>
-              </RailRow>
-            ))}
-          </div>
-        ))}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-24">
+          <Spinner />
+        </div>
+      ) : templates.length === 0 ? (
+        <EmptyStatePanel
+          title="No templates yet"
+          message="Click below to build your first one."
+          actionLabel="+ New template"
+          onAction={createTemplate}
+        />
+      ) : (
+        <div className="flex flex-col gap-3">
+          {templates.map((template) => (
+            <RailRow
+              key={template.id}
+              surface="flush"
+              showChevron
+              onClick={() => selectTemplate(template.id)}
+            >
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="truncate font-heading text-base font-bold text-heading">
+                  {template.name}
+                </span>
+                <span className="shrink-0 text-sm text-secondary">
+                  {template.itemCount} items
+                </span>
+              </div>
+              <p className="truncate text-sm text-secondary">
+                {template.description || "No description yet"}
+              </p>
+            </RailRow>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

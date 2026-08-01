@@ -1,4 +1,8 @@
-import { useQueryClient, type QueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 
 import { useToast } from "../components/ui/Toast";
 import { apiFetch } from "../lib/api/client";
@@ -22,8 +26,6 @@ export interface PackingList {
   eventDate: string | null;
   templateId: string | null;
   items: PackingListItem[];
-  // List-mode-only counts (PACK-036) — Items itself always stays empty in
-  // list mode, so these are the only way to know a trip's progress here.
   itemCount: number;
   packedCount: number;
 }
@@ -163,6 +165,7 @@ export function useTrip(id: string | undefined) {
     queryKey: [...TRIPS_QUERY_KEY, id],
     queryFn: () => fetchTrip(id as string),
     enabled: !!id,
+    placeholderData: keepPreviousData,
   });
 }
 

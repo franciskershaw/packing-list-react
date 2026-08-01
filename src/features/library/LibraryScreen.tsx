@@ -6,6 +6,7 @@ import type { Item } from "../../api/items";
 import { CategoryGroupCard } from "../../components/detail/CategoryGroupCard";
 import { Button, InteractiveButton } from "../../components/ui/Button";
 import { Chip } from "../../components/ui/Chip";
+import { Spinner } from "../../components/ui/Spinner";
 import { TextField } from "../../components/ui/TextField";
 import { CategoriesModal } from "./CategoriesModal";
 import { groupLibraryItems } from "./groupLibraryItems";
@@ -56,7 +57,11 @@ export function LibraryScreen() {
         placeholder="Search your stuff…"
       />
 
-      {!isLoading && (
+      {isLoading ? (
+        <div className="flex items-center justify-center py-24">
+          <Spinner />
+        </div>
+      ) : (
         <>
           <div className="-mx-6 flex gap-2 overflow-x-auto px-6 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0">
             <Chip

@@ -1,4 +1,4 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 
 import { useToast } from "../components/ui/Toast";
 import { apiFetch } from "../lib/api/client";
@@ -111,6 +111,7 @@ export function useTemplate(id: string | undefined) {
     queryKey: [...TEMPLATES_QUERY_KEY, id],
     queryFn: () => fetchTemplate(id as string),
     enabled: !!id,
+    placeholderData: keepPreviousData,
   });
 }
 

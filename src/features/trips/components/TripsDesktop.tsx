@@ -3,6 +3,7 @@ import { ProgressRing } from "../../../components/detail/ProgressRing";
 import { RailRow } from "../../../components/detail/RailRow";
 import { TripDetailHeader } from "../../../components/detail/TripDetailHeader";
 import { Button } from "../../../components/ui/Button";
+import { Spinner } from "../../../components/ui/Spinner";
 import { useAuth } from "../../auth/AuthContext";
 import { formatTripDate } from "../formatTripDate";
 import { tripItemCount } from "../tripItemCount";
@@ -32,7 +33,11 @@ export function TripsDesktop({
   const { user } = useAuth();
 
   if (isLoading) {
-    return null;
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Spinner />
+      </div>
+    );
   }
 
   return (

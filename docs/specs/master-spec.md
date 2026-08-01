@@ -396,13 +396,68 @@ bg-bg` unchanged.
         (a rhythm-preserving rework of the original, a plain functional
         statement, a warmer benefit-focused line, and this one) offered
         before any change was made.
-  - [ ] A real loading-state visual treatment (noticed during PACKFE-003
-        Piece 6, 2026-07-25 — first screen to hit this gap). No screen in
-        this project has a designed loading pattern yet; screens render
-        nothing during their brief fetch window rather than a "Loading…"
-        placeholder. Worth designing something real (skeleton rows, etc.)
-        now that it recurs across every screen rather than being a
-        one-off.
+  - **Loading states — scoped via grill-me, 2026-08-01**, into two
+    independent parts after diagnosis showed the originally-reported
+    trigger ("click a trip, then click another, get a blank flash") and
+    the original backlog framing ("no screen has a designed loading
+    pattern") are two different problems, not one:
+    - [x] **Part A — query fix (AI-authored, logic not UI).** The
+          reported flash isn't a missing loading state at all: `useTrip`/
+          `useTemplate` (`src/api/trips.ts`/`templates.ts`) embed the
+          selected ID in the query key, so switching selection is treated
+          as a brand-new, uncached query even though the trip/template
+          was already present in the list data. **Fixed 2026-08-01,
+          developer-confirmed**: added `placeholderData: keepPreviousData`
+          (TanStack Query v5 API, `^5.101.2` installed; not used anywhere
+          else in this codebase yet — a new pattern here, but TanStack's
+          own established idiom, not something invented for this) to both
+          hooks, so the previously-selected trip/template's content stays
+          on screen while the new one loads in the background.
+          Already-viewed trips/templates were fine before this (5 min
+          `staleTime` cache) and stay fine. Verified live in Chrome:
+          clicked between two different trips on the desktop rail,
+          content switched cleanly with no blank flash. Suggested test
+          opportunity, not yet written (flagged, not gating): a test
+          asserting the previous trip's data stays rendered while a
+          second trip's fetch is still in flight — genuine new
+          conditional/timing behavior, cheap to assert against the
+          existing mocked-fetch + real-`QueryClient` test harness already
+          used elsewhere in this codebase.
+    - [x] **Part B — first-load spinner.** Originally scoped as
+          developer-authored per `CLAUDE.md`'s no-design-artifact
+          authorship rule (no Claude Design export exists for a loading
+          state) — **developer explicitly overrode this** ("you're
+          authoring it all not just part a"), same override pattern as
+          `DesktopSidebar.tsx` (PACKFE-007). A genuine blank-render gap
+          exists on true first load (nothing cached yet), confirmed on
+          three screens: Trips blanks the whole screen (`if (isLoading)
+    return null`), Templates blanks only the list area (header/
+          `+ New template` button stay visible), Library blanks only the
+          chips+item-groups (header/search stay visible). Profile has no
+          query — out of scope. Detail panes' own first-ever load (before
+          Part A's cache has anything to show) deliberately left alone:
+          happens at most once per session, and detail panes have more
+          varied/complex shapes that would need real design effort —
+          revisit only if it's actually noticeable in practice, not
+          preemptively. **Fixed 2026-08-01, developer-confirmed**: new
+          `Spinner` component (`components/ui/Spinner.tsx`) — same
+          arc/stroke/accent-color language as `ProgressRing`, but a fixed
+          25%-of-circumference arc spun continuously via Tailwind's
+          `animate-spin` instead of a percentage-filled one, so it reads
+          as "the same visual family" rather than an unrelated spinner.
+          Wired into each screen's _existing_ loading-gate boundary
+          (`TripsDesktop`/`TripsMobile`'s `if (isLoading) return null` →
+          centered `Spinner`; `TemplatesDesktop`/`TemplatesMobile`'s and
+          `LibraryScreen`'s `{!isLoading && (...)}` → `{isLoading ? centered
+    Spinner : (...)}`) — deliberately not restructuring which
+          regions each screen blanks, just filling the existing blank
+          with a spinner. No minimum-visible-duration/anti-flicker timer —
+          spinner syncs directly with `isLoading`; the local API is
+          typically near-instant so it may rarely even be visible in
+          practice — revisit only if a remote deployment ever makes
+          latency (and therefore flicker) a real concern. Verified live in
+          Chrome (screen renders correctly, no regressions on the
+          list/detail flow) and via the full check suite.
   - [x] Manage-categories modal (`CategoriesModal.tsx`) scrolling UX needs
         improvement (noticed at PACKFE-003 close-out, 2026-07-25) — not
         diagnosed further yet, just flagged. **Fixed 2026-07-31,
@@ -432,7 +487,7 @@ bg-bg` unchanged.
         touch-target guideline), which extends ~10px past every button's
         own box on all sides, including past the rail's scroll container.
         Combined with a real CSS quirk — a container with `overflow-y:
-    auto` and no explicit `overflow-x` gets that axis silently
+auto` and no explicit `overflow-x` gets that axis silently
         promoted from `visible` to `auto` too — that invisible sliver
         became genuinely scrollable. Confirmed live in Chrome (developer
         first noticed the trackpad "springy"/rubber-band behavior was

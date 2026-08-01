@@ -5,6 +5,7 @@ import { RailRow } from "../../../components/detail/RailRow";
 import { TripDetailHeader } from "../../../components/detail/TripDetailHeader";
 import { MOBILE_NAV_CLEARANCE_SPACER_CLASS } from "../../../components/nav/AppShell";
 import { Button } from "../../../components/ui/Button";
+import { Spinner } from "../../../components/ui/Spinner";
 import { useAuth } from "../../auth/AuthContext";
 import { formatTripDate } from "../formatTripDate";
 import type { UseTripsScreenResult } from "../useTripsScreen";
@@ -34,7 +35,11 @@ export function TripsMobile({
   const { user } = useAuth();
 
   if (isLoading) {
-    return null;
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Spinner />
+      </div>
+    );
   }
 
   if (selectedTripId) {

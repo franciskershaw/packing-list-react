@@ -2,6 +2,7 @@ import { EmptyStatePanel } from "../../components/detail/EmptyStatePanel";
 import { RailRow } from "../../components/detail/RailRow";
 import { TemplateDetailHeader } from "../../components/detail/TemplateDetailHeader";
 import { Button } from "../../components/ui/Button";
+import { Spinner } from "../../components/ui/Spinner";
 import { TemplateDetailBody } from "./TemplateDetailBody";
 import type { UseTemplatesScreenResult } from "./useTemplatesScreen";
 
@@ -33,7 +34,11 @@ export function TemplatesDesktop({
           </Button>
         </div>
 
-        {!isLoading && (
+        {isLoading ? (
+          <div className="flex flex-1 items-center justify-center">
+            <Spinner />
+          </div>
+        ) : (
           <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
             {templates.length === 0 ? (
               <EmptyStatePanel
