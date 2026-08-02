@@ -1,8 +1,8 @@
 # Packing List - Frontend
 
-Pack-It is a simple full stack application that helps me manage how I pack for trips. I was looking for a small and understandable problem to solve in my day-to-day life that would ultimately allow me to build a project in Go, which was a recently learnt language at the time that I wanted practice in. The live app allows me to now save trips and items that are frequently used so I no longer have to strain my brain every time I pack for a festival. This repo is for the frontend code, in a framework I'm already far more familiar with, with the API code living here.
+Pack-It is a simple full stack application that helps me manage how I pack for trips. I was looking for a small and understandable problem to solve in my day-to-day life that would ultimately allow me to build a project in Go, which was a recently learnt language at the time that I wanted practice in. The live app allows me to now save trips and items that are frequently used so I no longer have to strain my brain every time I pack for a festival. This repo is for the frontend code, in a framework I'm already far more familiar with, with the API code living [here](https://github.com/franciskershaw/packing-list-go).
 
-The site is live and can be accessed with a Gmail account here.
+The site is live and can be accessed with a Gmail account [here](https://packitapp.co.uk).
 
 ![Pack-It desktop screenshot](docs/screenshots/hero.png)
 
