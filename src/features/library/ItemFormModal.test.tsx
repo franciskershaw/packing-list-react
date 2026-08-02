@@ -7,6 +7,8 @@ import type { Item } from "../../api/items";
 import { ToastProvider } from "../../components/ui/Toast";
 import { ItemFormModal } from "./ItemFormModal";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const categories: Category[] = [
   { id: "cat-1", name: "Clothing", isSystem: true },
   { id: "cat-2", name: "Toiletries", isSystem: true },
@@ -56,7 +58,9 @@ describe("ItemFormModal", () => {
   });
 
   it("new mode: defaults the category selection to the first category and disables submit while the name is blank", async () => {
-    mockFetch({ "GET /api/categories": () => jsonResponse(200, categories) });
+    mockFetch({
+      [`GET ${API_URL}/categories`]: () => jsonResponse(200, categories),
+    });
 
     renderModal({});
 
@@ -78,8 +82,8 @@ describe("ItemFormModal", () => {
       isSystem: false,
     };
     mockFetch({
-      "GET /api/categories": () => jsonResponse(200, categories),
-      "POST /api/items": () => jsonResponse(201, created),
+      [`GET ${API_URL}/categories`]: () => jsonResponse(200, categories),
+      [`POST ${API_URL}/items`]: () => jsonResponse(201, created),
     });
 
     const { onClose } = renderModal({});
@@ -97,7 +101,7 @@ describe("ItemFormModal", () => {
     await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
 
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      "/api/items",
+      `${API_URL}/items`,
       expect.objectContaining({
         method: "POST",
         body: JSON.stringify({ name: "Bum bag", categoryId: "cat-2" }),
@@ -112,7 +116,9 @@ describe("ItemFormModal", () => {
       categoryId: "cat-2",
       isSystem: false,
     };
-    mockFetch({ "GET /api/categories": () => jsonResponse(200, categories) });
+    mockFetch({
+      [`GET ${API_URL}/categories`]: () => jsonResponse(200, categories),
+    });
 
     renderModal({ item });
 
@@ -140,8 +146,8 @@ describe("ItemFormModal", () => {
     };
     const updated: Item = { ...item, name: "Rain jacket" };
     mockFetch({
-      "GET /api/categories": () => jsonResponse(200, categories),
-      "PATCH /api/items/item-1": () => jsonResponse(200, updated),
+      [`GET ${API_URL}/categories`]: () => jsonResponse(200, categories),
+      [`PATCH ${API_URL}/items/item-1`]: () => jsonResponse(200, updated),
     });
 
     const { onClose } = renderModal({ item });
@@ -155,7 +161,7 @@ describe("ItemFormModal", () => {
     await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
 
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      "/api/items/item-1",
+      `${API_URL}/items/item-1`,
       expect.objectContaining({
         method: "PATCH",
         body: JSON.stringify({ name: "Rain jacket", categoryId: "cat-2" }),

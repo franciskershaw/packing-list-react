@@ -35,11 +35,13 @@ function jsonResponse(body: unknown): Response {
   } as Response;
 }
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function mockFetch() {
   vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
     const url = typeof input === "string" ? input : input.toString();
-    if (url === "/api/items") return Promise.resolve(jsonResponse(items));
-    if (url === "/api/categories")
+    if (url === `${API_URL}/items`) return Promise.resolve(jsonResponse(items));
+    if (url === `${API_URL}/categories`)
       return Promise.resolve(jsonResponse(categories));
     throw new Error(`no fetch mock registered for ${url}`);
   });

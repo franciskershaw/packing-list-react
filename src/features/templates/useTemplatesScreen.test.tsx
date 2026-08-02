@@ -32,6 +32,8 @@ function mockFetch(handlers: Record<string, () => Response>) {
   });
 }
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const templates: Template[] = [
   {
     id: "t-1",
@@ -89,7 +91,9 @@ describe("useTemplatesScreen", () => {
   });
 
   it("does not fetch a selected template when the route has no :templateId", async () => {
-    mockFetch({ "GET /api/templates": () => jsonResponse(200, templates) });
+    mockFetch({
+      [`GET ${API_URL}/templates`]: () => jsonResponse(200, templates),
+    });
 
     renderAt("/templates");
 
@@ -97,7 +101,7 @@ describe("useTemplatesScreen", () => {
     expect(latest?.selectedTemplateId).toBeUndefined();
     expect(latest?.selectedTemplate).toBeUndefined();
     expect(globalThis.fetch).not.toHaveBeenCalledWith(
-      "/api/templates/t-1",
+      `${API_URL}/templates/t-1`,
       expect.anything(),
     );
   });
@@ -105,8 +109,8 @@ describe("useTemplatesScreen", () => {
   it("fetches the selected template's detail when :templateId is present in the route", async () => {
     const detail = templates[0];
     mockFetch({
-      "GET /api/templates": () => jsonResponse(200, templates),
-      "GET /api/templates/t-1": () => jsonResponse(200, detail),
+      [`GET ${API_URL}/templates`]: () => jsonResponse(200, templates),
+      [`GET ${API_URL}/templates/t-1`]: () => jsonResponse(200, detail),
     });
 
     renderAt("/templates/t-1");
@@ -116,7 +120,9 @@ describe("useTemplatesScreen", () => {
   });
 
   it("selectTemplate navigates to the template's detail route", async () => {
-    mockFetch({ "GET /api/templates": () => jsonResponse(200, templates) });
+    mockFetch({
+      [`GET ${API_URL}/templates`]: () => jsonResponse(200, templates),
+    });
 
     renderAt("/templates");
     await waitFor(() => expect(latest?.templates).toEqual(templates));
@@ -132,8 +138,8 @@ describe("useTemplatesScreen", () => {
 
   it("goToList navigates back to the templates list route", async () => {
     mockFetch({
-      "GET /api/templates": () => jsonResponse(200, templates),
-      "GET /api/templates/t-1": () => jsonResponse(200, templates[0]),
+      [`GET ${API_URL}/templates`]: () => jsonResponse(200, templates),
+      [`GET ${API_URL}/templates/t-1`]: () => jsonResponse(200, templates[0]),
     });
 
     renderAt("/templates/t-1");
@@ -155,8 +161,8 @@ describe("useTemplatesScreen", () => {
       itemCount: 0,
     };
     mockFetch({
-      "GET /api/templates": () => jsonResponse(200, templates),
-      "POST /api/templates": () => jsonResponse(201, created),
+      [`GET ${API_URL}/templates`]: () => jsonResponse(200, templates),
+      [`POST ${API_URL}/templates`]: () => jsonResponse(201, created),
     });
 
     renderAt("/templates");
@@ -170,7 +176,7 @@ describe("useTemplatesScreen", () => {
       ),
     );
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      "/api/templates",
+      `${API_URL}/templates`,
       expect.objectContaining({
         method: "POST",
         body: JSON.stringify({ name: "Untitled template" }),
@@ -188,8 +194,8 @@ describe("useTemplatesScreen", () => {
       itemCount: 0,
     };
     mockFetch({
-      "GET /api/templates": () => jsonResponse(200, templates),
-      "POST /api/templates": () => jsonResponse(201, created),
+      [`GET ${API_URL}/templates`]: () => jsonResponse(200, templates),
+      [`POST ${API_URL}/templates`]: () => jsonResponse(201, created),
     });
 
     renderAt("/templates");
@@ -224,8 +230,8 @@ describe("useTemplatesScreen", () => {
       itemCount: 0,
     };
     mockFetch({
-      "GET /api/templates": () => jsonResponse(200, existing),
-      "POST /api/templates": () => jsonResponse(201, created),
+      [`GET ${API_URL}/templates`]: () => jsonResponse(200, existing),
+      [`POST ${API_URL}/templates`]: () => jsonResponse(201, created),
     });
 
     renderAt("/templates");
@@ -239,7 +245,7 @@ describe("useTemplatesScreen", () => {
       ),
     );
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      "/api/templates",
+      `${API_URL}/templates`,
       expect.objectContaining({
         method: "POST",
         body: JSON.stringify({ name: "Untitled template 2" }),
@@ -250,12 +256,12 @@ describe("useTemplatesScreen", () => {
   it("deleteTemplate removes the template, navigates back to the list, and doesn't also error-toast from refetching the now-gone detail query", async () => {
     let templateDeleted = false;
     mockFetch({
-      "GET /api/templates": () => jsonResponse(200, templates),
-      "GET /api/templates/t-1": () =>
+      [`GET ${API_URL}/templates`]: () => jsonResponse(200, templates),
+      [`GET ${API_URL}/templates/t-1`]: () =>
         templateDeleted
           ? jsonResponse(404, { error: "template not found" })
           : jsonResponse(200, templates[0]),
-      "DELETE /api/templates/t-1": () => {
+      [`DELETE ${API_URL}/templates/t-1`]: () => {
         templateDeleted = true;
         return jsonResponse(204, undefined);
       },
@@ -271,7 +277,7 @@ describe("useTemplatesScreen", () => {
       expect(screen.getByTestId("pathname")).toHaveTextContent("/templates"),
     );
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      "/api/templates/t-1",
+      `${API_URL}/templates/t-1`,
       expect.objectContaining({ method: "DELETE" }),
     );
     expect(screen.queryByText("template not found")).not.toBeInTheDocument();

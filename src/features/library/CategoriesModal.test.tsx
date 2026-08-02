@@ -7,6 +7,8 @@ import type { Item } from "../../api/items";
 import { ToastProvider } from "../../components/ui/Toast";
 import { CategoriesModal } from "./CategoriesModal";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const categories: Category[] = [
   { id: "cat-1", name: "Clothing", isSystem: true },
   { id: "cat-2", name: "Festival kit", isSystem: false },
@@ -63,8 +65,8 @@ describe("CategoriesModal", () => {
 
   it("hides built-in categories by default; 'Show built-in' reveals their item count and Built-in badge, 'Hide built-in' re-hides them", async () => {
     mockFetch({
-      "GET /api/categories": () => jsonResponse(200, categories),
-      "GET /api/items": () => jsonResponse(200, items),
+      [`GET ${API_URL}/categories`]: () => jsonResponse(200, categories),
+      [`GET ${API_URL}/items`]: () => jsonResponse(200, items),
     });
 
     renderModal();
@@ -85,8 +87,8 @@ describe("CategoriesModal", () => {
 
   it("clicking a user-owned row enters rename mode, hiding its delete icon; clicking another row switches which one is renaming", async () => {
     mockFetch({
-      "GET /api/categories": () => jsonResponse(200, categories),
-      "GET /api/items": () => jsonResponse(200, items),
+      [`GET ${API_URL}/categories`]: () => jsonResponse(200, categories),
+      [`GET ${API_URL}/items`]: () => jsonResponse(200, items),
     });
 
     renderModal();
@@ -105,8 +107,8 @@ describe("CategoriesModal", () => {
 
   it("Escape cancels rename mode without closing the whole modal", async () => {
     mockFetch({
-      "GET /api/categories": () => jsonResponse(200, categories),
-      "GET /api/items": () => jsonResponse(200, items),
+      [`GET ${API_URL}/categories`]: () => jsonResponse(200, categories),
+      [`GET ${API_URL}/items`]: () => jsonResponse(200, items),
     });
 
     const { onClose } = renderModal();
@@ -124,8 +126,8 @@ describe("CategoriesModal", () => {
 
   it("Cancel button exits rename mode without saving", async () => {
     mockFetch({
-      "GET /api/categories": () => jsonResponse(200, categories),
-      "GET /api/items": () => jsonResponse(200, items),
+      [`GET ${API_URL}/categories`]: () => jsonResponse(200, categories),
+      [`GET ${API_URL}/items`]: () => jsonResponse(200, items),
     });
 
     renderModal();
@@ -136,7 +138,7 @@ describe("CategoriesModal", () => {
 
     expect(screen.queryByPlaceholderText("Category name")).toBeNull();
     expect(globalThis.fetch).not.toHaveBeenCalledWith(
-      expect.stringContaining("/api/categories/cat-2"),
+      expect.stringContaining(`${API_URL}/categories/cat-2`),
       expect.anything(),
     );
   });
@@ -144,9 +146,9 @@ describe("CategoriesModal", () => {
   it("disables Save while the rename input is blank, and PATCHes the trimmed name on save", async () => {
     const updated: Category = { ...categories[1]!, name: "Camping" };
     mockFetch({
-      "GET /api/categories": () => jsonResponse(200, categories),
-      "GET /api/items": () => jsonResponse(200, items),
-      "PATCH /api/categories/cat-2": () => jsonResponse(200, updated),
+      [`GET ${API_URL}/categories`]: () => jsonResponse(200, categories),
+      [`GET ${API_URL}/items`]: () => jsonResponse(200, items),
+      [`PATCH ${API_URL}/categories/cat-2`]: () => jsonResponse(200, updated),
     });
 
     renderModal();
@@ -166,7 +168,7 @@ describe("CategoriesModal", () => {
       expect(screen.queryByPlaceholderText("Category name")).toBeNull(),
     );
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      "/api/categories/cat-2",
+      `${API_URL}/categories/cat-2`,
       expect.objectContaining({
         method: "PATCH",
         body: JSON.stringify({ name: "Camping" }),
@@ -181,9 +183,9 @@ describe("CategoriesModal", () => {
       isSystem: false,
     };
     mockFetch({
-      "GET /api/categories": () => jsonResponse(200, categories),
-      "GET /api/items": () => jsonResponse(200, items),
-      "POST /api/categories": () => jsonResponse(201, created),
+      [`GET ${API_URL}/categories`]: () => jsonResponse(200, categories),
+      [`GET ${API_URL}/items`]: () => jsonResponse(200, items),
+      [`POST ${API_URL}/categories`]: () => jsonResponse(201, created),
     });
 
     renderModal();
@@ -199,7 +201,7 @@ describe("CategoriesModal", () => {
 
     await waitFor(() => expect(input).toHaveValue(""));
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      "/api/categories",
+      `${API_URL}/categories`,
       expect.objectContaining({
         method: "POST",
         body: JSON.stringify({ name: "Sports" }),
@@ -209,9 +211,10 @@ describe("CategoriesModal", () => {
 
   it("deleting a category: confirm dialog gates the DELETE request", async () => {
     mockFetch({
-      "GET /api/categories": () => jsonResponse(200, categories),
-      "GET /api/items": () => jsonResponse(200, items),
-      "DELETE /api/categories/cat-2": () => jsonResponse(204, undefined),
+      [`GET ${API_URL}/categories`]: () => jsonResponse(200, categories),
+      [`GET ${API_URL}/items`]: () => jsonResponse(200, items),
+      [`DELETE ${API_URL}/categories/cat-2`]: () =>
+        jsonResponse(204, undefined),
     });
 
     renderModal();
@@ -222,7 +225,7 @@ describe("CategoriesModal", () => {
     );
     screen.getByText("Delete Festival kit?");
     expect(globalThis.fetch).not.toHaveBeenCalledWith(
-      "/api/categories/cat-2",
+      `${API_URL}/categories/cat-2`,
       expect.objectContaining({ method: "DELETE" }),
     );
 
@@ -230,7 +233,7 @@ describe("CategoriesModal", () => {
 
     await waitFor(() =>
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        "/api/categories/cat-2",
+        `${API_URL}/categories/cat-2`,
         expect.objectContaining({ method: "DELETE" }),
       ),
     );

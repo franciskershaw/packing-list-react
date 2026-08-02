@@ -1,5 +1,7 @@
 import { getAccessToken, setAccessToken } from "./tokenStore";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export class ApiError extends Error {
   status: number;
 
@@ -13,7 +15,10 @@ export class ApiError extends Error {
 let refreshPromise: Promise<string> | null = null;
 
 async function performRefresh(): Promise<string> {
-  const res = await fetch("/api/auth/refresh", { method: "POST" });
+  const res = await fetch(`${API_URL}/auth/refresh`, {
+    method: "POST",
+    credentials: "include",
+  });
   if (!res.ok) {
     setAccessToken(null);
     throw new ApiError(res.status, "failed to refresh session");
@@ -38,8 +43,9 @@ export async function apiFetch<T>(
   hasRetried = false,
 ): Promise<T> {
   const token = getAccessToken();
-  const res = await fetch(`/api${path}`, {
+  const res = await fetch(`${API_URL}${path}`, {
     ...options,
+    credentials: "include",
     headers: {
       ...options.headers,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),

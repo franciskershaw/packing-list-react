@@ -34,6 +34,8 @@ function mockFetch(handlers: Record<string, () => Response>) {
   });
 }
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const trips: PackingList[] = [
   {
     id: "trip-1",
@@ -117,8 +119,8 @@ function renderAt(initialPath: string) {
 }
 
 const baseHandlers = {
-  "GET /api/lists": () => jsonResponse(200, trips),
-  "GET /api/lists?archived=true": () => jsonResponse(200, []),
+  [`GET ${API_URL}/lists`]: () => jsonResponse(200, trips),
+  [`GET ${API_URL}/lists?archived=true`]: () => jsonResponse(200, []),
 };
 
 describe("useTripsScreen", () => {
@@ -136,7 +138,7 @@ describe("useTripsScreen", () => {
     expect(latest?.selectedTripId).toBeUndefined();
     expect(latest?.selectedTrip).toBeUndefined();
     expect(globalThis.fetch).not.toHaveBeenCalledWith(
-      "/api/lists/trip-1",
+      `${API_URL}/lists/trip-1`,
       expect.anything(),
     );
   });
@@ -144,7 +146,7 @@ describe("useTripsScreen", () => {
   it("fetches the selected trip's detail when :tripId is present in the route", async () => {
     mockFetch({
       ...baseHandlers,
-      "GET /api/lists/trip-1": () => jsonResponse(200, tripDetail),
+      [`GET ${API_URL}/lists/trip-1`]: () => jsonResponse(200, tripDetail),
     });
 
     renderAt("/trips/trip-1");
@@ -171,7 +173,7 @@ describe("useTripsScreen", () => {
   it("goToList navigates back to the trips list route", async () => {
     mockFetch({
       ...baseHandlers,
-      "GET /api/lists/trip-1": () => jsonResponse(200, tripDetail),
+      [`GET ${API_URL}/lists/trip-1`]: () => jsonResponse(200, tripDetail),
     });
 
     renderAt("/trips/trip-1");
@@ -187,8 +189,8 @@ describe("useTripsScreen", () => {
   it("archiveTrip archives the trip and navigates back to the list", async () => {
     mockFetch({
       ...baseHandlers,
-      "GET /api/lists/trip-1": () => jsonResponse(200, tripDetail),
-      "DELETE /api/lists/trip-1": () => jsonResponse(204, undefined),
+      [`GET ${API_URL}/lists/trip-1`]: () => jsonResponse(200, tripDetail),
+      [`DELETE ${API_URL}/lists/trip-1`]: () => jsonResponse(204, undefined),
     });
 
     renderAt("/trips/trip-1");
@@ -201,7 +203,7 @@ describe("useTripsScreen", () => {
       expect(domScreen.getByTestId("pathname")).toHaveTextContent("/trips"),
     );
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      "/api/lists/trip-1",
+      `${API_URL}/lists/trip-1`,
       expect.objectContaining({ method: "DELETE" }),
     );
   });
@@ -209,8 +211,9 @@ describe("useTripsScreen", () => {
   it("restoreTrip restores the trip without navigating away, unlike archive", async () => {
     mockFetch({
       ...baseHandlers,
-      "GET /api/lists/trip-1": () => jsonResponse(200, tripDetail),
-      "POST /api/lists/trip-1/unarchive": () => jsonResponse(204, undefined),
+      [`GET ${API_URL}/lists/trip-1`]: () => jsonResponse(200, tripDetail),
+      [`POST ${API_URL}/lists/trip-1/unarchive`]: () =>
+        jsonResponse(204, undefined),
     });
 
     renderAt("/trips/trip-1");
@@ -223,7 +226,7 @@ describe("useTripsScreen", () => {
       "/trips/trip-1",
     );
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      "/api/lists/trip-1/unarchive",
+      `${API_URL}/lists/trip-1/unarchive`,
       expect.objectContaining({ method: "POST" }),
     );
   });
@@ -231,8 +234,8 @@ describe("useTripsScreen", () => {
   it("resets isEditMode and collapsed category groups when switching to a different trip", async () => {
     mockFetch({
       ...baseHandlers,
-      "GET /api/lists/trip-1": () => jsonResponse(200, tripDetail),
-      "GET /api/lists/trip-2": () =>
+      [`GET ${API_URL}/lists/trip-1`]: () => jsonResponse(200, tripDetail),
+      [`GET ${API_URL}/lists/trip-2`]: () =>
         jsonResponse(200, { ...tripDetail, id: "trip-2" }),
     });
 
