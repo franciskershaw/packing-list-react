@@ -1,6 +1,6 @@
 # Packing List — Frontend
 
-<!-- One or two sentences: what this app does and who it's for. -->
+<!-- First up, one or two sentences: what this app does and who it's for. -->
 
 ## Table of Contents
 
