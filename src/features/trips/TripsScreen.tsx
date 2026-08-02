@@ -1,3 +1,4 @@
+import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import { DESKTOP_QUERY, useMediaQuery } from "../../lib/useMediaQuery";
 import { NewTripModal } from "./components/NewTripModal";
 import { TripAddItemsModal } from "./components/TripAddItemsModal";
@@ -8,6 +9,7 @@ import { useTripsScreen } from "./useTripsScreen";
 export function TripsScreen() {
   const isDesktop = useMediaQuery(DESKTOP_QUERY);
   const screen = useTripsScreen();
+  useDocumentTitle(screen.selectedTrip?.name ?? "Trips");
 
   return (
     <>

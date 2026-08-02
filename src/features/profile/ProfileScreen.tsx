@@ -1,10 +1,13 @@
 import { Avatar } from "../../components/ui/Avatar";
 import { Button } from "../../components/ui/Button";
 import { GoogleIcon } from "../../components/ui/GoogleIcon";
+import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import { useAuth } from "../auth/AuthContext";
 import { useLogout } from "../auth/useLogout";
 
 export function ProfileScreen() {
+  useDocumentTitle("Profile");
+
   const { user } = useAuth();
   const { mutate: logout, isPending } = useLogout();
 

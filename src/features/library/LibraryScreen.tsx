@@ -8,12 +8,15 @@ import { Button, InteractiveButton } from "../../components/ui/Button";
 import { Chip } from "../../components/ui/Chip";
 import { Spinner } from "../../components/ui/Spinner";
 import { TextField } from "../../components/ui/TextField";
+import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import { CategoriesModal } from "./CategoriesModal";
 import { groupLibraryItems } from "./groupLibraryItems";
 import { ItemFormModal } from "./ItemFormModal";
 import { LibraryItemRow } from "./LibraryItemRow";
 
 export function LibraryScreen() {
+  useDocumentTitle("Library");
+
   const [search, setSearch] = useState("");
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [formModal, setFormModal] = useState<{

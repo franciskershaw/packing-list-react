@@ -1,3 +1,4 @@
+import { useDocumentTitle } from "../../lib/useDocumentTitle";
 import { DESKTOP_QUERY, useMediaQuery } from "../../lib/useMediaQuery";
 import { TemplateAddItemsModal } from "./TemplateAddItemsModal";
 import { TemplatesDesktop } from "./TemplatesDesktop";
@@ -7,6 +8,7 @@ import { useTemplatesScreen } from "./useTemplatesScreen";
 export function TemplatesScreen() {
   const isDesktop = useMediaQuery(DESKTOP_QUERY);
   const screen = useTemplatesScreen();
+  useDocumentTitle(screen.selectedTemplate?.name ?? "Templates");
 
   return (
     <>

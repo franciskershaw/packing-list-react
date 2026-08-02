@@ -1,8 +1,11 @@
 import illustration from "../../assets/landing-illustration.svg";
 import { Button } from "../../components/ui/Button";
 import { GoogleIcon } from "../../components/ui/GoogleIcon";
+import { useDocumentTitle } from "../../lib/useDocumentTitle";
 
 export function SignInScreen() {
+  useDocumentTitle("Sign In");
+
   return (
     <div className="flex min-h-screen flex-col bg-bg lg:flex-row-reverse">
       <div className="relative flex h-64 shrink-0 items-center justify-center overflow-hidden sm:h-80 lg:h-auto lg:flex-1 lg:p-12">
